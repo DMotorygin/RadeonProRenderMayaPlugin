@@ -27,16 +27,13 @@ limitations under the License.
 #include "FireMaya.h"
 
 MTypeId FireRenderPhysicalLightLocator::id(FireMaya::TypeId::FireRenderPhysicalLightLocator);
-MString FireRenderPhysicalLightLocator::drawDbClassification("light:drawdb/light/directionalLight:drawdb/geometry/FireRenderPhysicalLightLocator");
-MString FireRenderPhysicalLightLocator::drawDbGeomClassification("drawdb/geometry/FireRenderPhysicalLightLocator");
+MString FireRenderPhysicalLightLocator::drawDbClassification("drawdb/geometry/light/FireRenderPhysicalLightLocator:drawdb/light/directionalLight:light");
+MString FireRenderPhysicalLightLocator::drawDbGeomClassification("drawdb/geometry/light/FireRenderPhysicalLightLocator");
 MString FireRenderPhysicalLightLocator::drawRegistrantId("FireRenderPhysicalLightNode");
 
 FireRenderPhysicalLightLocator::FireRenderPhysicalLightLocator() :
 	m_attributeChangedCallback(0),
-	m_selectionChangedCallback(0),
-	m_aboutToDeleteCallback(0),
-	m_nodeRemovedCallback(0),
-	m_transformObject(MObject::kNullObj)
+	m_selectionChangedCallback(0)
 {
 }
 
@@ -60,58 +57,10 @@ FireRenderPhysicalLightLocator::~FireRenderPhysicalLightLocator()
 	SubscribeSelectionChangedEvent(false);
 }
 
-void FireRenderPhysicalLightLocator::onAboutToDelete(MObject &node, MDGModifier& modifier, void* clientData)
-{
-	// this callback is called just before shape node is removed
-	MStatus mstatus;
-	MFnDependencyNode nodeFn(node, &mstatus);
-	MString nodeName = nodeFn.name();
-
-	// get transform node
-	MFnDagNode dagfn(node);
-	int parentCount = dagfn.parentCount();
-	if (parentCount == 0)
-		return;
-
-	MObject parent = dagfn.parent(0, &mstatus);
-	
-	// ensure parent node has only one child
-	// (shouldn't be deleted otherwise)
-	MFnDagNode parentDag(parent, &mstatus);
-	int childCount = parentDag.childCount(&mstatus);
-	if (childCount > 1)
-		return;
-
-	// save parent node in light locator object
-	FireRenderPhysicalLightLocator* pLocator = static_cast<FireRenderPhysicalLightLocator*>(clientData);
-	pLocator->m_nodeRemovedCallback = MDGMessage::addNodeRemovedCallback(
-		FireRenderPhysicalLightLocator::onNodeRemoved, 
-		"RPRPhysicalLight", 
-		pLocator, 
-		&mstatus
-	);
-	assert(mstatus == MStatus::kSuccess);
-
-	pLocator->m_transformObject = parent;
-}
-
-void FireRenderPhysicalLightLocator::onNodeRemoved(MObject &node, void *clientData)
-{
-	// this callback is called just after shape node is removed
-
-	// get stored transform node
-	FireRenderPhysicalLightLocator* pparent = static_cast<FireRenderPhysicalLightLocator*>(clientData);
-	if (!pparent || pparent->m_transformObject == MObject::kNullObj)
-		return;
-
-	// delete transform node
-	MStatus mstatus;
-	mstatus = MGlobal::deleteNode(pparent->m_transformObject);
-	assert(mstatus == MStatus::kSuccess);
-}
-
 void FireRenderPhysicalLightLocator::postConstructor()
 {
+	FireRenderLightCommon::postConstructor();
+
 	MStatus status;
 	MObject mobj = thisMObject();
 	

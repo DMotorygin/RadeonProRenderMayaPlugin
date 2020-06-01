@@ -37,8 +37,8 @@ MObject	FireRenderIESLightLocator::aIntensity;
 MObject	FireRenderIESLightLocator::aDisplay;
 MObject FireRenderIESLightLocator::aMeshRepresentationUpdated;
 MTypeId FireRenderIESLightLocator::id(FireMaya::TypeId::FireRenderIESLightLocator);
-MString FireRenderIESLightLocator::drawDbClassification("light:drawdb/light/directionalLight:drawdb/geometry/FireRenderIESLightLocator");
-MString FireRenderIESLightLocator::drawDbGeomClassification("drawdb/geometry/FireRenderIESLightLocator");
+MString FireRenderIESLightLocator::drawDbClassification("drawdb/geometry/light/FireRenderIESLightLocator:drawdb/light/directionalLight:light");
+MString FireRenderIESLightLocator::drawDbGeomClassification("drawdb/geometry/light/FireRenderIESLightLocator");
 MString FireRenderIESLightLocator::drawRegistrantId("FireRenderIESLightNode");
 
 MStatus FireRenderIESLightLocator::compute(const MPlug& plug, MDataBlock& data)
@@ -60,6 +60,11 @@ void makeAttribute(T& attr)
 	CHECK_MSTATUS(attr.setReadable(true));
 	CHECK_MSTATUS(attr.setWritable(true));
 }
+
+//void FireRenderIESLightLocator::postConstructor()
+//{
+//	FireRenderLightCommon::postConstructor();
+//}
 
 MStatus FireRenderIESLightLocator::initialize()
 {

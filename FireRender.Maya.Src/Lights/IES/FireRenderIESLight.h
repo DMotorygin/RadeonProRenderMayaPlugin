@@ -27,7 +27,9 @@ limitations under the License.
 #include <maya/MShaderManager.h>
 #include <maya/MRenderTargetManager.h>
 #include <maya/MPointArray.h>
+
 #include "IESLightLocatorMesh.h"
+#include "../FireRenderLightCommon.h"
 
 #include <memory>
 
@@ -36,7 +38,7 @@ limitations under the License.
 * system attributes and is responsible for
 * drawing the viewport representation.
 */
-class FireRenderIESLightLocator : public MPxLocatorNode
+class FireRenderIESLightLocator : public FireRenderLightCommon
 {
 public:
 	FireRenderIESLightLocator() {};
@@ -56,6 +58,8 @@ public:
 	virtual MBoundingBox boundingBox() const;
 
 	static void* creator();
+
+	//void postConstructor() override;
 
 	static MStatus initialize();
 

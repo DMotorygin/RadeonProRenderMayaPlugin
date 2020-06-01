@@ -18,12 +18,14 @@ limitations under the License.
 #include <maya/MPxGeometryOverride.h>
 #include <memory>
 
+#include "../FireRenderLightCommon.h"
+
 /**
 * The RPR Physical Light locator contains the
 * system attributes.
 */
 
-class FireRenderPhysicalLightLocator : public MPxLocatorNode
+class FireRenderPhysicalLightLocator : public FireRenderLightCommon
 {
 public:
 	FireRenderPhysicalLightLocator();
@@ -56,10 +58,6 @@ public:
 private:
 	MCallbackId m_attributeChangedCallback;
 	MCallbackId m_selectionChangedCallback;
-	MCallbackId m_aboutToDeleteCallback;
-	MCallbackId m_nodeRemovedCallback;
-
-	MObject m_transformObject;
 
 private:
 	void SubscribeSelectionChangedEvent(bool subscribe = true);
@@ -67,6 +65,4 @@ private:
 
 	static void onSelectionChanged(void *clientData);
 	static void onAttributeChanged(MNodeMessage::AttributeMessage msg, MPlug &plug, MPlug &otherPlug, void *clientData);
-	static void onNodeRemoved(MObject &node, void *clientData);
-	static void onAboutToDelete(MObject &node, MDGModifier& modifier, void* clientData);
 };
