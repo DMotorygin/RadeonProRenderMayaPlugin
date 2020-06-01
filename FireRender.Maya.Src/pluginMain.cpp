@@ -663,6 +663,8 @@ MStatus initializePlugin(MObject obj)
 
 	MGlobal::executeCommand("setupFireRenderNodeClassification()");
 
+	MGlobal::executeCommand("setupFireRenderExtraUI()");
+
 	MGlobal::executeCommand("rprExportsGLTF(1)");
 
 	// register shaders

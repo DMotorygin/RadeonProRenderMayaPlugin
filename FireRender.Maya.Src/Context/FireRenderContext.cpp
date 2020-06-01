@@ -2134,6 +2134,11 @@ bool FireRenderContext::AddSceneObject(const MDagPath& dagPath)
 		{
 			ob = CreateSceneObject<FireRenderHairOrnatrix, NodeCachingOptions::AddPath>(dagPath);
 		}
+		//else if (dagNode.typeName() == "hairSystem" && hairSupported)
+		else if (dagNode.typeName() == "pfxHair" && hairSupported)
+		{
+			ob = CreateSceneObject<FireRenderHairNHair, NodeCachingOptions::AddPath>(dagPath);
+		}
 		else if (dagNode.typeName() == "transform")
 		{
 			ob = CreateSceneObject<FireRenderNode, NodeCachingOptions::AddPath>(dagPath);
@@ -2141,6 +2146,8 @@ bool FireRenderContext::AddSceneObject(const MDagPath& dagPath)
 		else
 		{
 			DebugPrint("Ignoring %s: %s", dagNode.typeName().asUTF8(), dagNode.name().asUTF8());
+			//MString nodetypename = dagNode.typeName();
+			//MString nodename = dagNode.name();
 		}
 	}
 	else
