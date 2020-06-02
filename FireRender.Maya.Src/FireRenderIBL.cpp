@@ -38,9 +38,8 @@ MObject FireRenderIBL::aPortalHolder;
 MObject FireRenderIBL::aColor;
 
 MTypeId FireRenderIBL::id(FireMaya::TypeId::FireRenderIBL);
-
-MString FireRenderIBL::drawDbClassification("light:drawdb/light/directionalLight:drawdb/geometry/FireRenderIBL");
-MString FireRenderIBL::drawDbGeomClassification("drawdb/geometry/FireRenderIBL");
+MString FireRenderIBL::drawDbClassification("drawdb/geometry/light/FireRenderIBL:drawdb/light/directionalLight:light");
+MString FireRenderIBL::drawDbGeomClassification("drawdb/geometry/light/FireRenderIBL");
 MString FireRenderIBL::drawRegistrantId("FireRenderIBLNode");
 
 FireRenderIBL::FireRenderIBL():
@@ -231,6 +230,8 @@ void FireRenderIBL::AddSelectedMeshToPortalList(void)
 
 void FireRenderIBL::postConstructor()
 {
+	FireRenderLightCommon::postConstructor();
+
 	MStatus status;
 	MObject mobj = thisMObject();
 	m_attributeChangedCallback = MNodeMessage::addAttributeChangedCallback(mobj, FireRenderIBL::onAttributeChanged, this, &status);

@@ -34,12 +34,14 @@ limitations under the License.
 
 #include <memory>
 
+#include "../FireRenderLightCommon.h"
+
 /**
  * The sky locator contains the Sun / Sky
  * system attributes and is responsible for
  * drawing the viewport representation.
  */
-class FireRenderSkyLocator : public MPxLocatorNode
+class FireRenderSkyLocator : public FireRenderLightCommon
 {
 public:
 

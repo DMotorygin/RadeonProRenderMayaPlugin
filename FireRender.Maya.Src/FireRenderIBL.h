@@ -32,9 +32,11 @@ limitations under the License.
 
 #include <memory>
 
+#include "../FireRenderLightCommon.h"
+
 class FireRenderIBLOverride;
 
-class FireRenderIBL : public MPxLocatorNode
+class FireRenderIBL : public FireRenderLightCommon
 {
 public:
 

@@ -67,8 +67,8 @@ void FireRenderPhysicalLightLocator::postConstructor()
 	m_attributeChangedCallback = MNodeMessage::addAttributeChangedCallback(mobj, FireRenderPhysicalLightLocator::onAttributeChanged, this, &status);
 	assert(status == MStatus::kSuccess);
 
-	m_aboutToDeleteCallback = MNodeMessage::addNodeAboutToDeleteCallback(mobj, onAboutToDelete, this, &status);
-	assert(status == MStatus::kSuccess);
+	//m_aboutToDeleteCallback = MNodeMessage::addNodeAboutToDeleteCallback(mobj, onAboutToDelete, this, &status);
+	//assert(status == MStatus::kSuccess);
 }
 
 MStatus FireRenderPhysicalLightLocator::compute(const MPlug& plug, MDataBlock& data)
