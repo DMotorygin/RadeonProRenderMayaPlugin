@@ -65,11 +65,13 @@ public:
 
 	static MStatus initialize();
 
-private:
+protected:
 	static void onAttributeChanged(MNodeMessage::AttributeMessage msg, MPlug &plug, MPlug &otherPlug, void *clientData);
 	static void onSelectionChanged(void *clientData);
 	void SubscribeSelectionChangedEvent(bool subscribe = true);
 	void AddSelectedMeshToPortalList(void);
+
+	virtual const MString GetNodeTypeName(void) const override;
 
 public:
 

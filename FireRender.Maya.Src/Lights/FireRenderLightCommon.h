@@ -32,6 +32,8 @@ protected:
 	static void onAboutToDelete(MObject &node, MDGModifier& modifier, void* clientData);
 	static void OnModelEditorChanged(void* clientData);
 
+	virtual const MString GetNodeTypeName(void) const = 0;
+
 protected:
 	MCallbackId m_modelEditorChangedCallback;
 	MCallbackId m_aboutToDeleteCallback;

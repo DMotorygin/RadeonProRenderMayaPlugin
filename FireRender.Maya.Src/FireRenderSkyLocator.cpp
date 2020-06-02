@@ -32,6 +32,11 @@ MString FireRenderSkyLocator::drawRegistrantId("FireRenderSkyNode");
 
 MObject FireRenderSkyLocator::SkySelectingPortalMesh;
 
+const MString FireRenderSkyLocator::GetNodeTypeName(void) const
+{
+	return "RPRSky";
+}
+
 MStatus FireRenderSkyLocator::compute(const MPlug& plug, MDataBlock& data)
 {
 	return MS::kUnknownParameter;

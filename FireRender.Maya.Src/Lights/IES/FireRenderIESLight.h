@@ -83,6 +83,9 @@ public:
 	static MObject	aDisplay;
 	static MObject	aMeshRepresentationUpdated;
 
+protected:
+	virtual const MString GetNodeTypeName(void) const override;
+
 private:
 	void UpdateMesh(bool forced) const;
 

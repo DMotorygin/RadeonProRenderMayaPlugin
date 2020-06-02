@@ -64,6 +64,11 @@ FireRenderIBL::~FireRenderIBL()
 	}
 }
 
+const MString FireRenderIBL::GetNodeTypeName(void) const
+{
+	return "RPRIBL";
+}
+
 MStatus FireRenderIBL::compute(const MPlug& plug, MDataBlock& data)
 {
 	return MS::kUnknownParameter;

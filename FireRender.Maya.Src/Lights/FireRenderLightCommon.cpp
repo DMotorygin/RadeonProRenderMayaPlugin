@@ -72,15 +72,16 @@ void FireRenderLightCommon::onAboutToDelete(MObject &node, MDGModifier& modifier
 
 	// save parent node in light locator object
 	FireRenderLightCommon* pLocator = static_cast<FireRenderLightCommon*>(clientData);
+	pLocator->m_transformObject = parent;
+	MString nodeTypeName(pLocator->GetNodeTypeName());
+
 	pLocator->m_nodeRemovedCallback = MDGMessage::addNodeRemovedCallback(
 		FireRenderLightCommon::onNodeRemoved,
-		"RPRPhysicalLight",
+		pLocator->GetNodeTypeName(),
 		pLocator,
 		&mstatus
 	);
 	assert(mstatus == MStatus::kSuccess);
-
-	pLocator->m_transformObject = parent;
 }
 
 void FireRenderLightCommon::onNodeRemoved(MObject &node, void *clientData)

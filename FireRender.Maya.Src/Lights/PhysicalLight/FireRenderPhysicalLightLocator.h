@@ -59,10 +59,12 @@ private:
 	MCallbackId m_attributeChangedCallback;
 	MCallbackId m_selectionChangedCallback;
 
-private:
+protected:
 	void SubscribeSelectionChangedEvent(bool subscribe = true);
 	void MakeSelectedMeshAsLight();
 
 	static void onSelectionChanged(void *clientData);
 	static void onAttributeChanged(MNodeMessage::AttributeMessage msg, MPlug &plug, MPlug &otherPlug, void *clientData);
+
+	virtual const MString GetNodeTypeName(void) const override;
 };

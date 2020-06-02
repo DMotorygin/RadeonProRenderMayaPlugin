@@ -41,6 +41,11 @@ MString FireRenderIESLightLocator::drawDbClassification("drawdb/geometry/light/F
 MString FireRenderIESLightLocator::drawDbGeomClassification("drawdb/geometry/light/FireRenderIESLightLocator");
 MString FireRenderIESLightLocator::drawRegistrantId("FireRenderIESLightNode");
 
+const MString FireRenderIESLightLocator::GetNodeTypeName(void) const
+{
+	return "RPRIES";
+}
+
 MStatus FireRenderIESLightLocator::compute(const MPlug& plug, MDataBlock& data)
 {
 	if (plug == aMeshRepresentationUpdated)
@@ -60,11 +65,6 @@ void makeAttribute(T& attr)
 	CHECK_MSTATUS(attr.setReadable(true));
 	CHECK_MSTATUS(attr.setWritable(true));
 }
-
-//void FireRenderIESLightLocator::postConstructor()
-//{
-//	FireRenderLightCommon::postConstructor();
-//}
 
 MStatus FireRenderIESLightLocator::initialize()
 {

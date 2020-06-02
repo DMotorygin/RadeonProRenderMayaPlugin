@@ -44,16 +44,6 @@ FireRenderPhysicalLightLocator::~FireRenderPhysicalLightLocator()
 		MNodeMessage::removeCallback(m_attributeChangedCallback);
 	}
 
-	if (m_nodeRemovedCallback != 0)
-	{
-		MDGMessage::removeCallback(m_nodeRemovedCallback);
-	}
-
-	if (m_attributeChangedCallback != 0)
-	{
-		MNodeMessage::removeCallback(m_aboutToDeleteCallback);
-	}
-
 	SubscribeSelectionChangedEvent(false);
 }
 
@@ -66,9 +56,11 @@ void FireRenderPhysicalLightLocator::postConstructor()
 	
 	m_attributeChangedCallback = MNodeMessage::addAttributeChangedCallback(mobj, FireRenderPhysicalLightLocator::onAttributeChanged, this, &status);
 	assert(status == MStatus::kSuccess);
+}
 
-	//m_aboutToDeleteCallback = MNodeMessage::addNodeAboutToDeleteCallback(mobj, onAboutToDelete, this, &status);
-	//assert(status == MStatus::kSuccess);
+const MString FireRenderPhysicalLightLocator::GetNodeTypeName(void) const
+{
+	return "RPRPhysicalLight";
 }
 
 MStatus FireRenderPhysicalLightLocator::compute(const MPlug& plug, MDataBlock& data)
