@@ -653,6 +653,15 @@
     <ClCompile Include="Lights\FireRenderLightCommon.cpp">
       <Filter>Lights</Filter>
     </ClCompile>
+    <ClCompile Include="MayaStandardNodesSupport\RemapValueConverter.cpp">
+      <Filter>MayaStandardNodesSupport</Filter>
+    </ClCompile>
+    <ClCompile Include="MayaStandardNodesSupport\NodeProcessingUtils.cpp">
+      <Filter>MayaStandardNodesSupport</Filter>
+    </ClCompile>
+    <ClCompile Include="MayaStandardNodesSupport\SetRangeConverter.cpp">
+      <Filter>MayaStandardNodesSupport</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FireRenderMaterialSwatchRender.h">
@@ -1073,6 +1082,33 @@
       <Filter>MayaStandardNodesSupport</Filter>
     </ClInclude>
     <ClInclude Include="MayaStandardNodesSupport\NodeProcessingUtils.h">
+      <Filter>MayaStandardNodesSupport</Filter>
+    </ClInclude>
+    <ClInclude Include="..\RadeonProRenderSharedComponents\src\Athena\athenaWrap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\RadeonProRenderSharedComponents\src\SunPosition\SPA.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\RadeonProRenderSharedComponents\src\IESLight\IESLightRepresentationCalc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\RadeonProRenderSharedComponents\src\IESLight\IESprocessor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\RadeonProRenderSharedComponents\src\ImageFilter\ImageFilter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\RadeonProRenderSharedComponents\src\Utils\Utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\RadeonProRenderSharedComponents\src\XMLMaterialExport\XMLMaterialExportCommon.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MayaStandardNodesSupport\RemapValueConverter.h">
+      <Filter>MayaStandardNodesSupport</Filter>
+    </ClInclude>
+    <ClInclude Include="MayaStandardNodesSupport\SetRangeConverter.h">
       <Filter>MayaStandardNodesSupport</Filter>
     </ClInclude>
     <ClInclude Include="..\RadeonProRenderSharedComponents\src\Athena\athenaWrap.h">
