@@ -116,8 +116,9 @@ MObject TryFindUberRecursively(MDagPath& path)
 {
 	MStatus status;
 
+	MObject rootNode = path.node();
 	MItDependencyGraph itdep(
-		path.node(),
+		rootNode,
 		MFn::kDependencyNode,
 		MItDependencyGraph::kUpstream,
 		MItDependencyGraph::kBreadthFirst,
@@ -133,19 +134,11 @@ MObject TryFindUberRecursively(MDagPath& path)
 
 		if (connectionNodeTypename == "hairSystem")
 		{
-			MObject attr = connectionNode.attribute("rprHairColor", &status);
+			MPlug hairColorPlug = connectionNode.findPlug("rprHairMaterial", &status);
 			CHECK_MSTATUS(status);
-			MPlug hairColorPlug = connectionNode.findPlug("rprHairColor", &status);
-			CHECK_MSTATUS(status);
-			MString plugName = hairColorPlug.name();
-			bool isConnected = hairColorPlug.isConnected();
 
 			MPlugArray connections;
-
 			hairColorPlug.connectedTo(connections, true, false, &status);
-			std::vector<MString> names;
-			for (auto& tmp : connections)
-				names.push_back(tmp.name());
 
 			if (connections.length() == 0)
 				continue;
@@ -153,9 +146,10 @@ MObject TryFindUberRecursively(MDagPath& path)
 			MPlug conn = connections[0];
 			MFn::Type type = conn.node().apiType();
 
-			MObject hairColorObject = conn.node(&status);
+			MObject hairMaterialObject = conn.node(&status);
 			CHECK_MSTATUS(status);
-			return hairColorObject;
+
+			return hairMaterialObject;
 		}
 	}
 

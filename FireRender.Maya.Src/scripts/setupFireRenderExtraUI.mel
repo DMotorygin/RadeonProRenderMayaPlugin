@@ -24,15 +24,15 @@ global proc fireRenderNodeTemplateCallback(string $nodeName)
 	if ($nodeType == "hairSystem")
 	{
 		editorTemplate -beginLayout "RPR" -collapse true;
-			$attributeAlreadyCreated = `attributeExists "rprHairColor" $nodeName`;
+			$attributeAlreadyCreated = `attributeExists "rprHairMaterial" $nodeName`;
 			if (!$attributeAlreadyCreated)
 			{
-				addAttr -longName rprHairColor -usedAsColor -attributeType float3 $nodeName;
-					addAttr -longName redBow -attributeType "float" -parent rprHairColor $nodeName;
-					addAttr -longName greenBow -attributeType "float" -parent rprHairColor $nodeName;
-					addAttr -longName blueBow -attributeType "float" -parent rprHairColor $nodeName;
+				addAttr -longName rprHairMaterial -usedAsColor -attributeType float3 $nodeName;
+					addAttr -longName redBow -attributeType "float" -parent rprHairMaterial $nodeName;
+					addAttr -longName greenBow -attributeType "float" -parent rprHairMaterial $nodeName;
+					addAttr -longName blueBow -attributeType "float" -parent rprHairMaterial $nodeName;
 			}
-			editorTemplate -addControl "rprHairColor";
+			editorTemplate -addControl "rprHairMaterial";
 		editorTemplate -endLayout;
 	}
 }
