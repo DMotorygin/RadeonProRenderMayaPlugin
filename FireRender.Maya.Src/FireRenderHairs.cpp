@@ -132,10 +132,19 @@ MObject TryFindUberRecursively(MDagPath& path)
 		MFnDependencyNode connectionNode(itdep.currentItem());
 		MString connectionNodeTypename = connectionNode.typeName();
 
-		if (connectionNodeTypename == "hairSystem")
+		// check if Uber is connected to hair shader
+		if (connectionNodeTypename == "RPRUberMaterial")
+		{
+			return itdep.currentItem();
+		}
+
+		// check if uber is connected in rpr panel
+		else if (connectionNodeTypename == "hairSystem")
 		{
 			MPlug hairColorPlug = connectionNode.findPlug("rprHairMaterial", &status);
 			CHECK_MSTATUS(status);
+			if (hairColorPlug.isNull())
+				continue;
 
 			MPlugArray connections;
 			hairColorPlug.connectedTo(connections, true, false, &status);
