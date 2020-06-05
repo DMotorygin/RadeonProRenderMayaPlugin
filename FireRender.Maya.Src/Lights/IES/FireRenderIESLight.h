@@ -59,8 +59,6 @@ public:
 
 	static void* creator();
 
-	//void postConstructor() override;
-
 	static MStatus initialize();
 
 	MString GetFilename() const;

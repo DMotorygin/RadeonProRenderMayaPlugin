@@ -91,7 +91,9 @@ void FireRenderLightCommon::onNodeRemoved(MObject &node, void *clientData)
 	// get stored transform node
 	FireRenderLightCommon* pparent = static_cast<FireRenderLightCommon*>(clientData);
 	if (!pparent || pparent->m_transformObject == MObject::kNullObj)
+	{
 		return;
+	}
 
 	// delete transform node
 	MStatus mstatus;
