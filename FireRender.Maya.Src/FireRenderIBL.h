@@ -32,7 +32,7 @@ limitations under the License.
 
 #include <memory>
 
-#include "../FireRenderLightCommon.h"
+#include "FireRenderLightCommon.h"
 
 class FireRenderIBLOverride;
 

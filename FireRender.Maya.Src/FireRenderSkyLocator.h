@@ -34,7 +34,7 @@ limitations under the License.
 
 #include <memory>
 
-#include "../FireRenderLightCommon.h"
+#include "FireRenderLightCommon.h"
 
 /**
  * The sky locator contains the Sun / Sky

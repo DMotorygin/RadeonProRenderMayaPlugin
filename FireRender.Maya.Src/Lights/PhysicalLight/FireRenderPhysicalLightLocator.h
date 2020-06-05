@@ -18,7 +18,7 @@ limitations under the License.
 #include <maya/MPxGeometryOverride.h>
 #include <memory>
 
-#include "../FireRenderLightCommon.h"
+#include "FireRenderLightCommon.h"
 
 /**
 * The RPR Physical Light locator contains the

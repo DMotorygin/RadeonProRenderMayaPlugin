@@ -29,7 +29,7 @@ limitations under the License.
 #include <maya/MPointArray.h>
 
 #include "IESLightLocatorMesh.h"
-#include "../FireRenderLightCommon.h"
+#include "FireRenderLightCommon.h"
 
 #include <memory>
 
