@@ -2151,8 +2151,6 @@ bool FireRenderContext::AddSceneObject(const MDagPath& dagPath)
 		else
 		{
 			DebugPrint("Ignoring %s: %s", dagNode.typeName().asUTF8(), dagNode.name().asUTF8());
-			//MString nodetypename = dagNode.typeName();
-			//MString nodename = dagNode.name();
 		}
 	}
 	else

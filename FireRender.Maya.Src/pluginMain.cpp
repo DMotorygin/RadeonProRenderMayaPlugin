@@ -663,7 +663,9 @@ MStatus initializePlugin(MObject obj)
 
 	MGlobal::executeCommand("setupFireRenderNodeClassification()");
 
-	//MGlobal::executeCommand("setupFireRenderExtraUI()");
+#ifdef ENABLE_RPR_PANEL
+	MGlobal::executeCommand("setupFireRenderExtraUI()");
+#endif
 
 	MGlobal::executeCommand("rprExportsGLTF(1)");
 

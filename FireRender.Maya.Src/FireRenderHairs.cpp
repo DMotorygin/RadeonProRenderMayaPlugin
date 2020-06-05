@@ -112,7 +112,7 @@ std::tuple<bool, MObject> GetUberMaterialFromHairShader(MObject& surfaceShader)
 	return std::make_tuple(false, MObject::kNullObj);
 }
 
-MObject TryFindUberRecursively(MDagPath& path)
+MObject TryFindUber(MDagPath& path)
 {
 	MStatus status;
 
@@ -171,7 +171,7 @@ MObject GetUberMObject(MDagPath& path)
 	MObjectArray shdrs = getConnectedShaders(path);
 
 	if (shdrs.length() == 0)
-		return TryFindUberRecursively(path);
+		return TryFindUber(path);
 
 	// get hair shader node
 	MObject surfaceShader = shdrs[0];
