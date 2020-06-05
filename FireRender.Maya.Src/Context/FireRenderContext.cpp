@@ -2139,7 +2139,6 @@ bool FireRenderContext::AddSceneObject(const MDagPath& dagPath)
 		{
 			ob = CreateSceneObject<FireRenderMesh, NodeCachingOptions::DontAddPath>(dagPathTmp);
 		}
-		//else if (dagNode.typeName() == "hairSystem" && hairSupported)
 		else if (dagNode.typeName() == "pfxHair" && hairSupported)
 		{
 			ob = CreateSceneObject<FireRenderHairNHair, NodeCachingOptions::AddPath>(dagPath);
