@@ -775,6 +775,12 @@ frw::Curve ProcessCurvesBatch(MRenderLineArray& mainLines, frw::Context currCont
 		ProcessHairWidth(batchData.m_radiuses, widths.data(), curveIndicesData);
 
 		// Texcoord
+		MDoubleArray parameter = renderLine.getParameter();
+		for (float param : parameter)
+		{
+			batchData.m_uvCoord.push_back(param);
+			batchData.m_uvCoord.push_back(param);
+		}
 	}
 
 	batchData.m_points = vertices.data();
