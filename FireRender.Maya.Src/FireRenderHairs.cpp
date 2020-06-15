@@ -776,8 +776,9 @@ frw::Curve ProcessCurvesBatch(MRenderLineArray& mainLines, frw::Context currCont
 
 		// Texcoord
 		MDoubleArray parameter = renderLine.getParameter();
-		for (float param : parameter)
+		for (unsigned int idx = 0; idx < parameter.length(); ++idx)
 		{
+			float param = parameter[idx];
 			batchData.m_uvCoord.push_back(param);
 			batchData.m_uvCoord.push_back(param);
 		}
