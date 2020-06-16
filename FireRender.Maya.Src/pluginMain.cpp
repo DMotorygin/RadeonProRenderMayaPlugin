@@ -667,8 +667,8 @@ MStatus initializePlugin(MObject obj)
 	// Add RPR UI to Maya native nodes
 	MFnNumericAttribute nAttr;
 	MObject hairMaterialAttr = nAttr.createColor("rprHairMaterial", "rhm");
-	MNodeClass transformNodeClass("polyCube");
-	transformNodeClass.addExtensionAttribute(hairMaterialAttr);
+	MNodeClass hairSystemClass("hairSystem");
+	hairSystemClass.addExtensionAttribute(hairMaterialAttr);
 
 	MGlobal::executeCommand("setupFireRenderExtraUI()"); // register callbacks
 
