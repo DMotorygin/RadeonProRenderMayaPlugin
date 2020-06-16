@@ -1234,19 +1234,19 @@ bool FireRenderContext::ConsiderShadowReflectionCatcherOverride(const ReadFrameB
 
 	if (isShadowCather && isReflectionCatcher)
 	{
-		compositeReflectionShadowCatcherOutput(params.pixels, params.width, params.height, params.region, params.flip, params.shadowColor, params.bgColor, params.shadowTransp, params.bgTransparency, params.bgWeight, params.shadowWeight);
+		compositeReflectionShadowCatcherOutput(params);
 		return true;
 	}
 
 	if (isShadowCather)
 	{
-		compositeShadowCatcherOutput(params.pixels, params.width, params.height, params.region, params.flip, params.shadowColor, params.bgColor, params.shadowTransp, params.bgTransparency, params.bgWeight, params.shadowWeight);
+		compositeShadowCatcherOutput(params);
 		return true;
 	}
 
 	if (isReflectionCatcher)
 	{
-		compositeReflectionCatcherOutput(params.pixels, params.width, params.height, params.region, params.flip, params.bgColor, params.bgTransparency, params.bgWeight, params.shadowWeight);
+		compositeReflectionCatcherOutput(params);
 		return true;
 	}
 
@@ -2563,43 +2563,147 @@ bool FireRenderContext::updateOutput()
 	}
 }
 
-// -----------------------------------------------------------------------------
-void FireRenderContext::compositeShadowCatcherOutput(
-	RV_PIXEL* pixels, 
-	unsigned int width, 
-	unsigned int height, 
-	const RenderRegion& region, 
-	bool flip, 
-	const std::array<float, 3>& scColor,
-	const std::array<float, 3>& bgColor,
-	float transparency, 
-	float bgTransp,
-	float bgWeight,
-	float weight)
+
+
+void FireRenderContext::doOutputFromComposites(const ReadFrameBufferRequestParams& params, size_t dataSize, const frw::FrameBuffer& frameBufferOut)
 {
-	RPR_THREAD_ONLY;
+	// Find the number of pixels in the frame buffer.
+	int pixelCount = params.PixelCount();
+	// Check that the reported frame buffer size
+	// in bytes matches the required dimensions.
+	assert(dataSize == (sizeof(RV_PIXEL) * pixelCount));
+
 	// A temporary pixel buffer is required if the region is less
 	// than the full width and height, or the image should be flipped.
-	bool useTempData = flip || region.getWidth() < width || region.getHeight() < height;
+	bool useTempData = params.UseTempData();
+	if (useTempData)
+		m_tempData.resize(pixelCount);
 
-	// Find the number of pixels in the frame buffer.
-	int pixelCount = width * height;
+	RV_PIXEL* data = useTempData ? m_tempData.get() : params.pixels;
+	rpr_int frstatus = rprFrameBufferGetInfo(frameBufferOut.Handle(), RPR_FRAMEBUFFER_DATA, dataSize, &data[0], nullptr);
+	checkStatus(frstatus);
 
+	if (useTempData)
+	{
+		copyPixels(params.pixels, data, params.width, params.height, params.region, params.flip);
+	}
+}
+
+class CompositeWrapper
+{
+public:
+	CompositeWrapper operator+ (const CompositeWrapper& other);
+	CompositeWrapper operator- (const CompositeWrapper& other);
+	CompositeWrapper operator* (const CompositeWrapper& other);
+	CompositeWrapper min (const CompositeWrapper& other);
+
+	CompositeWrapper(frw::Context& context, rpr_framebuffer frameBuffer);
+	CompositeWrapper(frw::Context& context, float val);
+	CompositeWrapper(frw::Context& context, float val, float val4);
+
+	rpr_int Compute(frw::FrameBuffer& out);
+
+protected:
+	CompositeWrapper(RprComposite& composite, void* pContext);
+
+protected:
+	RprComposite m_composite;
+	void* m_pContext;
+};
+
+CompositeWrapper::CompositeWrapper(RprComposite& composite, void* pContext)
+	: m_pContext(pContext)
+	, m_composite(composite)
+{}
+
+CompositeWrapper::CompositeWrapper(frw::Context& context, rpr_framebuffer frameBuffer)
+	: m_pContext(context.Handle())
+	, m_composite(context.Handle(), RPR_COMPOSITE_FRAMEBUFFER)
+{
+	m_composite.SetInputFb("framebuffer.input", frameBuffer);
+}
+
+CompositeWrapper::CompositeWrapper(frw::Context& context, float val)
+	: m_pContext(context.Handle())
+	, m_composite(context.Handle(), RPR_COMPOSITE_CONSTANT)
+{
+	m_composite.SetInput4f("constant.input", val, val, val, val);
+}
+
+CompositeWrapper::CompositeWrapper(frw::Context& context, float val, float val4)
+	: m_pContext(context.Handle())
+	, m_composite(context.Handle(), RPR_COMPOSITE_CONSTANT)
+{
+	m_composite.SetInput4f("constant.input", val, val, val, val4);
+}
+
+CompositeWrapper CompositeWrapper::operator+ (const CompositeWrapper& other)
+{
+	RprComposite summ(m_pContext, RPR_COMPOSITE_ARITHMETIC);
+	summ.SetInputC("arithmetic.color0", m_composite);
+	summ.SetInputC("arithmetic.color1", static_cast<RprComposite>(other.m_composite) );
+	summ.SetInputOp("arithmetic.op", RPR_MATERIAL_NODE_OP_ADD);
+
+	return CompositeWrapper(summ, m_pContext);
+}
+
+CompositeWrapper CompositeWrapper::operator- (const CompositeWrapper& other)
+{
+	RprComposite subt(m_pContext, RPR_COMPOSITE_ARITHMETIC); 
+	subt.SetInputC("arithmetic.color0", m_composite);
+	subt.SetInputC("arithmetic.color1", static_cast<RprComposite>(other.m_composite));
+	subt.SetInputOp("arithmetic.op", RPR_MATERIAL_NODE_OP_SUB);
+
+	return CompositeWrapper(subt, m_pContext);
+}
+
+CompositeWrapper CompositeWrapper::operator* (const CompositeWrapper& other)
+{
+	RprComposite mul(m_pContext, RPR_COMPOSITE_ARITHMETIC);
+	mul.SetInputC("arithmetic.color0", m_composite);
+	mul.SetInputC("arithmetic.color1", static_cast<RprComposite>(other.m_composite));
+	mul.SetInputOp("arithmetic.op", RPR_MATERIAL_NODE_OP_MUL);
+
+	return CompositeWrapper(mul, m_pContext);
+}
+
+CompositeWrapper CompositeWrapper::min (const CompositeWrapper& other)
+{
+	RprComposite mul(m_pContext, RPR_COMPOSITE_ARITHMETIC);
+	mul.SetInputC("arithmetic.color0", m_composite);
+	mul.SetInputC("arithmetic.color1", static_cast<RprComposite>(other.m_composite));
+	mul.SetInputOp("arithmetic.op", RPR_MATERIAL_NODE_OP_MIN);
+
+	return CompositeWrapper(mul, m_pContext);
+}
+
+rpr_int CompositeWrapper::Compute(frw::FrameBuffer& out)
+{
+	return rprCompositeCompute(m_composite, out.Handle());
+}
+
+// -----------------------------------------------------------------------------
+void FireRenderContext::compositeShadowCatcherOutput(const ReadFrameBufferRequestParams& params)
+{
+	RPR_THREAD_ONLY;
+
+	// get data from frame buffers
 	rpr_framebuffer frameBuffer = frameBufferAOV_Resolved(RPR_AOV_COLOR);
 	rpr_framebuffer opacityFrameBuffer = frameBufferAOV_Resolved(RPR_AOV_OPACITY);
 	rpr_framebuffer shadowCatcherFrameBuffer = frameBufferAOV_Resolved(RPR_AOV_SHADOW_CATCHER);
 	rpr_framebuffer backgroundFrameBuffer = frameBufferAOV_Resolved(RPR_AOV_BACKGROUND);
 
-	// Get data from the RPR frame buffer.
-	size_t dataSize;
-	rpr_int frstatus = rprFrameBufferGetInfo(frameBuffer, RPR_FRAMEBUFFER_DATA, 0, nullptr, &dataSize);
-	checkStatus(frstatus);
-
-	// Check that the reported frame buffer size
-	// in bytes matches the required dimensions.
-	assert(dataSize == (sizeof(RV_PIXEL) * pixelCount));
+	// begin composite logic
 
 	frw::Context context = GetContext();
+	/*
+	CompositeWrapper noAlpha(context, 1.0f, 0.0f);
+	CompositeWrapper color(context, frameBuffer);
+	CompositeWrapper opacity(context, opacityFrameBuffer);
+	
+	CompositeWrapper step1 = noAlpha * color * opacity;
+
+	CompositeWrapper step2 = ;*/
 
 	RprComposite noAlpha(context.Handle(), RPR_COMPOSITE_CONSTANT);
 	noAlpha.SetInput4f("constant.input", 1.0f, 1.0f, 1.0f, 0.0f);
@@ -2636,10 +2740,10 @@ void FireRenderContext::compositeShadowCatcherOutput(
 
 	// shadowTransp*(1-shadowColor)
 	RprComposite shadowColor(context.Handle(), RPR_COMPOSITE_CONSTANT);
-	shadowColor.SetInput4f("constant.input", 1.0f - scColor[0], 1.0f - scColor[1], 1.0f - scColor[2], 1.0f);
+	shadowColor.SetInput4f("constant.input", 1.0f - params.shadowColor[0], 1.0f - params.shadowColor[1], 1.0f - params.shadowColor[2], 1.0f);
 
 	RprComposite shadowTransp(context.Handle(), RPR_COMPOSITE_CONSTANT);
-	shadowTransp.SetInput4f("constant.input", 1.0f*weight - transparency, 1.0f*weight - transparency, 1.0f*weight - transparency, 1.0f*weight - transparency);
+	shadowTransp.SetInput4f("constant.input", 1.0f*params.shadowWeight - params.shadowTransp, 1.0f*params.shadowWeight - params.shadowTransp, 1.0f*params.shadowWeight - params.shadowTransp, 1.0f*params.shadowWeight - params.shadowTransp);
 
 	RprComposite shadowTranspColor(context.Handle(), RPR_COMPOSITE_ARITHMETIC);
 	shadowTranspColor.SetInputC("arithmetic.color0", shadowTransp);
@@ -2678,7 +2782,7 @@ void FireRenderContext::compositeShadowCatcherOutput(
 	// - step 31
 	// background * bgTransparency
 	RprComposite bgTransparency(context.Handle(), RPR_COMPOSITE_CONSTANT);
-	bgTransparency.SetInput4f("constant.input", 1.0f*bgWeight - bgTransp, 1.0f*bgWeight - bgTransp, 1.0f*bgWeight - bgTransp, 1.0f*bgWeight - bgTransp);
+	bgTransparency.SetInput4f("constant.input", 1.0f*params.bgWeight - params.bgTransparency, 1.0f*params.bgWeight - params.bgTransparency, 1.0f*params.bgWeight - params.bgTransparency, 1.0f*params.bgWeight - params.bgTransparency);
 
 	RprComposite step31(context.Handle(), RPR_COMPOSITE_ARITHMETIC);
 	step31.SetInputC("arithmetic.color0", compositeBackground1);
@@ -2687,7 +2791,7 @@ void FireRenderContext::compositeShadowCatcherOutput(
 
 	// - step 32
 	RprComposite backgroundColor(context.Handle(), RPR_COMPOSITE_CONSTANT);
-	backgroundColor.SetInput4f("constant.input", bgColor[0], bgColor[1], bgColor[2], 1.0f);
+	backgroundColor.SetInput4f("constant.input", params.bgColor[0], params.bgColor[1], params.bgColor[2], 1.0f);
 
 	RprComposite step32(context.Handle(), RPR_COMPOSITE_ARITHMETIC);
 	step32.SetInputC("arithmetic.color0", backgroundColor);
@@ -2708,31 +2812,27 @@ void FireRenderContext::compositeShadowCatcherOutput(
 	step4.SetInputOp("arithmetic.op", RPR_MATERIAL_NODE_OP_ADD);
 
 	rpr_framebuffer_format fmtOut = { 4, RPR_COMPONENT_TYPE_FLOAT32 };
-	frw::FrameBuffer frameBufferOut(context, width, height, fmtOut);
-	checkStatus(frstatus);
-	frstatus = rprCompositeCompute(step4, frameBufferOut.Handle());
+	frw::FrameBuffer frameBufferOut(context, params.width, params.height, fmtOut);
+	rpr_int frstatus = rprCompositeCompute(step4, frameBufferOut.Handle());
 	checkStatus(frstatus);
 
 #ifdef SHADOWCATCHERDEBUG
 	frstatus = rprFrameBufferSaveToFile(frameBufferOut, "C:/temp/step4.png");
 #endif
 
-	// Copy the frame buffer into temporary memory, if
-	// required, or directly into the supplied pixel buffer.
-	if (useTempData)
-		m_tempData.resize(pixelCount);
-	RV_PIXEL* data = useTempData ? m_tempData.get() : pixels;
-	frstatus = rprFrameBufferGetInfo(frameBufferOut.Handle(), RPR_FRAMEBUFFER_DATA, dataSize, &data[0], nullptr);
+	// Get data from the RPR frame buffer.
+	size_t dataSize;
+	frstatus = rprFrameBufferGetInfo(frameBuffer, RPR_FRAMEBUFFER_DATA, 0, nullptr, &dataSize);
 	checkStatus(frstatus);
 
-	if (useTempData)
-	{
-		copyPixels(pixels, data, width, height, region, flip);
-	}
+	// write result to output
+	doOutputFromComposites(params, dataSize, frameBufferOut);
 }
 
 // -----------------------------------------------------------------------------
 void FireRenderContext::compositeReflectionCatcherOutput(
+	const ReadFrameBufferRequestParams& params
+/*
 	RV_PIXEL* pixels, 
 	unsigned int width, 
 	unsigned int height, 
@@ -2741,15 +2841,10 @@ void FireRenderContext::compositeReflectionCatcherOutput(
 	const std::array<float, 3>& bgColor,
 	float bgTransp, 
 	float bgWeight,
-	float weight)
+	float weight*/
+)
 {
 	RPR_THREAD_ONLY;
-	// A temporary pixel buffer is required if the region is less
-	// than the full width and height, or the image should be flipped.
-	bool useTempData = flip || region.getWidth() < width || region.getHeight() < height;
-
-	// Find the number of pixels in the frame buffer.
-	int pixelCount = width * height;
 
 	rpr_framebuffer frameBufferColor = frameBufferAOV_Resolved(RPR_AOV_COLOR);
 	rpr_framebuffer opacityFrameBuffer = frameBufferAOV_Resolved(RPR_AOV_OPACITY);
@@ -2760,15 +2855,6 @@ void FireRenderContext::compositeReflectionCatcherOutput(
 	rprFrameBufferSaveToFile(reflectionCatcherFrameBuffer, "C:/temp/RC/rc_aov.png");
 	rprFrameBufferSaveToFile(frameBufferColor, "C:/temp/RC/color_aov.png");
 #endif
-
-	// Get data from the RPR frame buffer.
-	size_t dataSize;
-	rpr_int frstatus = rprFrameBufferGetInfo(frameBufferColor, RPR_FRAMEBUFFER_DATA, 0, nullptr, &dataSize);
-	checkStatus(frstatus);
-
-	// Check that the reported frame buffer size
-	// in bytes matches the required dimensions.
-	assert(dataSize == (sizeof(RV_PIXEL) * pixelCount));
 
 	frw::Context context = GetContext();
 
@@ -2872,7 +2958,7 @@ void FireRenderContext::compositeReflectionCatcherOutput(
 	// - step 31
 	// background * bgTransparency
 	RprComposite bgTransparency(context.Handle(), RPR_COMPOSITE_CONSTANT);
-	bgTransparency.SetInput4f("constant.input", 1.0f*bgWeight - bgTransp, 1.0f*bgWeight - bgTransp, 1.0f*bgWeight - bgTransp, 1.0f*bgWeight - bgTransp);
+	bgTransparency.SetInput4f("constant.input", 1.0f*params.bgWeight - params.bgTransparency, 1.0f*params.bgWeight - params.bgTransparency, 1.0f*params.bgWeight - params.bgTransparency, 1.0f*params.bgWeight - params.bgTransparency);
 
 	RprComposite step31(context.Handle(), RPR_COMPOSITE_ARITHMETIC);
 	step31.SetInputC("arithmetic.color0", compositeBackground1);
@@ -2881,7 +2967,7 @@ void FireRenderContext::compositeReflectionCatcherOutput(
 
 	// - step 32
 	RprComposite backgroundColor(context.Handle(), RPR_COMPOSITE_CONSTANT);
-	backgroundColor.SetInput4f("constant.input", bgColor[0], bgColor[1], bgColor[2], 1.0f);
+	backgroundColor.SetInput4f("constant.input", params.bgColor[0], params.bgColor[1], params.bgColor[2], 1.0f);
 
 	RprComposite step32(context.Handle(), RPR_COMPOSITE_ARITHMETIC);
 	step32.SetInputC("arithmetic.color0", backgroundColor);
@@ -2919,30 +3005,26 @@ void FireRenderContext::compositeReflectionCatcherOutput(
 	step4.SetInputOp("arithmetic.op", RPR_MATERIAL_NODE_OP_ADD);
 
 	rpr_framebuffer_format fmtOut = { 4, RPR_COMPONENT_TYPE_FLOAT32 };
-	frw::FrameBuffer frameBufferOut (context, width, height, fmtOut);
-	checkStatus(frstatus);
-	frstatus = rprCompositeCompute(step4, frameBufferOut.Handle());
+	frw::FrameBuffer frameBufferOut (context, params.width, params.height, fmtOut);
+	rpr_int frstatus = rprCompositeCompute(step4, frameBufferOut.Handle());
 	checkStatus(frstatus);
 
 #ifdef REFLECTIONCATCHERDEBUG
 	frstatus = rprFrameBufferSaveToFile(frameBufferOut, "C:/temp/RC/step4.png");
 #endif
 
-	// Copy the frame buffer into temporary memory, if
-	// required, or directly into the supplied pixel buffer.
-	if (useTempData)
-		m_tempData.resize(pixelCount);
-	RV_PIXEL* data = useTempData ? m_tempData.get() : pixels;
-	frstatus = rprFrameBufferGetInfo(frameBufferOut.Handle(), RPR_FRAMEBUFFER_DATA, dataSize, &data[0], nullptr);
+	// Get data from the RPR frame buffer.
+	size_t dataSize;
+	frstatus = rprFrameBufferGetInfo(frameBufferColor, RPR_FRAMEBUFFER_DATA, 0, nullptr, &dataSize);
 	checkStatus(frstatus);
 
-	if (useTempData)
-	{
-		copyPixels(pixels, data, width, height, region, flip);
-	}
+	// write result to output
+	doOutputFromComposites(params, dataSize, frameBufferOut);
 }
 
 void FireRenderContext::compositeReflectionShadowCatcherOutput(
+	const ReadFrameBufferRequestParams& params
+/*
 	RV_PIXEL* pixels, 
 	unsigned int width, 
 	unsigned int height, 
@@ -2953,11 +3035,14 @@ void FireRenderContext::compositeReflectionShadowCatcherOutput(
 	float transparency, 
 	float bgTransp, 
 	float bgWeight,
-	float weight)
+	float weight*/
+)
 {
 	RPR_THREAD_ONLY;
+	return;
 	// A temporary pixel buffer is required if the region is less
 	// than the full width and height, or the image should be flipped.
+	/*
 	bool useTempData = flip || region.getWidth() < width || region.getHeight() < height;
 
 	// Find the number of pixels in the frame buffer.
@@ -2990,9 +3075,10 @@ void FireRenderContext::compositeReflectionShadowCatcherOutput(
 	compositeOpacityNoAlpha.SetInputC("arithmetic.color0", noAlpha);
 	compositeOpacityNoAlpha.SetInputC("arithmetic.color1", compositeOpacity1);
 	compositeOpacityNoAlpha.SetInputOp("arithmetic.op", RPR_MATERIAL_NODE_OP_MUL);
-
+	*/
 	/* background * (1-min(alpha+sc, 1)) + color*(alpha+rc) */
 	// color * (alpha+rc)
+	/*
 	RprComposite compositeRC(context.Handle(), RPR_COMPOSITE_FRAMEBUFFER);
 	compositeRC.SetInputFb("framebuffer.input", reflectionCatcherFrameBuffer);
 
@@ -3134,6 +3220,7 @@ void FireRenderContext::compositeReflectionShadowCatcherOutput(
 	{
 		copyPixels(pixels, data, width, height, region, flip);
 	}
+	*/
 }
 
 RenderType FireRenderContext::GetRenderType() const
