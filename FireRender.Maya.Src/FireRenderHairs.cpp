@@ -302,12 +302,12 @@ void ProcessHairWidth(
 	{
 		// bottom circle
 		rpr_uint controlPointIdx = curveIndicesData[idx * PointsPerSegment];
-		float radius = width[controlPointIdx] * 0.5f;
+		float radius = (float)width[controlPointIdx] * 0.5f;
 		outRadiuses.push_back(radius);
 
 		// top circle
 		controlPointIdx = curveIndicesData[idx * PointsPerSegment + (PointsPerSegment - 1)];
-		radius = width[controlPointIdx] * 0.5f;
+		radius = (float)width[controlPointIdx] * 0.5f;
 		outRadiuses.push_back(radius);
 	}
 }
@@ -747,12 +747,12 @@ frw::Curve ProcessCurvesBatch(MRenderLineArray& mainLines, frw::Context currCont
 		currStrandVertexCount = lineVtxs.length();
 
 		// Copy points
-		for (int vtxIdx = 0; vtxIdx < lineVtxs.length(); ++vtxIdx)
+		for (unsigned int vtxIdx = 0; vtxIdx < lineVtxs.length(); ++vtxIdx)
 		{
 			MVector& tVect = lineVtxs[vtxIdx];
-			vertices.push_back(tVect.x);
-			vertices.push_back(tVect.y);
-			vertices.push_back(tVect.z);
+			vertices.push_back((float)tVect.x);
+			vertices.push_back((float)tVect.y);
+			vertices.push_back((float)tVect.z);
 		}
 
 		// Write indices
@@ -778,7 +778,7 @@ frw::Curve ProcessCurvesBatch(MRenderLineArray& mainLines, frw::Context currCont
 		MDoubleArray parameter = renderLine.getParameter();
 		for (unsigned int idx = 0; idx < parameter.length(); ++idx)
 		{
-			float param = parameter[idx];
+			float param = (float)parameter[idx];
 			batchData.m_uvCoord.push_back(param);
 			batchData.m_uvCoord.push_back(param);
 		}
