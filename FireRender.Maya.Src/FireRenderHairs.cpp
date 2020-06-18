@@ -876,3 +876,20 @@ void FireRenderHair::RegisterCallbacks()
 		AddCallback(MNodeMessage::addNodeDirtyCallback(surfaceShader, HairShaderDirtyCallback, this));
 	}
 }
+
+void FireRenderHairNHair::RegisterCallbacks()
+{
+	FireRenderNode::RegisterCallbacks();
+
+	if (m_Curves.empty())
+		return;
+
+	MObject node = Object();
+	MDagPath path = MDagPath::getAPathTo(node);
+
+	MObject shader = TryFindUber(path);
+	if (shader.isNull())
+		return;
+
+	AddCallback(MNodeMessage::addNodeDirtyCallback(shader, HairShaderDirtyCallback, this));
+}
