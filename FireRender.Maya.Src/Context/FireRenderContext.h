@@ -283,20 +283,10 @@ public:
 
 	void CombineOpacity(ReadFrameBufferRequestParams& params);
 
-	// Composite image for Shadow Catcher
-	void compositeShadowCatcherOutput(const ReadFrameBufferRequestParams& params);
-	//void compositeShadowCatcherOutput(RV_PIXEL* pixels, unsigned int width, unsigned int height, const RenderRegion& region,
-	//	bool flip, const std::array<float, 3>& color, const std::array<float, 3>& bgColor, float transparency, float bgTransp, float bgWeight, float weight);
-
-	// Composite image for Reflection Catcher
-	//void compositeReflectionCatcherOutput(RV_PIXEL* pixels, unsigned int width, unsigned int height, const RenderRegion& region,
-	//	bool flip, const std::array<float, 3>& bgColor, float bgTransp, float bgWeight, float weight);
-	void compositeReflectionCatcherOutput(const ReadFrameBufferRequestParams& params);
-
-	// Composite image for Shadow+Reflection Catcher
-	//void compositeReflectionShadowCatcherOutput(RV_PIXEL* pixels, unsigned int width, unsigned int height, const RenderRegion& region,
-	//	bool flip, const std::array<float, 3>& color, const std::array<float, 3>& bgColor, float transparency, float bgTransp, float bgWeight, float weight);
-	void compositeReflectionShadowCatcherOutput(const ReadFrameBufferRequestParams& params);
+	// Composite image for Shadow Catcher, Reflection Catcher and Shadow+Reflection Catcher
+	virtual void compositeShadowCatcherOutput(const ReadFrameBufferRequestParams& params);
+	virtual void compositeReflectionCatcherOutput(const ReadFrameBufferRequestParams& params);
+	virtual void compositeReflectionShadowCatcherOutput(const ReadFrameBufferRequestParams& params);
 
 	// Copy the frame buffer into temporary memory, if
 	// required, or directly into the supplied pixel buffer.
