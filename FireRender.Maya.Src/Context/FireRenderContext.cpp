@@ -43,6 +43,8 @@ limitations under the License.
 
 #include "FireRenderThread.h"
 #include "FireRenderMaterialSwatchRender.h"
+#include "CompositeWrapper.h"
+#include "CompositeWrapper.hpp"
 
 #ifdef OPTIMIZATION_CLOCK
 	#include <chrono>
@@ -2646,7 +2648,7 @@ void FireRenderContext::compositeShadowCatcherOutput(const ReadFrameBufferReques
 
 	// inputs
 	frw::Context context = GetContext();
-	CompositeWrapper noAlpha(context, 1.0f, 0.0f);
+	CompositeWrapper noAlpha(context, 1.0f, 0.0f); // Input Wrapper
 	CompositeWrapper color(context, colorFrameBuffer);
 	CompositeWrapper opacity(context, opacityFrameBuffer);
 	CompositeWrapper shadowCatcher(context, shadowCatcherFrameBuffer);
