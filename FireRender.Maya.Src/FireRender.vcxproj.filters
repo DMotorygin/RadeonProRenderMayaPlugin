@@ -1135,6 +1135,12 @@
     <ClInclude Include="Lights\FireRenderLightCommon.h">
       <Filter>Lights</Filter>
     </ClInclude>
+    <ClInclude Include="CompositeWrapper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CompositeWrapper.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="scripts\registerFireRender.mel">
