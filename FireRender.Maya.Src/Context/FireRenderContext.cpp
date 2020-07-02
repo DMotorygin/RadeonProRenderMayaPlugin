@@ -92,7 +92,7 @@ FireRenderContext::FireRenderContext() :
 	m_viewportMotionBlur(false),
 	m_motionBlurCameraExposure(0.0f),
 	m_cameraAttributeChanged(false),
-	m_startTime(0),
+	m_renderStartTime(0),
 	m_samplesPerUpdate(1),
 	m_secondsSpentOnLastRender(0.0),
 	m_lastRenderResultState(NOT_SET),
@@ -100,8 +100,6 @@ FireRenderContext::FireRenderContext() :
 	m_currentIteration(0),
 	m_currentFrame(0),
 	m_progress(0),
-	m_lastIterationTime(0),
-	m_timeIntervalForOutputUpdate(0.1),
 	m_interactive(false),
 	m_camera(this, MDagPath()),
 	m_glInteropActive(false),
@@ -121,7 +119,8 @@ FireRenderContext::FireRenderContext() :
 {
 	DebugPrint("FireRenderContext::FireRenderContext()");
 
-	state = StateUpdating;
+	m_workStartTime = clock();
+	m_state = StateUpdating;
 	m_dirty = false;
 }
 
@@ -297,7 +296,7 @@ void FireRenderContext::updateLimitsFromGlobalData(const FireRenderGlobalsData &
 	setCompletionCriteria(params);
 }
 
-bool FireRenderContext::buildScene(bool isViewport, bool glViewport, bool freshen, BuildSceneProgressCallback progressCallback)
+bool FireRenderContext::buildScene(bool isViewport, bool glViewport, bool freshen)
 {
 	MAIN_THREAD_ONLY;
 	DebugPrint("FireRenderContext::buildScene()");
@@ -400,7 +399,7 @@ bool FireRenderContext::buildScene(bool isViewport, bool glViewport, bool freshe
 	}
 
 	if(freshen)
-		Freshen(true, [] { return false; }, progressCallback);
+		Freshen(true, [] { return false; });
 
 	return true;
 }
@@ -870,6 +869,12 @@ void FireRenderContext::initSwatchScene()
 	setPreview();
 }
 
+long TimeDiff(time_t currTime, time_t startTime)
+{
+	return (long)((currTime - startTime) * 1000 / CLOCKS_PER_SEC);
+}
+
+
 void FireRenderContext::render(bool lock)
 {
 	RPR_THREAD_ONLY;
@@ -903,7 +908,7 @@ void FireRenderContext::render(bool lock)
 		}
 
 		m_restartRender = false;
-		m_startTime = clock();
+		m_renderStartTime = clock();
 		m_currentIteration = 0;
 		m_currentFrame = 0;
 	}
@@ -922,6 +927,15 @@ void FireRenderContext::render(bool lock)
 
 	context.SetParameter(RPR_CONTEXT_ITERATIONS, iterationStep);
 	context.SetParameter(RPR_CONTEXT_FRAMECOUNT, m_currentFrame);
+
+	ContextWorkProgressData progressData;
+
+	progressData.currentIndex = m_currentIteration;
+	progressData.totalCount = m_completionCriteriaParams.completionCriteriaMaxIterations;
+	progressData.currentTimeInMiliseconds = TimeDiff(clock(), m_workStartTime);
+	progressData.progressType = ProgressType::RenderPassStarted;
+
+	TriggerProgressCallback(progressData);
 
 	if (m_useRegion)
 		context.RenderTile(m_region.left, m_region.right+1, m_height - m_region.top - 1, m_height - m_region.bottom);
@@ -2246,7 +2260,26 @@ HashValue FireRenderContext::GetStateHash()
 	return hash;
 }
 
-bool FireRenderContext::Freshen(bool lock, std::function<bool()> cancelled, BuildSceneProgressCallback progressCallback)
+void FireRenderContext::UpdateTimeAndTriggerProgressCallback(ContextWorkProgressData& syncProgressData, ProgressType progressType)
+{
+	if (progressType != ContextWorkProgressData::ProgressType::Unknown)
+	{
+		syncProgressData.progressType = progressType;
+	}
+
+	syncProgressData.currentTimeInMiliseconds = TimeDiff(clock(), m_workStartTime);
+	TriggerProgressCallback(syncProgressData);
+}
+
+void FireRenderContext::TriggerProgressCallback(const ContextWorkProgressData& syncProgressData)
+{
+	if (m_WorkProgressCallback)
+	{
+		m_WorkProgressCallback(syncProgressData);
+	}
+}
+
+bool FireRenderContext::Freshen(bool lock, std::function<bool()> cancelled)
 {
 	MAIN_THREAD_ONLY;
 
@@ -2286,25 +2319,17 @@ bool FireRenderContext::Freshen(bool lock, std::function<bool()> cancelled, Buil
 		changed = true;
 	}
 
-#ifdef OPTIMIZATION_CLOCK
-	int overallFreshen = 0;
-	timeInInnerAddPolygon = 0;
-	overallAddPolygon = 0;
-	overallCreateMeshEx = 0;
-	timeGetDataFromMaya = 0;
-	translateData = 0;
-	inTranslateMesh = 0;
-	inGetFaceMaterials = 0;
-	getTessellatedObj = 0;
-	deleteNodes = 0;
-
-	auto start = std::chrono::steady_clock::now();
-#endif
 	size_t dirtyObjectsSize = m_dirtyObjects.size();
-	size_t currentIndex = 0;
+
+	ContextWorkProgressData syncProgressData;
+	syncProgressData.totalCount = dirtyObjectsSize;
+	time_t syncStartTime = clock();
+
+	UpdateTimeAndTriggerProgressCallback(syncProgressData, ProgressType::SyncStarted);
+
 	for (auto it = m_dirtyObjects.begin(); it != m_dirtyObjects.end(); )
 	{
-		if ((state != FireRenderContext::StateRendering) && (state != FireRenderContext::StateUpdating))
+		if ((m_state != FireRenderContext::StateRendering) && (m_state != FireRenderContext::StateUpdating))
 			break;
 
 		// Request the object with removal it from the dirty list. Use mutex to prevent list's modifications.
@@ -2319,28 +2344,14 @@ bool FireRenderContext::Freshen(bool lock, std::function<bool()> cancelled, Buil
 		// Now perform update
 		if (ptr)
 		{
-#ifdef OPTIMIZATION_CLOCK
-			auto start_iter = std::chrono::steady_clock::now();
-#endif
-
+			changed = true;
 			DebugPrint("Freshing object");
 
+			UpdateTimeAndTriggerProgressCallback(syncProgressData, ProgressType::ObjectPreSync);
 			ptr->Freshen();
-			changed = true;
 
-			currentIndex++;
-
-			if (progressCallback)
-			{
-				progressCallback((int)(100 * currentIndex / dirtyObjectsSize));
-			}
-
-#ifdef OPTIMIZATION_CLOCK
-			auto end_iter = std::chrono::steady_clock::now();
-			auto elapsed_iter = std::chrono::duration_cast<std::chrono::milliseconds>(end_iter - start_iter);
-			int ms_iter = elapsed_iter.count();
-			overallFreshen += ms_iter;
-#endif
+			syncProgressData.currentIndex++;
+			UpdateTimeAndTriggerProgressCallback(syncProgressData, ProgressType::ObjectSyncComplete);
 
 			if (cancelled())
 			{
@@ -2353,12 +2364,8 @@ bool FireRenderContext::Freshen(bool lock, std::function<bool()> cancelled, Buil
 		}
 	}
 
-#ifdef OPTIMIZATION_CLOCK
-	auto end = std::chrono::steady_clock::now();
-	auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-	int ms = elapsed.count();
-	LogPrint("time spent in Freshen = %d ms", overallFreshen);
-#endif
+	syncProgressData.elapsed = TimeDiff(clock(), syncStartTime);
+	UpdateTimeAndTriggerProgressCallback(syncProgressData, ProgressType::SyncComplete);
 
 	if (changed)
 	{
@@ -2378,25 +2385,29 @@ bool FireRenderContext::Freshen(bool lock, std::function<bool()> cancelled, Buil
 	auto hash = GetStateHash();
 	DebugPrint("Hash Value: %08X", int(hash));
 
-#ifdef OPTIMIZATION_CLOCK
-	auto total_end = std::chrono::steady_clock::now();
-	LogPrint("time spent in after CommitShaders till end = %d ms", std::chrono::duration_cast<std::chrono::milliseconds>(total_end - after_commit_shd));
-	LogPrint("Elapsed time in Translate Mesh: %d ms", inTranslateMesh);
-	LogPrint("Elapsed time in AddPolygon: %d ms", overallAddPolygon);
-	LogPrint("Elapsed time in CreateMeshEx: %d ms", overallCreateMeshEx);
-	LogPrint("Elapsed time in timeGetDataFromMaya: %llu nanoS", timeGetDataFromMaya);
-	LogPrint("Elapsed time in innerAddPolygon: %d microS", timeInInnerAddPolygon);
-	LogPrint("Elapsed time in translateData: %llu nanoS", translateData);
-	LogPrint("Elapsed time in inGetFaceMaterials: %d microS", inGetFaceMaterials);
-	LogPrint("Elapsed time in getTessellatedObj: %d microS", getTessellatedObj);
-	LogPrint("Elapsed time in deleteNodes: %d microS", deleteNodes);
-#endif
-
 	m_inRefresh = false;
 
 	m_needRedraw = true;
 
 	return true;
+}
+
+void FireRenderContext::SetState(StateEnum newState)
+{
+	if (m_state == newState)
+	{
+		return;
+	}
+
+	m_state = newState;
+
+	if (m_state == StateEnum::StateExiting)
+	{
+		ContextWorkProgressData data;
+		data.elapsed = TimeDiff(clock(), m_renderStartTime);
+
+		UpdateTimeAndTriggerProgressCallback(data, ProgressType::RenderComplete);
+	}
 }
 
 bool FireRenderContext::setUseRegion(bool value)
@@ -2471,7 +2482,7 @@ bool FireRenderContext::isUnlimited()
 
 void FireRenderContext::setStartedRendering()
 {
-	m_startTime = clock();
+	m_renderStartTime = clock();
 	m_currentIteration = 0;
 }
 
@@ -2497,7 +2508,7 @@ bool FireRenderContext::keepRenderRunning()
 	}
 
 	// check time limit completion criteria
-	long numberOfClicks = clock() - m_startTime;
+	long numberOfClicks = clock() - m_renderStartTime;
 	double secondsSpentRendering = numberOfClicks / (double)CLOCKS_PER_SEC;
 
 	return secondsSpentRendering < m_completionCriteriaParams.getTotalSecondsCount();
@@ -2520,7 +2531,7 @@ bool FireRenderContext::isFirstIterationAndShadersNOTCached()
 
 void FireRenderContext::updateProgress()
 {
-	long numberOfClocks = clock() - m_startTime;
+	long numberOfClocks = clock() - m_renderStartTime;
 	double secondsSpentRendering = numberOfClocks / (double)CLOCKS_PER_SEC;
 
 	m_secondsSpentOnLastRender = secondsSpentRendering;
@@ -2549,19 +2560,6 @@ int FireRenderContext::getProgress()
 void FireRenderContext::setProgress(int percents)
 {
 	m_progress = std::min(percents, 100);
-}
-
-bool FireRenderContext::updateOutput()
-{
-	long numberOfClicks = clock() - m_lastIterationTime;
-	double secondsSpentRendering = numberOfClicks / (double)CLOCKS_PER_SEC;
-	if (m_timeIntervalForOutputUpdate < secondsSpentRendering) {
-		m_lastIterationTime = clock();
-		return true;
-	}
-	else {
-		return false;
-	}
 }
 
 
