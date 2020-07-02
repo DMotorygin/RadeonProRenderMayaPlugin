@@ -13,7 +13,7 @@ limitations under the License.
 #pragma once
 #include "RadeonProRender.h"
 #include "frWrap.h"
-#include "RifComposite.h"
+#include "RprComposite.h"
 #include "ImageFilter.h"
 
 class CompositeWrapper

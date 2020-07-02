@@ -99,5 +99,5 @@ void RprComposite::SetInputOp(const char *inputName, rpr_material_node_arithmeti
 void RprComposite::SaveDependency(const std::shared_ptr<RprComposite>& fromTemporary)
 {
 	m_dependencies.emplace_back();
-	m_dependencies.back() = fromTemporary; // std::move(const_cast<std::unique_ptr<RprComposite>&>(fromTemporary));
+	m_dependencies.back() = fromTemporary;
 }
