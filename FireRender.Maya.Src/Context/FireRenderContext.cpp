@@ -44,7 +44,6 @@ limitations under the License.
 #include "FireRenderThread.h"
 #include "FireRenderMaterialSwatchRender.h"
 #include "CompositeWrapper.h"
-#include "CompositeWrapper.hpp"
 
 #ifdef OPTIMIZATION_CLOCK
 	#include <chrono>
