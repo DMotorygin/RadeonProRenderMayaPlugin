@@ -241,6 +241,16 @@ void FireRenderIBL::postConstructor()
 	MObject mobj = thisMObject();
 	m_attributeChangedCallback = MNodeMessage::addAttributeChangedCallback(mobj, FireRenderIBL::onAttributeChanged, this, &status);
 	assert(status == MStatus::kSuccess);
+
+	// rename node
+	MFnDependencyNode nodeFn(thisMObject());
+	nodeFn.setName("RPRIBLShape");
+
+	MFnDagNode dagNode(thisMObject());
+	MObject parent = dagNode.parent(0, &status);
+
+	MFnDependencyNode parentFn(parent);
+	parentFn.setName("RPRIBL");
 }
 
 const char* frIblVS =

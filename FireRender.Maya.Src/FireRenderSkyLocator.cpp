@@ -255,6 +255,16 @@ void FireRenderSkyLocator::postConstructor()
 	MObject mobj = thisMObject();
 	m_attributeChangedCallback = MNodeMessage::addAttributeChangedCallback(mobj, FireRenderSkyLocator::onAttributeChanged, this, &status);
 	assert(status == MStatus::kSuccess);
+
+	// rename
+	MFnDependencyNode nodeFn(thisMObject());
+	nodeFn.setName("RPRSkyShape");
+
+	MFnDagNode dagNode(thisMObject());
+	MObject parent = dagNode.parent(0, &status);
+
+	MFnDependencyNode parentFn(parent);
+	parentFn.setName("RPRSky");
 }
 
 void FireRenderSkyLocator::onAttributeChanged(MNodeMessage::AttributeMessage msg, MPlug &plug, MPlug &otherPlug, void *clientData)
