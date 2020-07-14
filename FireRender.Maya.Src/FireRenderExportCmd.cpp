@@ -33,8 +33,6 @@ limitations under the License.
 #include <fstream>
 #include <regex>
 
-#include <json.hpp>
-
 #ifdef __linux__
 	#include <../RprLoadStore.h>
 #else
@@ -72,7 +70,7 @@ MSyntax FireRenderExportCmd::newSyntax()
 	return syntax;
 }
 
-bool SaveExportConfig(std::string filePath, const TahoeContext& ctx, std::string fileName)
+bool SaveExportConfig(std::string filePath, TahoeContext& ctx, std::string fileName)
 {
 	// get directory path and name of generated files
 	std::string directory = filePath;
@@ -84,6 +82,8 @@ bool SaveExportConfig(std::string filePath, const TahoeContext& ctx, std::string
 	fileName.erase(0, directory.length() + 1);
 	directory += "/config.json";
 	std::ofstream json(directory);
+	if (!json)
+		return false;
 
 	json << "{" << std::endl;
 
@@ -112,40 +112,44 @@ bool SaveExportConfig(std::string filePath, const TahoeContext& ctx, std::string
 	{
 		 {RPR_AOV_COLOR, "color"}
 		,{RPR_AOV_OPACITY, "opacity" }
-		,{RPR_AOV_WORLD_COORDINATE, "world_coordinate" }
+		,{RPR_AOV_WORLD_COORDINATE, "world.coordinate" }
 		,{RPR_AOV_UV, "uv" }
-		,{RPR_AOV_MATERIAL_IDX, "material_idx" }
-		,{RPR_AOV_GEOMETRIC_NORMAL, "geometric_normal" }
-		,{RPR_AOV_SHADING_NORMAL, "shading_normal" }
+		,{RPR_AOV_MATERIAL_IDX, "material.id" }
+		,{RPR_AOV_GEOMETRIC_NORMAL, "normal.geom" }
+		,{RPR_AOV_SHADING_NORMAL, "normal" }
 		,{RPR_AOV_DEPTH, "depth" }
-		,{RPR_AOV_OBJECT_ID, "object_id" }
-		,{RPR_AOV_OBJECT_GROUP_ID, "object_group_id" }
-		,{RPR_AOV_SHADOW_CATCHER, "shadow_catcher" }
+		,{RPR_AOV_OBJECT_ID, "object.id" }
+		,{RPR_AOV_OBJECT_GROUP_ID, "group.id" }
+		,{RPR_AOV_SHADOW_CATCHER, "shadow.catcher" }
 		,{RPR_AOV_BACKGROUND, "background" }
 		,{RPR_AOV_EMISSION, "emission" }
 		,{RPR_AOV_VELOCITY, "velocity" }
-		,{RPR_AOV_DIRECT_ILLUMINATION, "direct_illumination" }
-		,{RPR_AOV_INDIRECT_ILLUMINATION, "indirect_illumination"}
+		,{RPR_AOV_DIRECT_ILLUMINATION, "direct.illumination" }
+		,{RPR_AOV_INDIRECT_ILLUMINATION, "indirect.illumination"}
 		,{RPR_AOV_AO, "ao" }
-		,{RPR_AOV_DIRECT_DIFFUSE, "direct_diffuse" }
-		,{RPR_AOV_DIRECT_REFLECT, "direct_reflect" }
-		,{RPR_AOV_INDIRECT_DIFFUSE, "indirect_diffuse" }
-		,{RPR_AOV_INDIRECT_REFLECT, "indirect_reflect" }
+		,{RPR_AOV_DIRECT_DIFFUSE, "direct.diffuse" }
+		,{RPR_AOV_DIRECT_REFLECT, "direct.reflect" }
+		,{RPR_AOV_INDIRECT_DIFFUSE, "indirect.diffuse" }
+		,{RPR_AOV_INDIRECT_REFLECT, "indirect.reflect" }
 		,{RPR_AOV_REFRACT, "refract" }
 		,{RPR_AOV_VOLUME, "volume" }
 		,{RPR_AOV_LIGHT_GROUP0, "light_group0" }
 		,{RPR_AOV_LIGHT_GROUP1, "light_group1" }
 		,{RPR_AOV_LIGHT_GROUP2, "light_group2" }
 		,{RPR_AOV_LIGHT_GROUP3, "light_group3" }
-		,{RPR_AOV_DIFFUSE_ALBEDO, "diffuse_albedo" }
+		,{RPR_AOV_DIFFUSE_ALBEDO, "albedo.diffuse" }
 		,{RPR_AOV_VARIANCE, "variance" }
-		,{RPR_AOV_VIEW_SHADING_NORMAL, "view_shading_normal" }
-		,{RPR_AOV_REFLECTION_CATCHER, "reflection_catcher" }
+		,{RPR_AOV_VIEW_SHADING_NORMAL, "normal.view" }
+		,{RPR_AOV_REFLECTION_CATCHER, "reflection.catcher" }
 		,{RPR_AOV_MAX, "RPR_AOV_MAX" }
 	};
 
+	FireRenderGlobalsData globals;
+	globals.readFromCurrentScene();
+	FireRenderAOVs& aovsGlobal = globals.aovs;
+	aovsGlobal.applyToContext(ctx);
+
 	std::vector<std::string> aovs;
-	aovs.push_back(aov2name[RPR_AOV_COLOR]);
 	for (auto aov = RPR_AOV_OPACITY; aov != RPR_AOV_MAX; aov++)
 	{
 		auto it = aov2name.find(aov);
@@ -158,17 +162,23 @@ bool SaveExportConfig(std::string filePath, const TahoeContext& ctx, std::string
 		aovs.push_back(it->second);
 	}
 
-	// rpr export returns critical error with this field, but it should be working in the future
-	/*json << "\"aovs\" : {\n";
-	for (auto& tmp : aovs)
+	// aovs
+	auto aov = aovs.begin();
+	if (aov != aovs.end())
 	{
-		json << "\"" << tmp << "\",\n";
+		json << "\"aovs\" : {\n";
+		json << "\"" << *aov << "\":\"" << (*aov + ".png") << "\"";
+		++aov;
+
+		for (; aov != aovs.end(); ++aov)
+		{
+			json << ",\n" << "\"" << *aov << "\":\"" << (*aov + ".png") << "\"";
+		}
+		json << "\n}," << std::endl;
 	}
-	json << "}" << std::endl;*/
 
 	// - devices
 	std::vector<std::pair<std::string, int>> context;
-	std::vector<bool> gpusUsed;
 	MIntArray devicesUsing;
 	MGlobal::executeCommand("optionVar -q RPR_DevicesSelected", devicesUsing);
 	std::vector<HardwareResources::Device> allDevices = HardwareResources::GetAllDevices();
@@ -442,6 +452,10 @@ MStatus FireRenderExportCmd::doIt(const MArgList & args)
 
 			// save config
 			bool res = SaveExportConfig(filePath.asChar(), context, fileName.asChar());
+			if (!res)
+			{
+				MGlobal::displayError("Unable to export render config!\n");
+			}
 
 			if (statusExport != RPR_SUCCESS)
 			{
