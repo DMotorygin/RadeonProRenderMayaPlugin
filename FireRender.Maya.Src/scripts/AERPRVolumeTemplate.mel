@@ -162,18 +162,14 @@ global proc albedoGridSelectReplace( string $attrName, string $listAttrName )
 
 	string $listAllItems[];
 	$listAllItems = `textScrollList -q -allItems albedoGridList`;
-	$found = 0;
+	
 	for ($tmp in $listAllItems)
 	{
 		if ($tmp == $selectedValue)
 		{
-			$found = 1;
+			textScrollList -e -selectItem $selectedValue albedoGridList;
+			break;
 		}
-	}
-	
-	if($found)
-	{
-		textScrollList -e -selectItem $selectedValue albedoGridList;
 	}
 }
 
@@ -222,18 +218,14 @@ global proc densityGridSelectReplace( string $attrName, string $listAttrName )
 
 	string $listAllItems[];
 	$listAllItems = `textScrollList -q -allItems densityGridList`;
-	$found = 0;
+	
 	for ($tmp in $listAllItems)
 	{
 		if ($tmp == $selectedValue)
 		{
-			$found = 1;
+			textScrollList -e -selectItem $selectedValue densityGridList;
+			break;
 		}
-	}
-	
-	if($found)
-	{
-		textScrollList -e -selectItem $selectedValue densityGridList;
 	}
 
 	// without selected density grid volume will not render (and will not give any warnings!), thus this safety routine is added
@@ -290,18 +282,13 @@ global proc emissionGridSelectReplace( string $attrName, string $listAttrName )
 
 	string $listAllItems[];
 	$listAllItems = `textScrollList -q -allItems emissionGridList`;
-	$found = 0;
 	for ($tmp in $listAllItems)
 	{
 		if ($tmp == $selectedValue)
 		{
-			$found = 1;
+			textScrollList -e -selectItem $selectedValue emissionGridList;
+			break;
 		}
-	}
-	
-	if($found)
-	{
-		textScrollList -e -selectItem $selectedValue emissionGridList;
 	}
 }
 
