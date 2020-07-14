@@ -262,6 +262,7 @@ void FireRenderSkyLocator::postConstructor()
 
 	MFnDagNode dagNode(thisMObject());
 	MObject parent = dagNode.parent(0, &status);
+	CHECK_MSTATUS(status);
 
 	MFnDependencyNode parentFn(parent);
 	parentFn.setName("RPRSky");

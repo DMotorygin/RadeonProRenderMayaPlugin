@@ -24,7 +24,7 @@ public:
 	virtual ~FireRenderLightCommon();
 
 	virtual void postConstructor() override;
-	virtual bool  excludeAsLocator() const override;
+	virtual bool excludeAsLocator() const override;
 
 	MSelectionMask getShapeSelectionMask(void) const override;
 
