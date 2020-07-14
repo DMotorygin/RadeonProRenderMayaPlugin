@@ -414,7 +414,7 @@ bool TahoeContext::IsDisplacementSupported() const
 
 bool TahoeContext::IsHairSupported() const
 {
-	return m_PluginVersion == TahoePluginVersion::RPR1;
+	return true; // hair is now supported in RPR 2.0;
 }
 
 bool TahoeContext::IsVolumeSupported() const
