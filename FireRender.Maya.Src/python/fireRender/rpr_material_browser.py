@@ -61,7 +61,7 @@ class RPRMaterialBrowser(object) :
         # Get the material library path and
         # ensure that it's formatted correctly.5
         libraryPath = self.getLibraryPath()
-        print("ML Log: library path = %" + libraryPath)		
+        print("ML Log: library path = " + libraryPath)		
 		
         self.libraryPath = libraryPath.replace("\\", "/").rstrip("/")
 
