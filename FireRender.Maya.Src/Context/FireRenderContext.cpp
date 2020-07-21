@@ -44,6 +44,7 @@ limitations under the License.
 #include "FireRenderThread.h"
 #include "FireRenderMaterialSwatchRender.h"
 #include "CompositeWrapper.h"
+#include "FireRenderGPUCache.h"
 
 #ifdef OPTIMIZATION_CLOCK
 	#include <chrono>
@@ -2168,14 +2169,22 @@ bool FireRenderContext::AddSceneObject(const MDagPath& dagPath)
 		{
 			ob = CreateSceneObject<FireRenderNode, NodeCachingOptions::AddPath>(dagPath);
 		}
+		else if (dagNode.typeName() == "gpuCache")
+		{
+			ob = CreateSceneObject<FireRenderGPUCache, NodeCachingOptions::AddPath>(dagPath);
+		}
 		else
 		{
+			std::string typeName = dagNode.typeName().asUTF8();
+			std::string nodeName = dagNode.name().asUTF8();
 			DebugPrint("Ignoring %s: %s", dagNode.typeName().asUTF8(), dagNode.name().asUTF8());
 		}
 	}
 	else
 	{
 		MFnDependencyNode depNode(node);
+		std::string typeName = depNode.typeName().asUTF8();
+		std::string nodeName = depNode.name().asUTF8();
 		DebugPrint("Ignoring %s: %s", depNode.typeName().asUTF8(), depNode.name().asUTF8());
 	}
 

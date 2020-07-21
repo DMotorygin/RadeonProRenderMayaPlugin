@@ -148,6 +148,7 @@
     <ClCompile Include="..\RadeonProRenderSDK\RadeonProRender\inc\Math\half.cpp" />
     <ClCompile Include="..\RadeonProRenderSDK\RadeonProRender\rprTools\RPRStringIDMapper.cpp" />
     <ClCompile Include="..\RadeonProRenderSDK\RadeonProRender\rprTools\RprTools.cpp" />
+    <ClCompile Include="AlembicWrapper.cpp" />
     <ClCompile Include="athenaCmd.cpp" />
     <ClCompile Include="athenaSystemInfo_Win.cpp" />
     <ClCompile Include="CompositeWrapper.cpp" />
@@ -182,6 +183,7 @@
     <ClCompile Include="FireRenderFresnel.cpp" />
     <ClCompile Include="FireRenderFresnelSchlick.cpp" />
     <ClCompile Include="FireRenderGlobals.cpp" />
+    <ClCompile Include="FireRenderGPUCache.cpp" />
     <ClCompile Include="FireRenderGradient.cpp" />
     <ClCompile Include="FireRenderHairs.cpp" />
     <ClCompile Include="FireRenderIBL.cpp" />
@@ -298,6 +300,7 @@
     <ClInclude Include="..\RadeonProRenderSharedComponents\src\ImageFilter\ImageFilter.h" />
     <ClInclude Include="..\RadeonProRenderSharedComponents\src\Utils\Utils.h" />
     <ClInclude Include="..\RadeonProRenderSharedComponents\src\XMLMaterialExport\XMLMaterialExportCommon.h" />
+    <ClInclude Include="AlembicWrapper.hpp" />
     <ClInclude Include="athenaCmd.h" />
     <ClInclude Include="athenaSystemInfo_Win.h" />
     <ClInclude Include="attributeNames.h" />
@@ -334,6 +337,7 @@
     <ClInclude Include="FireRenderError.h" />
     <ClInclude Include="FireRenderFresnelSchlick.h" />
     <ClInclude Include="FireRenderGlobals.h" />
+    <ClInclude Include="FireRenderGPUCache.h" />
     <ClInclude Include="FireRenderGradient.h" />
     <ClInclude Include="FireRenderIBL.h" />
     <ClInclude Include="FireRenderImageComparing.h" />
@@ -610,7 +614,7 @@
       <AdditionalOptions>%(AdditionalOptions)</AdditionalOptions>
       <PrecompiledHeaderOutputFile>$(IntermediateOutputPath)\$(ProjectName).pch</PrecompiledHeaderOutputFile>
       <OpenMPSupport>true</OpenMPSupport>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Program Files\Autodesk\Maya2020 devkit\devkitBase\devkit\Alembic\include;C:\Program Files\Autodesk\Maya2020 devkit\devkitBase\devkit\Alembic\include\AlembicPrivate\ilmbase;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -637,7 +641,7 @@
       <AdditionalOptions>%(AdditionalOptions)</AdditionalOptions>
       <PrecompiledHeaderOutputFile>$(IntermediateOutputPath)\$(ProjectName).pch</PrecompiledHeaderOutputFile>
       <OpenMPSupport>true</OpenMPSupport>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Program Files\Autodesk\Maya2020 devkit\devkitBase\devkit\Alembic\include;C:\Program Files\Autodesk\Maya2020 devkit\devkitBase\devkit\Alembic\include\AlembicPrivate\ilmbase;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -664,7 +668,7 @@
       <AdditionalOptions>%(AdditionalOptions)</AdditionalOptions>
       <PrecompiledHeaderOutputFile>$(IntermediateOutputPath)\$(ProjectName).pch</PrecompiledHeaderOutputFile>
       <OpenMPSupport>true</OpenMPSupport>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Program Files\Autodesk\Maya2020 devkit\devkitBase\devkit\Alembic\include;C:\Program Files\Autodesk\Maya2020 devkit\devkitBase\devkit\Alembic\include\AlembicPrivate\ilmbase;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -673,8 +677,8 @@
       <AdditionalOptions>/export:initializePlugin /export:uninitializePlugin %(AdditionalOptions)</AdditionalOptions>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <ImportLibrary>$(IntermediateOutputPath)$(ProjectName).lib</ImportLibrary>
-      <AdditionalLibraryDirectories>$(MAYA_X64_2020)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>OpenMayaFX.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(MAYA_X64_2020)\lib;C:\Program Files\Autodesk\Maya2020 devkit\devkitBase\devkit\Alembic\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>OpenMayaFX.lib;Alembic.lib;AlembicHalf.lib;AlembicIex.lib;AlembicImath.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent />
   </ItemDefinitionGroup>
@@ -713,7 +717,7 @@
       <PrecompiledHeaderOutputFile>$(IntermediateOutputPath)\$(ProjectName).pch</PrecompiledHeaderOutputFile>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <OpenMPSupport>true</OpenMPSupport>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Program Files\Autodesk\Maya2020 devkit\devkitBase\devkit\Alembic\include;C:\Program Files\Autodesk\Maya2020 devkit\devkitBase\devkit\Alembic\include\AlembicPrivate\ilmbase;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -747,7 +751,7 @@
       <PrecompiledHeaderOutputFile>$(IntermediateOutputPath)\$(ProjectName).pch</PrecompiledHeaderOutputFile>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <OpenMPSupport>true</OpenMPSupport>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Program Files\Autodesk\Maya2020 devkit\devkitBase\devkit\Alembic\include;C:\Program Files\Autodesk\Maya2020 devkit\devkitBase\devkit\Alembic\include\AlembicPrivate\ilmbase;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -781,7 +785,7 @@
       <PrecompiledHeaderOutputFile>$(IntermediateOutputPath)\$(ProjectName).pch</PrecompiledHeaderOutputFile>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <OpenMPSupport>true</OpenMPSupport>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Program Files\Autodesk\Maya2020 devkit\devkitBase\devkit\Alembic\include;C:\Program Files\Autodesk\Maya2020 devkit\devkitBase\devkit\Alembic\include\AlembicPrivate\ilmbase;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
