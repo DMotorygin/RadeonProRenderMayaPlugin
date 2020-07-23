@@ -1254,7 +1254,8 @@ bool FireRenderContext::ConsiderShadowReflectionCatcherOverride(const ReadFrameB
 	{
 		if (isRPR20)
 		{
-			rifReflectionShadowCatcherOutput(params);
+			//rifReflectionShadowCatcherOutput(params);
+			compositeReflectionShadowCatcherOutput(params);
 		}
 		else
 		{
@@ -1268,7 +1269,8 @@ bool FireRenderContext::ConsiderShadowReflectionCatcherOverride(const ReadFrameB
 	{
 		if (isRPR20)
 		{
-			rifShadowCatcherOutput(params);
+			//rifShadowCatcherOutput(params);
+			compositeShadowCatcherOutput(params);
 		}
 		else
 		{
@@ -1282,7 +1284,8 @@ bool FireRenderContext::ConsiderShadowReflectionCatcherOverride(const ReadFrameB
 	{
 		if (isRPR20)
 		{
-			rifReflectionCatcherOutput(params);
+			//rifReflectionCatcherOutput(params);
+			compositeReflectionCatcherOutput(params);
 		}
 		else
 		{
