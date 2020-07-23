@@ -34,10 +34,16 @@ FireRenderGPUCache::~FireRenderGPUCache()
 	FireRenderGPUCache::clear();
 }
 
+bool FireRenderGPUCache::IsMeshVisible(const MDagPath& meshPath, const FireRenderContext* context) const
+{
+	// NIY!
+	return true;
+}
+
 void FireRenderGPUCache::clear()
 {
-	elements.clear();
-	FireRenderGPUCache::clear();
+	m.elements.clear();
+	FireRenderObject::clear();
 }
 
 // this function is identical to one in FireRenderMesh! 
@@ -49,7 +55,7 @@ void FireRenderGPUCache::detachFromScene()
 
 	if (auto scene = context()->GetScene())
 	{
-		for (auto element : elements)
+		for (auto element : m.elements)
 		{
 			if (auto shape = element.shape)
 				scene.Detach(shape);
@@ -67,7 +73,7 @@ void FireRenderGPUCache::attachToScene()
 
 	if (auto scene = context()->GetScene())
 	{
-		for (auto element : elements)
+		for (auto element : m.elements)
 		{
 			if (auto shape = element.shape)
 				scene.Attach(shape);
@@ -97,6 +103,7 @@ void FireRenderGPUCache::Rebuild()
 	MString cacheFilePath = plug.asString(&res);
 	CHECK_MSTATUS(res);
 
+	//****************************************************
 	// open alembic archive
 	try 
 	{
@@ -118,6 +125,80 @@ void FireRenderGPUCache::Rebuild()
 	{
 		errorMessage = "AlembicStorage::open error: " + errorMessage; 
 		MGlobal::displayError(errorMessage.c_str());
+		return;
+	}
+
+	bool isOpened = m_storage.isOpened();
+	uint32_t frameCount = m_storage.frameCount();
+
+
+	static int sampleIdx = 0;
+	m_scene = m_storage.read(sampleIdx, errorMessage);
+	if (!m_scene)
+	{
+		errorMessage = "sample error: " + errorMessage;
+		MGlobal::displayError(errorMessage.c_str());
+		return;
+	}
+	//****************************************************
+
+	MDagPath meshPath = DagPath();
+
+	// will not be calling it always eventually
+	ReloadMesh(meshPath);
+
+	//m.changed.mesh = false;
+	//m.changed.transform = false;
+	//m.changed.shader = false;
+}
+
+void FireRenderGPUCache::ReloadMesh(const MDagPath& meshPath)
+{
+	m.elements.clear();
+
+	// node is not visible => skip
+	if (!IsMeshVisible(meshPath, this->context()))
+		return;
+
+	std::vector<frw::Shape> shapes;
+	GetShapes(shapes);
+
+	m.elements.resize(shapes.size());
+	for (unsigned int i = 0; i < shapes.size(); i++)
+	{
+		m.elements[i].shape = shapes[i];
 	}
 }
 
+frw::Shape TranslateAlembicMesh(const RPRAlembicWrapper::PolygonMeshObject* mesh)
+{
+	bool isTriangleMesh = std::all_of(mesh->faceCounts.begin(), mesh->faceCounts.end(), [](int32_t f) {
+		return f == 3; });
+
+	if (!isTriangleMesh)
+		return frw::Shape();
+
+	return frw::Shape();
+}
+
+void FireRenderGPUCache::GetShapes(std::vector<frw::Shape>& outShapes)
+{
+	outShapes.clear();
+
+	// ensure correct input
+	if (!m_scene)
+		return;
+
+	// translate alembic data into RPR shapes (to be decomposed...)
+	for (auto alembicObj : m_scene->objects)
+	{
+		if (alembicObj->visible == false) 
+			continue;
+
+		if (RPRAlembicWrapper::PolygonMeshObject* mesh = alembicObj.as_polygonMesh())
+		{
+			outShapes.emplace_back();
+			outShapes.back() = TranslateAlembicMesh(mesh);
+		}
+	}
+}

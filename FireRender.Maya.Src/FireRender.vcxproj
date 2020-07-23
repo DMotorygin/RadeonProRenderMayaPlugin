@@ -183,7 +183,9 @@
     <ClCompile Include="FireRenderFresnel.cpp" />
     <ClCompile Include="FireRenderFresnelSchlick.cpp" />
     <ClCompile Include="FireRenderGlobals.cpp" />
-    <ClCompile Include="FireRenderGPUCache.cpp" />
+    <ClCompile Include="FireRenderGPUCache.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release2020|x64'">Disabled</Optimization>
+    </ClCompile>
     <ClCompile Include="FireRenderGradient.cpp" />
     <ClCompile Include="FireRenderHairs.cpp" />
     <ClCompile Include="FireRenderIBL.cpp" />
@@ -614,7 +616,7 @@
       <AdditionalOptions>%(AdditionalOptions)</AdditionalOptions>
       <PrecompiledHeaderOutputFile>$(IntermediateOutputPath)\$(ProjectName).pch</PrecompiledHeaderOutputFile>
       <OpenMPSupport>true</OpenMPSupport>
-      <AdditionalIncludeDirectories>C:\Program Files\Autodesk\Maya2020 devkit\devkitBase\devkit\Alembic\include;C:\Program Files\Autodesk\Maya2020 devkit\devkitBase\devkit\Alembic\include\AlembicPrivate\ilmbase;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\dev\vcpkg\vcpkg\installed\x64-windows\include;C:\dev\vcpkg\vcpkg\installed\x64-windows\include\OpenEXR;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -641,7 +643,7 @@
       <AdditionalOptions>%(AdditionalOptions)</AdditionalOptions>
       <PrecompiledHeaderOutputFile>$(IntermediateOutputPath)\$(ProjectName).pch</PrecompiledHeaderOutputFile>
       <OpenMPSupport>true</OpenMPSupport>
-      <AdditionalIncludeDirectories>C:\Program Files\Autodesk\Maya2020 devkit\devkitBase\devkit\Alembic\include;C:\Program Files\Autodesk\Maya2020 devkit\devkitBase\devkit\Alembic\include\AlembicPrivate\ilmbase;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\dev\vcpkg\vcpkg\installed\x64-windows\include;C:\dev\vcpkg\vcpkg\installed\x64-windows\include\OpenEXR;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -668,7 +670,7 @@
       <AdditionalOptions>%(AdditionalOptions)</AdditionalOptions>
       <PrecompiledHeaderOutputFile>$(IntermediateOutputPath)\$(ProjectName).pch</PrecompiledHeaderOutputFile>
       <OpenMPSupport>true</OpenMPSupport>
-      <AdditionalIncludeDirectories>C:\Program Files\Autodesk\Maya2020 devkit\devkitBase\devkit\Alembic\include;C:\Program Files\Autodesk\Maya2020 devkit\devkitBase\devkit\Alembic\include\AlembicPrivate\ilmbase;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\dev\vcpkg\vcpkg\installed\x64-windows\include;C:\dev\vcpkg\vcpkg\installed\x64-windows\include\OpenEXR;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -677,10 +679,49 @@
       <AdditionalOptions>/export:initializePlugin /export:uninitializePlugin %(AdditionalOptions)</AdditionalOptions>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <ImportLibrary>$(IntermediateOutputPath)$(ProjectName).lib</ImportLibrary>
-      <AdditionalLibraryDirectories>$(MAYA_X64_2020)\lib;C:\Program Files\Autodesk\Maya2020 devkit\devkitBase\devkit\Alembic\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>OpenMayaFX.lib;Alembic.lib;AlembicHalf.lib;AlembicIex.lib;AlembicImath.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(MAYA_X64_2020)\lib;C:\dev\vcpkg\vcpkg\installed\x64-windows\debug\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>OpenMayaFX.lib;Alembic.lib;Iex-2_3_d.lib;Half-2_3_d.lib;Imath-2_3_d.lib;hdf5_D.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent />
+    <PostBuildEvent>
+      <Command>echo creating dist folders
+md $(SolutionDir)dist
+md $(SolutionDir)dist\bin
+md $(SolutionDir)dist\scripts
+md $(SolutionDir)dist\plug-ins
+md $(SolutionDir)dist\plug-ins\$(FR_MAYA_VERSION)
+md $(SolutionDir)dist\images
+md $(SolutionDir)dist\icons
+md $(SolutionDir)dist\shaders
+md $(SolutionDir)dist\renderDesc
+
+XCOPY /E /Y $(ProjectDir)\scripts\* $(SolutionDir)dist\scripts\
+XCOPY /E /Y $(ProjectDir)\python $(SolutionDir)dist\scripts\
+
+COPY $(TargetPath) $(SolutionDir)dist\plug-ins\$(FR_MAYA_VERSION)\* /Y
+
+COPY $(ProjectDir)\images\* $(SolutionDir)dist\images\ /Y
+
+XCOPY /E /Y $(ProjectDir)\icons\* $(SolutionDir)dist\icons\
+COPY $(ProjectDir)\shaders\* $(SolutionDir)dist\shaders\ /Y
+
+COPY $(ProjectDir)\renderDesc\* $(SolutionDir)dist\renderDesc\ /Y
+
+COPY "$(SolutionDir)RadeonProRenderSDK\RadeonProRender\binWin64\*.dll" $(SolutionDir)dist\bin\ /Y
+COPY "$(SolutionDir)RadeonProImageProcessingSDK\Windows\*.dll" $(SolutionDir)dist\bin\ /Y
+COPY "$(SolutionDir)RadeonProRenderSharedComponents\OpenVDB\Windows\bin\*.dll" $(SolutionDir)dist\bin\ /Y
+COPY "$(SolutionDir)RadeonProRenderSharedComponents\OpenImageIO\Windows\bin\*.dll" $(SolutionDir)dist\bin\ /Y
+COPY "C:\dev\vcpkg\vcpkg\installed\x64-windows\debug\bin\*.dll" $(SolutionDir)dist\bin\ /Y
+XCOPY /S /Y /I "$(SolutionDir)RadeonProImageProcessingSDK\models" $(SolutionDir)dist\data\models
+
+COPY $(SolutionDir)RadeonProRenderSharedComponents\glew\bin\x64\*.dll $(SolutionDir)dist\bin\ /Y
+IF EXIST "%USERPROFILE%\Documents\maya\$(FR_MAYA_VERSION)\prefs\shelves\" COPY $(ProjectDir)\Shelfs\* "%USERPROFILE%\Documents\maya\$(FR_MAYA_VERSION)\prefs\shelves\" /Y
+
+IF EXIST "%USERPROFILE%\Documents\maya\$(FR_MAYA_VERSION)-x64\prefs\shelves" COPY $(ProjectDir)\Shelfs\* "%USERPROFILE%\Documents\maya\$(FR_MAYA_VERSION)-x64\prefs\shelves\" /Y
+
+
+</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release2018|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -717,7 +758,7 @@
       <PrecompiledHeaderOutputFile>$(IntermediateOutputPath)\$(ProjectName).pch</PrecompiledHeaderOutputFile>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <OpenMPSupport>true</OpenMPSupport>
-      <AdditionalIncludeDirectories>C:\Program Files\Autodesk\Maya2020 devkit\devkitBase\devkit\Alembic\include;C:\Program Files\Autodesk\Maya2020 devkit\devkitBase\devkit\Alembic\include\AlembicPrivate\ilmbase;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\dev\vcpkg\vcpkg\installed\x64-windows\include;C:\dev\vcpkg\vcpkg\installed\x64-windows\include\OpenEXR;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -751,7 +792,7 @@
       <PrecompiledHeaderOutputFile>$(IntermediateOutputPath)\$(ProjectName).pch</PrecompiledHeaderOutputFile>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <OpenMPSupport>true</OpenMPSupport>
-      <AdditionalIncludeDirectories>C:\Program Files\Autodesk\Maya2020 devkit\devkitBase\devkit\Alembic\include;C:\Program Files\Autodesk\Maya2020 devkit\devkitBase\devkit\Alembic\include\AlembicPrivate\ilmbase;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\dev\vcpkg\vcpkg\installed\x64-windows\include;C:\dev\vcpkg\vcpkg\installed\x64-windows\include\OpenEXR;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -785,7 +826,7 @@
       <PrecompiledHeaderOutputFile>$(IntermediateOutputPath)\$(ProjectName).pch</PrecompiledHeaderOutputFile>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <OpenMPSupport>true</OpenMPSupport>
-      <AdditionalIncludeDirectories>C:\Program Files\Autodesk\Maya2020 devkit\devkitBase\devkit\Alembic\include;C:\Program Files\Autodesk\Maya2020 devkit\devkitBase\devkit\Alembic\include\AlembicPrivate\ilmbase;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\dev\vcpkg\vcpkg\installed\x64-windows\include;C:\dev\vcpkg\vcpkg\installed\x64-windows\include\OpenEXR;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -796,14 +837,53 @@
       <OptimizeReferences>true</OptimizeReferences>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <ImportLibrary>$(IntermediateOutputPath)$(ProjectName).lib</ImportLibrary>
-      <AdditionalLibraryDirectories>$(MAYA_X64_2020)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>OpenMayaFX.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(MAYA_X64_2020)\lib;C:\dev\vcpkg\vcpkg\installed\x64-windows\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>OpenMayaFX.lib;Alembic.lib;Iex-2_3.lib;Half-2_3.lib;Imath-2_3.lib;hdf5.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent />
     <PreBuildEvent>
       <Command>
       </Command>
     </PreBuildEvent>
+    <PostBuildEvent>
+      <Command>echo creating dist folders
+md $(SolutionDir)dist
+md $(SolutionDir)dist\bin
+md $(SolutionDir)dist\scripts
+md $(SolutionDir)dist\plug-ins
+md $(SolutionDir)dist\plug-ins\$(FR_MAYA_VERSION)
+md $(SolutionDir)dist\images
+md $(SolutionDir)dist\icons
+md $(SolutionDir)dist\shaders
+md $(SolutionDir)dist\renderDesc
+
+XCOPY /E /Y $(ProjectDir)\scripts\* $(SolutionDir)dist\scripts\
+XCOPY /E /Y $(ProjectDir)\python $(SolutionDir)dist\scripts\
+
+COPY $(TargetPath) $(SolutionDir)dist\plug-ins\$(FR_MAYA_VERSION)\* /Y
+
+COPY $(ProjectDir)\images\* $(SolutionDir)dist\images\ /Y
+
+XCOPY /E /Y $(ProjectDir)\icons\* $(SolutionDir)dist\icons\
+COPY $(ProjectDir)\shaders\* $(SolutionDir)dist\shaders\ /Y
+
+COPY $(ProjectDir)\renderDesc\* $(SolutionDir)dist\renderDesc\ /Y
+
+COPY "$(SolutionDir)RadeonProRenderSDK\RadeonProRender\binWin64\*.dll" $(SolutionDir)dist\bin\ /Y
+COPY "$(SolutionDir)RadeonProImageProcessingSDK\Windows\*.dll" $(SolutionDir)dist\bin\ /Y
+COPY "$(SolutionDir)RadeonProRenderSharedComponents\OpenVDB\Windows\bin\*.dll" $(SolutionDir)dist\bin\ /Y
+COPY "$(SolutionDir)RadeonProRenderSharedComponents\OpenImageIO\Windows\bin\*.dll" $(SolutionDir)dist\bin\ /Y
+COPY "C:\dev\vcpkg\vcpkg\installed\x64-windows\bin\*.dll" $(SolutionDir)dist\bin\ /Y
+XCOPY /S /Y /I "$(SolutionDir)RadeonProImageProcessingSDK\models" $(SolutionDir)dist\data\models
+
+COPY $(SolutionDir)RadeonProRenderSharedComponents\glew\bin\x64\*.dll $(SolutionDir)dist\bin\ /Y
+IF EXIST "%USERPROFILE%\Documents\maya\$(FR_MAYA_VERSION)\prefs\shelves\" COPY $(ProjectDir)\Shelfs\* "%USERPROFILE%\Documents\maya\$(FR_MAYA_VERSION)\prefs\shelves\" /Y
+
+IF EXIST "%USERPROFILE%\Documents\maya\$(FR_MAYA_VERSION)-x64\prefs\shelves" COPY $(ProjectDir)\Shelfs\* "%USERPROFILE%\Documents\maya\$(FR_MAYA_VERSION)-x64\prefs\shelves\" /Y
+
+
+</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

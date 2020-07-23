@@ -49,11 +49,13 @@ public:
 	void Rebuild(void);
 
 protected:
+	void ReloadMesh(const MDagPath& meshPath);
+
 	void GetShapes(std::vector<frw::Shape>& outShapes);
 
 	bool IsSelected(const MDagPath& dagPath) const;
 
-	//virtual bool IsMeshVisible(const MDagPath& meshPath, const FireRenderContext* context) const;
+	virtual bool IsMeshVisible(const MDagPath& meshPath, const FireRenderContext* context) const;
 
 	// Detach from the scene
 	virtual void detachFromScene() override;
@@ -62,7 +64,18 @@ protected:
 	virtual void attachToScene() override;
 
 protected:
-	std::vector<FrElement> elements;
+	struct
+	{
+		std::vector<FrElement> elements;
+		bool isEmissive = false;
+		bool isMainInstance = false;
+		struct
+		{
+			bool mesh = false;
+			bool transform = false;
+			bool shader = false;
+		} changed;
+	} m;
 
 	Alembic::Abc::IArchive m_archive;
 	RPRAlembicWrapper::AlembicStorage m_storage;
