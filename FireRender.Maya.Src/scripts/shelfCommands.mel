@@ -319,7 +319,7 @@ global proc exportSceneRPR()
 
 global proc openMaterialLibraryRPR()
 {
-	print("openMaterialLibraryRPR()\n");
+	print("openMaterialLibraryRPR called from shelf!\n");
 
 	if (!checkPluginLoadedRPR())
 		return;
