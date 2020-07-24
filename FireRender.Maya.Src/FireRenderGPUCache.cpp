@@ -120,6 +120,8 @@ void FireRenderGPUCache::Rebuild()
 	if (!m_archive.valid())
 		return;
 
+	uint32_t getNumTimeSamplings = m_archive.getNumTimeSamplings();
+
 	std::string errorMessage;
 	if (m_storage.open(cacheFilePath.asChar(), errorMessage) == false) 
 	{

@@ -148,7 +148,9 @@
     <ClCompile Include="..\RadeonProRenderSDK\RadeonProRender\inc\Math\half.cpp" />
     <ClCompile Include="..\RadeonProRenderSDK\RadeonProRender\rprTools\RPRStringIDMapper.cpp" />
     <ClCompile Include="..\RadeonProRenderSDK\RadeonProRender\rprTools\RprTools.cpp" />
-    <ClCompile Include="AlembicWrapper.cpp" />
+    <ClCompile Include="AlembicWrapper.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release2020|x64'">Disabled</Optimization>
+    </ClCompile>
     <ClCompile Include="athenaCmd.cpp" />
     <ClCompile Include="athenaSystemInfo_Win.cpp" />
     <ClCompile Include="CompositeWrapper.cpp" />

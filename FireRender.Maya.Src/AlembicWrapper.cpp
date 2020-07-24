@@ -456,6 +456,8 @@ namespace RPRAlembicWrapper
 		ISampleSelector selector
 	) 
 	{
+		size_t numProperties = compound_prop.getNumProperties();
+
 		for (int i = 0; i < compound_prop.getNumProperties(); ++i) 
 		{
 			auto child_header = compound_prop.getPropertyHeader(i);
@@ -526,9 +528,16 @@ namespace RPRAlembicWrapper
 			schema.getArbGeomParams(), selector
 		);
 
+		auto title = polyMesh.getSchemaTitle();
+		ICompoundProperty prop = polyMesh.getProperties();
+
+		size_t numProperties = prop.getNumProperties();
+
+		ICompoundProperty compound_prop = ICompoundProperty(prop, ".geom");
+
 		parse_attributes(
 			&polymeshObject->points, &polymeshObject->vertices, &polymeshObject->primitives,
-			ICompoundProperty(polyMesh.getProperties(), ".geom"), selector
+			/*ICompoundProperty(polyMesh.getProperties(), ".geom")*/ compound_prop, selector
 		);
 
 		auto p = polymeshObject->points.column_as_vector3("P");
