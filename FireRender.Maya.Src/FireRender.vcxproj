@@ -149,7 +149,8 @@
     <ClCompile Include="..\RadeonProRenderSDK\RadeonProRender\rprTools\RPRStringIDMapper.cpp" />
     <ClCompile Include="..\RadeonProRenderSDK\RadeonProRender\rprTools\RprTools.cpp" />
     <ClCompile Include="AlembicWrapper.cpp">
-      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release2020|x64'">Disabled</Optimization>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release2020|x64'">MaxSpeed</Optimization>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug2020|x64'">Disabled</Optimization>
     </ClCompile>
     <ClCompile Include="athenaCmd.cpp" />
     <ClCompile Include="athenaSystemInfo_Win.cpp" />
@@ -186,7 +187,7 @@
     <ClCompile Include="FireRenderFresnelSchlick.cpp" />
     <ClCompile Include="FireRenderGlobals.cpp" />
     <ClCompile Include="FireRenderGPUCache.cpp">
-      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release2020|x64'">Disabled</Optimization>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release2020|x64'">MaxSpeed</Optimization>
     </ClCompile>
     <ClCompile Include="FireRenderGradient.cpp" />
     <ClCompile Include="FireRenderHairs.cpp" />
@@ -672,7 +673,7 @@
       <AdditionalOptions>%(AdditionalOptions)</AdditionalOptions>
       <PrecompiledHeaderOutputFile>$(IntermediateOutputPath)\$(ProjectName).pch</PrecompiledHeaderOutputFile>
       <OpenMPSupport>true</OpenMPSupport>
-      <AdditionalIncludeDirectories>C:\dev\vcpkg\vcpkg\installed\x64-windows\include;C:\dev\vcpkg\vcpkg\installed\x64-windows\include\OpenEXR;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -681,8 +682,8 @@
       <AdditionalOptions>/export:initializePlugin /export:uninitializePlugin %(AdditionalOptions)</AdditionalOptions>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <ImportLibrary>$(IntermediateOutputPath)$(ProjectName).lib</ImportLibrary>
-      <AdditionalLibraryDirectories>$(MAYA_X64_2020)\lib;C:\dev\vcpkg\vcpkg\installed\x64-windows\debug\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>OpenMayaFX.lib;Alembic.lib;Iex-2_3_d.lib;Half-2_3_d.lib;Imath-2_3_d.lib;hdf5_D.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(MAYA_X64_2020)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>OpenMayaFX.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent />
     <PostBuildEvent>
@@ -828,7 +829,7 @@ IF EXIST "%USERPROFILE%\Documents\maya\$(FR_MAYA_VERSION)-x64\prefs\shelves" COP
       <PrecompiledHeaderOutputFile>$(IntermediateOutputPath)\$(ProjectName).pch</PrecompiledHeaderOutputFile>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <OpenMPSupport>true</OpenMPSupport>
-      <AdditionalIncludeDirectories>C:\dev\vcpkg\vcpkg\installed\x64-windows\include;C:\dev\vcpkg\vcpkg\installed\x64-windows\include\OpenEXR;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -839,8 +840,8 @@ IF EXIST "%USERPROFILE%\Documents\maya\$(FR_MAYA_VERSION)-x64\prefs\shelves" COP
       <OptimizeReferences>true</OptimizeReferences>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <ImportLibrary>$(IntermediateOutputPath)$(ProjectName).lib</ImportLibrary>
-      <AdditionalLibraryDirectories>$(MAYA_X64_2020)\lib;C:\dev\vcpkg\vcpkg\installed\x64-windows\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>OpenMayaFX.lib;Alembic.lib;Iex-2_3.lib;Half-2_3.lib;Imath-2_3.lib;hdf5.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(MAYA_X64_2020)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>OpenMayaFX.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent />
     <PreBuildEvent>
