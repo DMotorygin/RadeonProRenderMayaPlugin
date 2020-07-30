@@ -524,25 +524,14 @@ namespace RPRAlembicWrapper
 		polymeshObject->indices = std::vector<uint32_t>(indices->get(), indices->get() + indices->size());
 
 		parse_attributes(
-			&polymeshObject->points, &polymeshObject->vertices, &polymeshObject->primitives,
-			schema.getArbGeomParams(), selector
-		);
-
-		auto title = polyMesh.getSchemaTitle();
-		ICompoundProperty prop = polyMesh.getProperties();
-
-		size_t numProperties = prop.getNumProperties();
-
-		ICompoundProperty compound_prop = ICompoundProperty(prop, ".geom");
-
-		parse_attributes(
-			&polymeshObject->points, &polymeshObject->vertices, &polymeshObject->primitives,
-			/*ICompoundProperty(polyMesh.getProperties(), ".geom")*/ compound_prop, selector
+			&polymeshObject->points, nullptr, nullptr,
+			ICompoundProperty(polyMesh.getProperties(), ".geom"), selector
 		);
 
 		auto p = polymeshObject->points.column_as_vector3("P");
 		polymeshObject->P.resize(p->rowCount());
-		for (int i = 0; i < polymeshObject->P.size(); ++i) {
+		for (int i = 0; i < polymeshObject->P.size(); ++i) 
+		{
 			float *xyz = (float *)&polymeshObject->P[i];
 			p->get(i, xyz);
 		}

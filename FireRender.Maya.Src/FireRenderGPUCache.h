@@ -37,24 +37,26 @@ public:
 	virtual void clear() override;
 
 	// Register the callback
-	//virtual void RegisterCallbacks() override;
+	virtual void RegisterCallbacks() override;
 
 	// transform attribute changed callback
-	//virtual void OnNodeDirty() override;
+	virtual void OnNodeDirty() override;
 
 	// node dirty
-	//virtual void attributeChanged(MNodeMessage::AttributeMessage msg, MPlug &plug, MPlug &otherPlug) override;
+	virtual void attributeChanged(MNodeMessage::AttributeMessage msg, MPlug &plug, MPlug &otherPlug) override;
 	virtual void Freshen() override;
 
 	void Rebuild(void);
 
 protected:
 	void ReloadMesh(const MDagPath& meshPath);
-
+	void ReadAlembicFile(void);
+	void RebuildTransforms(void);
 	void GetShapes(std::vector<frw::Shape>& outShapes);
 
-	bool IsSelected(const MDagPath& dagPath) const;
+	frw::Shader GetAlembicShadingEngines(MObject gpucacheNode);
 
+	bool IsSelected(const MDagPath& dagPath) const;
 	virtual bool IsMeshVisible(const MDagPath& meshPath, const FireRenderContext* context) const;
 
 	// Detach from the scene
@@ -74,6 +76,8 @@ protected:
 			bool mesh = false;
 			bool transform = false;
 			bool shader = false;
+
+			bool file = true;
 		} changed;
 	} m;
 
