@@ -682,6 +682,11 @@ namespace RPRAlembicWrapper
 			ICamera camera(o);
 			auto schema = camera.getSchema();
 
+			//***************************************************************
+			// staff below is houdini-specific
+			// we'll leave it for now as a reference
+			// but we need an implementation for Maya camera which would be different
+
 			std::shared_ptr<CameraObject> object(new CameraObject());
 
 			IXform parentXForm(o.getParent());
@@ -728,6 +733,8 @@ namespace RPRAlembicWrapper
 
 			CameraSample sample;
 			schema.get(sample, selector);
+
+			return;
 
 			// Houdini Parameters [ View ]
 			object->resolution_x = (int)get_typed_scalar_property<IFloatProperty>(schema.getUserProperties(), "resx", selector);
