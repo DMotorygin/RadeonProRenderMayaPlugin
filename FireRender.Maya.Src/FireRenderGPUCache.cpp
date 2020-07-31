@@ -295,23 +295,15 @@ frw::Shape TranslateAlembicMesh(const RPRAlembicWrapper::PolygonMeshObject* mesh
 
 	// auxilary containers necessary for passing data to RPR
 	const std::vector<RPRAlembicWrapper::Vector3f>& points = mesh->P;
+	const std::vector<RPRAlembicWrapper::Vector3f>& normals = mesh->N;
 
-	const RPRAlembicWrapper::AttributeVector3Column* pNormals = mesh->points.column_as_vector3("N");
-	assert(pNormals);
-	if (!pNormals)
+	assert(normals.size() > 0);
+	if (normals.size() == 0)
 	{
 		MGlobal::displayError("Alembic translator error: No normals in loaded data!");
 		return frw::Shape();
 	}
 
-	size_t rowCount = pNormals->rowCount();
-	std::vector<RPRAlembicWrapper::Vector3f> normals(points.size(), RPRAlembicWrapper::Vector3f(0.0f, 0.0f, 0.0f));
-
-	for (int idx = 0; idx < normals.size(); ++idx)
-	{
-		float *xyz = (float*)&normals[idx];
-		pNormals->get(idx, xyz);
-	}
 
 	unsigned int uvSetCount = 0; // no uv set; at least until we will read materials from alembic
 
@@ -324,7 +316,7 @@ frw::Shape TranslateAlembicMesh(const RPRAlembicWrapper::PolygonMeshObject* mesh
 		(const int*)vertexIndices.data(), sizeof(int),
 		(const int*)vertexIndices.data(), sizeof(int),
 		nullptr, nullptr,
-		(const int*)mesh->faceCounts.data(), vertexIndices.size() / 3
+		(const int*)mesh->faceCounts.data(), mesh->faceCounts.size()
 	);
 
 	return out;

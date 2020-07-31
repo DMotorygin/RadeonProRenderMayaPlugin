@@ -299,6 +299,7 @@ namespace RPRAlembicWrapper
 		std::vector<uint32_t> faceCounts;
 		std::vector<uint32_t> indices;
 		std::vector<Vector3f> P;
+		std::vector<Vector3f> N;
 
 		AttributeSpreadSheet points;
 		AttributeSpreadSheet vertices;

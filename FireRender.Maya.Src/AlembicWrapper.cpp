@@ -476,7 +476,7 @@ namespace RPRAlembicWrapper
 			std::string geoScope;
 			if (parse_attributes(compound_prop, key, selector, attributes, geoScope)) 
 			{
-				if (points && geoScope == "var" || geoScope == "vtx") 
+				if (points && geoScope == "var" || geoScope == "vtx" || geoScope == "fvr")
 				{
 					points->m_sheet.emplace_back(key, attributes);
 				}
@@ -534,6 +534,21 @@ namespace RPRAlembicWrapper
 		{
 			float *xyz = (float *)&polymeshObject->P[i];
 			p->get(i, xyz);
+		}
+
+		auto n = polymeshObject->points.column_as_vector3("N");
+		if (n)
+		{
+			polymeshObject->N.resize(n->rowCount());
+			for (int i = 0; i < polymeshObject->N.size(); ++i)
+			{
+				float *xyz = (float *)&polymeshObject->N[i];
+				n->get(i, xyz);
+			}
+		}
+		else
+		{
+			// in some cases normals are nor stored in points sheet
 		}
 	}
 
