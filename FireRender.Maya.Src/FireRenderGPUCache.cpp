@@ -257,49 +257,74 @@ void FireRenderGPUCache::ReloadMesh(const MDagPath& meshPath)
 
 frw::Shape TranslateAlembicMesh(const RPRAlembicWrapper::PolygonMeshObject* mesh, frw::Context& context)
 {
-	// only triangle mesh is supported
+	// get indices
+	const std::vector<uint32_t>& indices = mesh->indices;
+	std::vector<int> vertexIndices(indices.size(), 0); // output indices of vertexes (3 for triangle and 4 for quad)
+
+	// mesh have only triangles => simplified mesh processing
 	bool isTriangleMesh = std::all_of(mesh->faceCounts.begin(), mesh->faceCounts.end(), [](int32_t f) {
-		return f == 3; });
-
-	if (!isTriangleMesh)
-		return frw::Shape();
-
-	// convert data from alembic data container to RPR one
-	std::vector<frw::Shape> resultShapes;
+		return f == 3;
+	});
 
 	// in alembic indexes are reversed compared to what RPR expects
-	const std::vector<uint32_t>& indices = mesh->indices;
-	std::vector<int> triangleVertexIndices(indices.size(), 0); // output indices of vertexes (3 indices for each triangle)
-	for (size_t idx = 0; idx < indices.size(); idx += 3)
+	if (isTriangleMesh)
 	{
-		triangleVertexIndices[idx] = indices[idx+2];
-		triangleVertexIndices[idx+1] = indices[idx+1];
-		triangleVertexIndices[idx+2] = indices[idx];
+		for (size_t idx = 0; idx < indices.size(); idx += 3)
+		{
+			vertexIndices[idx] = indices[idx + 2];
+			vertexIndices[idx + 1] = indices[idx + 1];
+			vertexIndices[idx + 2] = indices[idx];
+		}
+	}
+	else
+	{
+		uint32_t idx = 0;
+		size_t countIndices = indices.size();
+
+		for (uint32_t faceCount : mesh->faceCounts)
+		{
+			uint32_t currIdx = idx;
+
+			for (uint32_t idxInPolygon = 1; idxInPolygon <= faceCount; idxInPolygon++)
+			{
+				vertexIndices[idx] = indices[currIdx + faceCount - idxInPolygon];
+				idx++;
+			}
+		}
 	}
 
+	// auxilary containers necessary for passing data to RPR
 	const std::vector<RPRAlembicWrapper::Vector3f>& points = mesh->P;
 
 	const RPRAlembicWrapper::AttributeVector3Column* pNormals = mesh->points.column_as_vector3("N");
+	assert(pNormals);
+	if (!pNormals)
+	{
+		MGlobal::displayError("Alembic translator error: No normals in loaded data!");
+		return frw::Shape();
+	}
+
 	size_t rowCount = pNormals->rowCount();
 	std::vector<RPRAlembicWrapper::Vector3f> normals(points.size(), RPRAlembicWrapper::Vector3f(0.0f, 0.0f, 0.0f));
 
 	for (int idx = 0; idx < normals.size(); ++idx)
 	{
-		float *xyz = (float *)&normals[idx];
+		float *xyz = (float*)&normals[idx];
 		pNormals->get(idx, xyz);
 	}
 
 	unsigned int uvSetCount = 0; // no uv set; at least until we will read materials from alembic
 
+	// pass data to RPR
 	frw::Shape out = context.CreateMeshEx(
 		(const float*)points.data(), points.size(), sizeof(RPRAlembicWrapper::Vector3f),
 		(const float*)normals.data(), normals.size(), sizeof(RPRAlembicWrapper::Vector3f),
 		nullptr, 0, 0,
 		uvSetCount, nullptr, nullptr, nullptr, // no textures, no UVs
-		(const int*)triangleVertexIndices.data(), sizeof(int),
-		(const int*)triangleVertexIndices.data(), sizeof(int),
+		(const int*)vertexIndices.data(), sizeof(int),
+		(const int*)vertexIndices.data(), sizeof(int),
 		nullptr, nullptr,
-		std::vector<int>(triangleVertexIndices.size() / 3, 3).data(), triangleVertexIndices.size() / 3
+		(const int*)mesh->faceCounts.data(), vertexIndices.size() / 3
 	);
 
 	return out;
