@@ -297,12 +297,12 @@ frw::Shape TranslateAlembicMesh(const RPRAlembicWrapper::PolygonMeshObject* mesh
 	const std::vector<RPRAlembicWrapper::Vector3f>& points = mesh->P;
 	const std::vector<RPRAlembicWrapper::Vector3f>& normals = mesh->N;
 
-	assert(normals.size() > 0);
-	if (normals.size() == 0)
-	{
-		MGlobal::displayError("Alembic translator error: No normals in loaded data!");
-		return frw::Shape();
-	}
+	// It appears that no normals is valid case for alembic file; Need to discuss
+	//if (normals.size() == 0)
+	//{
+	//	MGlobal::displayError("Alembic translator error: No normals in loaded data!");
+	//	return frw::Shape();
+	//}
 
 
 	unsigned int uvSetCount = 0; // no uv set; at least until we will read materials from alembic
