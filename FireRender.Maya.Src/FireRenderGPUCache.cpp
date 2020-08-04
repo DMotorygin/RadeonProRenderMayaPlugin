@@ -203,15 +203,16 @@ void FireRenderGPUCache::RebuildTransforms()
 	{
 		if (element.first.shape)
 		{
-			MMatrix tmpMatr = GetSelfTransform();
-
 			float(*f)[4][4] = reinterpret_cast<float(*)[4][4]>(element.second.data());
 			MMatrix elementTransform(*f);
-			tmpMatr *= elementTransform;
-			tmpMatr *= scaleM;
+
+			MMatrix mayaObjMatr = GetSelfTransform();
+
+			elementTransform *= mayaObjMatr;
+			elementTransform *= scaleM;
 
 			float mfloats[4][4];
-			tmpMatr.get(mfloats);
+			elementTransform.get(mfloats);
 
 			element.first.shape.SetTransform(&mfloats[0][0]);
 		}
