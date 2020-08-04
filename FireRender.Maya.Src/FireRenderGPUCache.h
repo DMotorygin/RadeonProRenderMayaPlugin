@@ -52,7 +52,7 @@ protected:
 	void ReloadMesh(const MDagPath& meshPath);
 	void ReadAlembicFile(void);
 	void RebuildTransforms(void);
-	void GetShapes(std::vector<frw::Shape>& outShapes);
+	void GetShapes(std::vector<frw::Shape>& outShapes, std::vector<std::array<float, 16>>& tmMatrs);
 
 	frw::Shader GetAlembicShadingEngines(MObject gpucacheNode);
 
@@ -68,7 +68,7 @@ protected:
 protected:
 	struct
 	{
-		std::vector<FrElement> elements;
+		std::vector<std::pair<FrElement, std::array<float, 16>>> elements;
 		bool isEmissive = false;
 		bool isMainInstance = false;
 		struct

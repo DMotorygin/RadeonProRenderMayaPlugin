@@ -85,7 +85,7 @@ void FireRenderGPUCache::detachFromScene()
 	{
 		for (auto element : m.elements)
 		{
-			if (auto shape = element.shape)
+			if (auto shape = element.first.shape)
 				scene.Detach(shape);
 		}
 	}
@@ -105,7 +105,7 @@ void FireRenderGPUCache::attachToScene()
 	{
 		for (auto element : m.elements)
 		{
-			if (auto shape = element.shape)
+			if (auto shape = element.first.shape)
 			{
 				scene.Attach(shape);
 				shape.SetShader(alembicShader);
@@ -198,14 +198,22 @@ void FireRenderGPUCache::RebuildTransforms()
 	scaleM.setToIdentity();
 	scaleM[0][0] = scaleM[1][1] = scaleM[2][2] = 0.01;
 	matrix *= scaleM;
-	float mfloats[4][4];
-	matrix.get(mfloats);
 
 	for (auto& element : m.elements)
 	{
-		if (element.shape)
+		if (element.first.shape)
 		{
-			element.shape.SetTransform(&mfloats[0][0]);
+			MMatrix tmpMatr = GetSelfTransform();
+
+			float(*f)[4][4] = reinterpret_cast<float(*)[4][4]>(element.second.data());
+			MMatrix elementTransform(*f);
+			tmpMatr *= elementTransform;
+			tmpMatr *= scaleM;
+
+			float mfloats[4][4];
+			tmpMatr.get(mfloats);
+
+			element.first.shape.SetTransform(&mfloats[0][0]);
 		}
 	}
 }
@@ -246,12 +254,14 @@ void FireRenderGPUCache::ReloadMesh(const MDagPath& meshPath)
 		return;
 
 	std::vector<frw::Shape> shapes;
-	GetShapes(shapes);
+	std::vector<std::array<float, 16>> tmMatrs;
+	GetShapes(shapes, tmMatrs);
 
 	m.elements.resize(shapes.size());
 	for (unsigned int i = 0; i < shapes.size(); i++)
 	{
-		m.elements[i].shape = shapes[i];
+		m.elements[i].first.shape = shapes[i];
+		m.elements[i].second = tmMatrs[i];
 	}
 }
 
@@ -322,7 +332,7 @@ frw::Shape TranslateAlembicMesh(const RPRAlembicWrapper::PolygonMeshObject* mesh
 	return out;
 }
 
-void FireRenderGPUCache::GetShapes(std::vector<frw::Shape>& outShapes)
+void FireRenderGPUCache::GetShapes(std::vector<frw::Shape>& outShapes, std::vector<std::array<float, 16>>& tmMatrs)
 {
 	outShapes.clear();
 	frw::Context ctx = context()->GetContext();
@@ -342,6 +352,9 @@ void FireRenderGPUCache::GetShapes(std::vector<frw::Shape>& outShapes)
 		{
 			outShapes.emplace_back();
 			outShapes.back() = TranslateAlembicMesh(mesh, ctx);
+
+			// - transformation matrix
+			tmMatrs.emplace_back(mesh->combinedXforms.m_value);
 		}
 	}
 }
