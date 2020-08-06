@@ -448,7 +448,7 @@ namespace RPRAlembicWrapper
 		return false;
 	}
 
-	static void parse_attributes(
+	static auto parse_attributes(
 		AttributeSpreadSheet *points, 
 		AttributeSpreadSheet *vertices, 
 		AttributeSpreadSheet *primitives,
@@ -457,6 +457,8 @@ namespace RPRAlembicWrapper
 	) 
 	{
 		size_t numProperties = compound_prop.getNumProperties();
+
+		auto keyScopeTag = std::make_shared<std::vector<std::pair<std::string, std::string>>>();
 
 		for (int i = 0; i < compound_prop.getNumProperties(); ++i) 
 		{
@@ -488,6 +490,8 @@ namespace RPRAlembicWrapper
 				{
 					primitives->m_sheet.emplace_back(key, attributes);
 				}
+
+				keyScopeTag->push_back({ key , geoScope });
 			}
 		}
 
@@ -505,6 +509,8 @@ namespace RPRAlembicWrapper
 		{
 			std::sort(primitives->m_sheet.begin(), primitives->m_sheet.end());
 		}
+
+		return keyScopeTag;
 	}
 
 	inline void parse_polymesh(
@@ -523,7 +529,7 @@ namespace RPRAlembicWrapper
 		Int32ArraySamplePtr indices = sample.getFaceIndices();
 		polymeshObject->indices = std::vector<uint32_t>(indices->get(), indices->get() + indices->size());
 
-		parse_attributes(
+		polymeshObject->keyScopeTag = parse_attributes(
 			&polymeshObject->points, nullptr, nullptr,
 			ICompoundProperty(polyMesh.getProperties(), ".geom"), selector
 		);

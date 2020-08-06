@@ -304,6 +304,8 @@ namespace RPRAlembicWrapper
 		AttributeSpreadSheet points;
 		AttributeSpreadSheet vertices;
 		AttributeSpreadSheet primitives;
+
+		std::shared_ptr<std::vector<std::pair<std::string, std::string>>> keyScopeTag;
 	};
 
 	class PointObject : public SceneObject 
