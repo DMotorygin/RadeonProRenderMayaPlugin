@@ -25,10 +25,10 @@
 using namespace Alembic::Abc;
 using namespace Alembic::AbcGeom;
 
-FireRenderGPUCache::FireRenderGPUCache(FireRenderContext* context, const MDagPath& dagPath) :
-	FireRenderNode(context, dagPath)
-{
-}
+FireRenderGPUCache::FireRenderGPUCache(FireRenderContext* context, const MDagPath& dagPath) 
+	: 	m_changedFile(true)
+	,	FireRenderMeshCommon(context, dagPath)
+{}
 
 FireRenderGPUCache::~FireRenderGPUCache()
 {
@@ -72,48 +72,6 @@ void FireRenderGPUCache::clear()
 {
 	m.elements.clear();
 	FireRenderObject::clear();
-}
-
-// this function is identical to one in FireRenderMesh! 
-// TODO: move it to common parent class!
-void FireRenderGPUCache::detachFromScene()
-{
-	if (!m_isVisible)
-		return;
-
-	if (auto scene = context()->GetScene())
-	{
-		for (auto element : m.elements)
-		{
-			if (auto shape = element.first.shape)
-				scene.Detach(shape);
-		}
-	}
-	m_isVisible = false;
-}
-
-// this function is identical to one in FireRenderMesh! 
-// TODO: move it to common parent class!
-void FireRenderGPUCache::attachToScene()
-{
-	if (m_isVisible)
-		return;
-
-	frw::Shader alembicShader = GetAlembicShadingEngines(Object());
-
-	if (auto scene = context()->GetScene())
-	{
-		for (auto element : m.elements)
-		{
-			if (auto shape = element.first.shape)
-			{
-				scene.Attach(shape);
-				shape.SetShader(alembicShader);
-			}
-		}
-
-		m_isVisible = true;
-	}
 }
 
 // this function is identical to one in FireRenderMesh! 
@@ -215,7 +173,6 @@ void FireRenderGPUCache::ReadAlembicFile()
 frw::Shader FireRenderGPUCache::GetAlembicShadingEngines(MObject gpucacheNode)
 {
 	// this is implementation that returns default shader
-	// - eventually we will try reading material from alembic file and fallback on this when we fail to do so
 	frw::Shader placeholderShader = Scope().GetCachedShader(std::string("DefaultShaderForAlembic"));
 	if (!placeholderShader)
 	{
@@ -241,9 +198,9 @@ void FireRenderGPUCache::RebuildTransforms()
 
 	for (auto& element : m.elements)
 	{
-		if (element.first.shape)
+		if (element.shape)
 		{
-			float(*f)[4][4] = reinterpret_cast<float(*)[4][4]>(element.second.data());
+			float(*f)[4][4] = reinterpret_cast<float(*)[4][4]>(element.TM.data());
 			MMatrix elementTransform(*f);
 
 			MMatrix mayaObjMatr = GetSelfTransform();
@@ -254,7 +211,30 @@ void FireRenderGPUCache::RebuildTransforms()
 			float mfloats[4][4];
 			elementTransform.get(mfloats);
 
-			element.first.shape.SetTransform(&mfloats[0][0]);
+			element.shape.SetTransform(&mfloats[0][0]);
+		}
+	}
+}
+
+void FireRenderGPUCache::ProcessShaders()
+{
+	FireRenderContext* context = this->context();
+
+	for (int i = 0; i < m.elements.size(); i++)
+	{
+		auto& element = m.elements[i];
+		element.shader = context->GetShader(getSurfaceShader(element.shadingEngine), this);
+
+		if (element.shape)
+		{
+			element.shape.SetShader(element.shader);
+
+			frw::ShaderType shType = element.shader.GetShaderType();
+			if (shType == frw::ShaderTypeEmissive)
+				m.isEmissive = true;
+
+			if ((shType == frw::ShaderTypeRprx) && (IsUberEmissive(element.shader)))
+				m.isEmissive = true;
 		}
 	}
 }
@@ -265,10 +245,9 @@ void FireRenderGPUCache::Rebuild()
 	// this is called every time alembic node is moved or params changed
 	// optimizations will be added so that we reload file and rebuild mesh only when its necessary
 	//*********************************
-	RegisterCallbacks();
 
 	// read alembic file
-	bool needReadFile = m.changed.file;
+	bool needReadFile = m_changedFile;
 	if (needReadFile)
 	{
 		ReadAlembicFile();
@@ -278,12 +257,21 @@ void FireRenderGPUCache::Rebuild()
 
 	RebuildTransforms();
 
+	MFnDagNode meshFn(Object());
+	MObjectArray shadingEngines = GetShadingEngines(meshFn, Instance());
+	AssignShadingEngines(shadingEngines);
+
+	RegisterCallbacks();
+
+	ProcessShaders();
+
+	// if (IsMeshVisible())
 	attachToScene();
 
 	m.changed.mesh = false;
 	m.changed.transform = false;
 	m.changed.shader = false;
-	m.changed.file = false;
+	m_changedFile = false;
 }
 
 void FireRenderGPUCache::ReloadMesh(const MDagPath& meshPath)
@@ -301,8 +289,8 @@ void FireRenderGPUCache::ReloadMesh(const MDagPath& meshPath)
 	m.elements.resize(shapes.size());
 	for (unsigned int i = 0; i < shapes.size(); i++)
 	{
-		m.elements[i].first.shape = shapes[i];
-		m.elements[i].second = tmMatrs[i];
+		m.elements[i].shape = shapes[i];
+		m.elements[i].TM = tmMatrs[i];
 	}
 }
 
@@ -458,6 +446,12 @@ void FireRenderGPUCache::OnNodeDirty()
 	setDirty();
 }
 
+void FireRenderGPUCache::OnShaderDirty()
+{
+	m.changed.shader = true;
+	setDirty();
+}
+
 void FireRenderGPUCache::attributeChanged(MNodeMessage::AttributeMessage msg, MPlug &plug, MPlug &otherPlug)
 {
 	std::string name = plug.name().asChar();
@@ -467,7 +461,7 @@ void FireRenderGPUCache::attributeChanged(MNodeMessage::AttributeMessage msg, MP
 		((msg | MNodeMessage::AttributeMessage::kConnectionMade) ||
 		(msg | MNodeMessage::AttributeMessage::kConnectionBroken)))
 	{
-		m.changed.file = true;
+		m_changedFile = true;
 		OnNodeDirty();
 	}
 }
@@ -475,5 +469,27 @@ void FireRenderGPUCache::attributeChanged(MNodeMessage::AttributeMessage msg, MP
 void FireRenderGPUCache::RegisterCallbacks()
 {
 	FireRenderNode::RegisterCallbacks();
+
+	for (auto& it : m.elements)
+	{
+		if (!it.shadingEngine.isNull())
+		{
+			MObject shaderOb = getSurfaceShader(it.shadingEngine);
+			if (!shaderOb.isNull())
+			{
+				AddCallback(MNodeMessage::addNodeDirtyCallback(shaderOb, ShaderDirtyCallback, this));
+			}
+		}
+	}
+}
+
+void FireRenderGPUCache::ShaderDirtyCallback(MObject& node, void* clientData)
+{
+	DebugPrint("CALLBACK > ShaderDirtyCallback(%s)", node.apiTypeStr());
+	if (auto self = static_cast<FireRenderGPUCache*>(clientData))
+	{
+		assert(node != self->Object());
+		self->OnShaderDirty();
+	}
 }
 

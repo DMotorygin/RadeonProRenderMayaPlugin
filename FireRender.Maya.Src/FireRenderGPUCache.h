@@ -24,7 +24,7 @@ limitations under the License.
 #include <sstream>
 #include <functional>
 
-class FireRenderGPUCache : public FireRenderNode
+class FireRenderGPUCache : public FireRenderMeshCommon
 {
 public:
 	// Constructor
@@ -41,12 +41,15 @@ public:
 
 	// transform attribute changed callback
 	virtual void OnNodeDirty() override;
+	virtual void OnShaderDirty();
 
 	// node dirty
 	virtual void attributeChanged(MNodeMessage::AttributeMessage msg, MPlug &plug, MPlug &otherPlug) override;
 	virtual void Freshen() override;
+	static void ShaderDirtyCallback(MObject& node, void* clientData);
 
 	void Rebuild(void);
+	void ProcessShaders(void);
 
 protected:
 	void ReloadMesh(const MDagPath& meshPath);
@@ -59,28 +62,8 @@ protected:
 	bool IsSelected(const MDagPath& dagPath) const;
 	virtual bool IsMeshVisible(const MDagPath& meshPath, const FireRenderContext* context) const;
 
-	// Detach from the scene
-	virtual void detachFromScene() override;
-
-	// Attach to the scene
-	virtual void attachToScene() override;
-
 protected:
-	struct
-	{
-		std::vector<std::pair<FrElement, std::array<float, 16>>> elements;
-		bool isEmissive = false;
-		bool isMainInstance = false;
-		struct
-		{
-			bool mesh = false;
-			bool transform = false;
-			bool shader = false;
-
-			bool file = true;
-		} changed;
-	} m;
-
+	bool m_changedFile;
 	Alembic::Abc::IArchive m_archive;
 	RPRAlembicWrapper::AlembicStorage m_storage;
 	std::shared_ptr<RPRAlembicWrapper::AlembicScene> m_scene;
