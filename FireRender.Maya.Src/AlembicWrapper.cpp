@@ -543,7 +543,7 @@ namespace RPRAlembicWrapper
 		}
 
 		auto n = polymeshObject->points.column_as_vector3("N");
-		if (n)
+		if (n) // in some cases normals are nor stored in points sheet; this is normal case and should be handled
 		{
 			polymeshObject->N.resize(n->rowCount());
 			for (int i = 0; i < polymeshObject->N.size(); ++i)
@@ -552,9 +552,16 @@ namespace RPRAlembicWrapper
 				n->get(i, xyz);
 			}
 		}
-		else
+
+		auto uv = polymeshObject->points.column_as_vector2("uv");
+		if (uv)
 		{
-			// in some cases normals are nor stored in points sheet
+			polymeshObject->UV.resize(uv->rowCount());
+			for (int i = 0; i < polymeshObject->N.size(); ++i)
+			{
+				float *xy = (float *)&polymeshObject->UV[i];
+				uv->get(i, xy);
+			}
 		}
 	}
 

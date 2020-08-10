@@ -34,6 +34,15 @@ namespace RPRAlembicWrapper
 		float z = 0.0f;
 	};
 
+	class Vector2f
+	{
+	public:
+		Vector2f() {}
+		Vector2f(float x_, float y_) : x(x_), y(y_) {}
+		float x = 0.0f;
+		float y = 0.0f;
+	};
+
 	class Matrix4x4f 
 	{
 	public:
@@ -300,6 +309,7 @@ namespace RPRAlembicWrapper
 		std::vector<uint32_t> indices;
 		std::vector<Vector3f> P;
 		std::vector<Vector3f> N;
+		std::vector<Vector2f> UV;
 
 		AttributeSpreadSheet points;
 		AttributeSpreadSheet vertices;

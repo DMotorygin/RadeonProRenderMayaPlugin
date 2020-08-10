@@ -393,21 +393,58 @@ frw::Shape TranslateAlembicMesh(const RPRAlembicWrapper::PolygonMeshObject* mesh
 		}
 	}
 
-	// helpers necessary for passing data to RPR
+	std::vector<int> uvIndices;
+	if (mesh->UV.data() != nullptr)
+	{
+		auto uvsIt = find_if(keyScopeTags->begin(), keyScopeTags->end(), [](const auto& pair)
+		{ return pair.first == "uv"; });
+
+		assert(uvsIt != keyScopeTags.end());
+		std::string uvsTag = uvsIt->second;
+
+		if (uvsTag == pointsTag)
+		{
+			uvIndices = vertexIndices;
+		}
+		else
+		{
+			GenerateIndicesArray(uvIndices, uvsTag, mesh, isTriangleMesh);
+		}
+	}
+
+	// data structures necessary for passing data to RPR
 	const std::vector<RPRAlembicWrapper::Vector3f>& points = mesh->P;
 	const std::vector<RPRAlembicWrapper::Vector3f>& normals = mesh->N;
+	const std::vector<RPRAlembicWrapper::Vector2f>& uvs = mesh->UV;
 
-	unsigned int uvSetCount = 0; // no uv set; at least until we will read materials from alembic
+	unsigned int uvSetCount = 1; // 1 uv set
+	std::vector<const float*> output_submeshUVCoords;
+	output_submeshUVCoords.reserve(uvSetCount);
+	std::vector<size_t> output_submeshSizeCoords;
+	output_submeshSizeCoords.reserve(uvSetCount);
+	std::vector<const rpr_int*>	puvIndices;
+	puvIndices.reserve(uvSetCount);
+
+	// - this should be done for each uv set, but we support only one uv set in object loaded from alembic file for now
+	output_submeshUVCoords.push_back((const float*)uvs.data());
+	output_submeshSizeCoords.push_back(uvs.size());
+
+	puvIndices.push_back(uvIndices.size() > 0 ?
+		uvIndices.data() :
+		nullptr);
+	
+	std::vector<int> texIndexStride(uvSetCount, sizeof(int));
+	std::vector<int> multiUV_texcoord_strides(uvSetCount, sizeof(Float2));
 
 	// pass data to RPR
 	frw::Shape out = context.CreateMeshEx(
 		(const float*)points.data(), points.size(), sizeof(RPRAlembicWrapper::Vector3f),
 		(const float*)normals.data(), normals.size(), sizeof(RPRAlembicWrapper::Vector3f),
 		nullptr, 0, 0,
-		uvSetCount, nullptr, nullptr, nullptr, // no textures, no UVs
+		uvSetCount, output_submeshUVCoords.data(), output_submeshSizeCoords.data(), multiUV_texcoord_strides.data(),
 		(const int*)vertexIndices.data(), sizeof(int),
 		(const int*)normalIndices.data(), normalIndices.size() != 0 ? sizeof(int) : 0,
-		nullptr, nullptr,
+		puvIndices.data(), texIndexStride.data(),
 		(const int*)mesh->faceCounts.data(), mesh->faceCounts.size()
 	);
 
