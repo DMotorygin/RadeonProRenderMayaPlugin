@@ -64,8 +64,9 @@ bool FireRenderGPUCache::IsSelected(const MDagPath& dagPath) const
 
 bool FireRenderGPUCache::IsMeshVisible(const MDagPath& meshPath, const FireRenderContext* context) const
 {
-	// NIY!
-	return true;
+	bool isVisible = meshPath.isVisible();
+
+	return isVisible;
 }
 
 void FireRenderGPUCache::clear()
@@ -241,21 +242,21 @@ void FireRenderGPUCache::ProcessShaders()
 
 void FireRenderGPUCache::Rebuild()
 {
+	MDagPath meshPath = DagPath();
 	//*********************************
 	// this is called every time alembic node is moved or params changed
 	// optimizations will be added so that we reload file and rebuild mesh only when its necessary
 	//*********************************
-
 	// read alembic file
 	bool needReadFile = m_changedFile;
 	if (needReadFile)
 	{
 		ReadAlembicFile();
-		MDagPath meshPath = DagPath();
 		ReloadMesh(meshPath);
 	}
 
 	RebuildTransforms();
+	setRenderStats(meshPath);
 
 	MFnDagNode meshFn(Object());
 	MObjectArray shadingEngines = GetShadingEngines(meshFn, Instance());

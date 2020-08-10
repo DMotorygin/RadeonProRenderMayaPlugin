@@ -272,15 +272,25 @@ public:
 	void AddForceShaderDirtyDependOnOtherObjectCallback(MObject dependency);
 	static void ForceShaderDirtyCallback(MObject& node, void* clientData);
 
-protected:
 	// utility functions
-	void AssignShadingEngines(const MObjectArray& shadingEngines);
+	void setRenderStats(MDagPath dagPath);
+	void setVisibility(bool visibility);
+	void setReflectionVisibility(bool reflectionVisibility);
+	void setRefractionVisibility(bool refractionVisibility);
+	void setCastShadows(bool castShadow);
+	void setPrimaryVisibility(bool primaryVisibility);
 
+protected:
 	// Detach from the scene
 	virtual void detachFromScene() override;
 
 	// Attach to the scene
 	virtual void attachToScene() override;
+
+	// utility functions
+	void AssignShadingEngines(const MObjectArray& shadingEngines);
+
+	virtual bool IsMeshVisible(const MDagPath& meshPath, const FireRenderContext* context) const = 0;
 
 protected:
 
@@ -341,13 +351,6 @@ public:
 
 	// build a sphere
 	void buildSphere();
-
-	void setRenderStats(MDagPath dagPath);
-	void setVisibility(bool visibility);
-	void setReflectionVisibility(bool reflectionVisibility);
-	void setRefractionVisibility(bool refractionVisibility);
-	void setCastShadows(bool castShadow);
-	void setPrimaryVisibility(bool primaryVisibility);
 
 	virtual bool IsEmissive() override { return m.isEmissive; }
 

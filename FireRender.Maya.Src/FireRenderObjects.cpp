@@ -786,7 +786,7 @@ void FireRenderMesh::buildSphere()
 	}
 }
 
-void FireRenderMesh::setRenderStats(MDagPath dagPath)
+void FireRenderMeshCommon::setRenderStats(MDagPath dagPath)
 {
 	MFnDependencyNode depNode(dagPath.node());
 
@@ -845,7 +845,7 @@ bool FireRenderMesh::IsSelected(const MDagPath& dagPath) const
 	return isSelected;
 }
 
-void FireRenderMesh::setVisibility(bool visibility)
+void FireRenderMeshCommon::setVisibility(bool visibility)
 {
 	if (visibility)
 		attachToScene();
@@ -853,7 +853,7 @@ void FireRenderMesh::setVisibility(bool visibility)
 		detachFromScene();
 }
 
-void FireRenderMesh::setReflectionVisibility(bool reflectionVisibility)
+void FireRenderMeshCommon::setReflectionVisibility(bool reflectionVisibility)
 {
 	for (auto element : m.elements)
 	{
@@ -869,7 +869,7 @@ void FireRenderMesh::setReflectionVisibility(bool reflectionVisibility)
 	}
 }
 
-void FireRenderMesh::setRefractionVisibility(bool refractionVisibility)
+void FireRenderMeshCommon::setRefractionVisibility(bool refractionVisibility)
 {
 	for (auto element : m.elements)
 	{
@@ -885,7 +885,7 @@ void FireRenderMesh::setRefractionVisibility(bool refractionVisibility)
 	}
 }
 
-void FireRenderMesh::setCastShadows(bool castShadow)
+void FireRenderMeshCommon::setCastShadows(bool castShadow)
 {
 	for (auto element : m.elements)
 	{
@@ -894,7 +894,7 @@ void FireRenderMesh::setCastShadows(bool castShadow)
 	}
 }
 
-void FireRenderMesh::setPrimaryVisibility(bool primaryVisibility)
+void FireRenderMeshCommon::setPrimaryVisibility(bool primaryVisibility)
 {
 	for (auto element : m.elements)
 	{
