@@ -82,6 +82,18 @@ public:
 		return *this;
 	}
 
+	void SetLightGroupId(rpr_uint id)
+	{
+		if (isAreaLight)
+		{
+			areaLight.SetLightGroupId(id);
+		}
+		else
+		{
+			light.SetLightGroupId(id);
+		}
+	}
+
 	frw::Image image;
 	frw::Light light;
 	frw::Shape areaLight;
