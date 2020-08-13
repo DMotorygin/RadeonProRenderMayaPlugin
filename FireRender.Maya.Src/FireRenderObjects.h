@@ -401,6 +401,7 @@ public:
 
 	// Return the fr light
 	const FrLight& data() { return m_light; }
+	FrLight& GetFrLight() { return m_light; }
 
 	// clear
 	virtual void clear() override;
@@ -852,6 +853,14 @@ public:
 
 protected:
 	virtual bool CreateCurves(void);
+};
+
+class FireRenderCustomEmitter : public FireRenderLight
+{
+public:
+	FireRenderCustomEmitter(FireRenderContext* context, const MDagPath& dagPath);
+
+	void Freshen() override;
 };
 
 bool IsUberEmissive(frw::Shader shader);
