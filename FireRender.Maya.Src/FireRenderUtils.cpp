@@ -2171,3 +2171,44 @@ void EnableAOVsFromRSIfEnvVarSet(FireRenderContext& context, FireRenderAOVs& aov
 
 	aovs.applyToContext(context);
 }
+
+std::string ProcessEnvVarsInFilePath(MString& in)
+{
+	std::string out(in.asChar());
+
+	// find environmental variables in the string
+	std::map<std::string, std::string> eVars;
+	char *s = *environ;
+	int i = 1;
+	for (; s; i++)
+	{
+		std::string tmp(s);
+		std::string varName = tmp.substr(0, tmp.find("="));
+		std::string varValue = tmp.substr(tmp.find("=") + 1, tmp.length());
+
+		eVars[varName] = varValue;
+		s = *(environ + i);
+	};
+
+	// replace them with real path
+	for (auto& eVar : eVars)
+	{
+		std::string tmpVar = "%" + eVar.first + "%";
+		size_t found = out.find(tmpVar);
+
+		if (found == std::string::npos)
+			continue;
+
+		out.replace(found, tmpVar.length(), eVar.second);
+	}
+
+	// replace "\\" with "/"
+	static const std::string toBeReplace("\\");
+	while (out.find(toBeReplace) != std::string::npos)
+	{
+		out.replace(out.find(toBeReplace), toBeReplace.size(), "/");
+	}
+
+	return out;
+}
+
