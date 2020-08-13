@@ -2,7 +2,6 @@
 #include "FireRenderGPUCache.h"
 #include "Context/FireRenderContext.h"
 #include "FireRenderUtils.h"
-#include "AlembicWrapper.hpp"
 
 #include <array>
 #include <algorithm>

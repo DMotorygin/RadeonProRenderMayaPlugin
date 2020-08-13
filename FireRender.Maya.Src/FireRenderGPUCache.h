@@ -13,7 +13,7 @@ limitations under the License.
 #pragma once
 
 #include "FireRenderObjects.h"
-#include "AlembicWrapper.hpp"
+#include "Alembic/AlembicWrapper.hpp"
 
 #include "Alembic/Abc/IArchive.h"
 
