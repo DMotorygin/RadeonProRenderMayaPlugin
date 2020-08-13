@@ -1044,12 +1044,12 @@ std::vector<float> FireRenderContext::getRenderImageData()
 	return data;
 }
 
-unsigned int FireRenderContext::width()
+unsigned int FireRenderContext::width() const
 {
 	return m_width;
 }
 
-unsigned int FireRenderContext::height()
+unsigned int FireRenderContext::height() const
 {
 	return m_height;
 }
@@ -2504,6 +2504,11 @@ void FireRenderContext::setCompletionCriteria(const CompletionCriteriaParams& co
 	m_completionCriteriaParams = completionCriteriaParams;
 }
 
+const CompletionCriteriaParams& FireRenderContext::getCompletionCriteria(void) const
+{
+	return m_completionCriteriaParams;
+}
+
 bool FireRenderContext::isUnlimited()
 {
 	// Corresponds to the kUnlimited enum in FireRenderGlobals.
@@ -2995,7 +3000,7 @@ void FireRenderContext::enableAOV(int aov, bool flag)
 	}
 }
 
-bool FireRenderContext::isAOVEnabled(int aov) 
+bool FireRenderContext::isAOVEnabled(int aov) const 
 {
 	return aovEnabled[aov];
 }
