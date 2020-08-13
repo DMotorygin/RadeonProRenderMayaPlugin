@@ -1254,13 +1254,11 @@ bool FireRenderContext::ConsiderShadowReflectionCatcherOverride(const ReadFrameB
 	{
 		if (isRPR20)
 		{
-			//rifReflectionShadowCatcherOutput(params);
-			compositeReflectionShadowCatcherOutput(params);
+			rifReflectionShadowCatcherOutput(params);
 		}
 		else
 		{
-			rifReflectionShadowCatcherOutput(params);
-			//compositeReflectionShadowCatcherOutput(params);
+			compositeReflectionShadowCatcherOutput(params);
 		}
 		return true;
 	}
@@ -1269,13 +1267,11 @@ bool FireRenderContext::ConsiderShadowReflectionCatcherOverride(const ReadFrameB
 	{
 		if (isRPR20)
 		{
-			//rifShadowCatcherOutput(params);
-			compositeShadowCatcherOutput(params);
+			rifShadowCatcherOutput(params);
 		}
 		else
 		{
-			rifShadowCatcherOutput(params);
-			//compositeShadowCatcherOutput(params);
+			compositeShadowCatcherOutput(params);
 		}
 		return true;
 	}
@@ -1284,13 +1280,11 @@ bool FireRenderContext::ConsiderShadowReflectionCatcherOverride(const ReadFrameB
 	{
 		if (isRPR20)
 		{
-			//rifReflectionCatcherOutput(params);
-			compositeReflectionCatcherOutput(params);
+			rifReflectionCatcherOutput(params);
 		}
 		else
 		{
-			rifReflectionCatcherOutput(params);
-			//compositeReflectionCatcherOutput(params);
+			compositeReflectionCatcherOutput(params);
 		}
 		return true;
 	}
