@@ -904,7 +904,7 @@ frw::Image FireMaya::Scope::GetImage(MString texturePath, MString colorSpace, co
 
 		frw::Image image;
 
-		image = frw::Image(m->context, texturePath.asUTF8());
+		image = frw::Image(m->context, processedTexturePath.c_str());
 
 		if (!image)
 		{
