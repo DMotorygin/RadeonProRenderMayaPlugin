@@ -1056,4 +1056,4 @@ std::string string_format(const std::string& format, Args ... args)
 }
 
 // replaces environment variables in file path string into actual paths
-std::string ProcessEnvVarsInFilePath(MString& in);
+std::string ProcessEnvVarsInFilePath(const MString& in);

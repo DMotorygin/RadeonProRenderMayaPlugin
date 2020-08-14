@@ -2172,9 +2172,9 @@ void EnableAOVsFromRSIfEnvVarSet(FireRenderContext& context, FireRenderAOVs& aov
 	aovs.applyToContext(context);
 }
 
-std::string ProcessEnvVarsInFilePath(MString& in)
+std::string ProcessEnvVarsInFilePath(const MString& in)
 {
-	std::string out(in.asChar());
+	std::string out(in.asUTF8());
 
 	// find environmental variables in the string
 	std::map<std::string, std::string> eVars;
