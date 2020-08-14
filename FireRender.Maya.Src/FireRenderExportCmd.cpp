@@ -357,10 +357,6 @@ MStatus FireRenderExportCmd::doIt(const MArgList & args)
 		size_t fileExtensionIndex = filePath.find("." + fileExtension);
 		bool fileExtensionNotProvided = fileExtensionIndex == -1;
 
-
-		//int fileExtensionIndex = inFilePath.rindexW("." + fileExtension);
-		//bool fileExtensionNotProvided = fileExtensionIndex == -1;
-
 		if (fileExtensionNotProvided)
 		{
 			fileName = filePath;
