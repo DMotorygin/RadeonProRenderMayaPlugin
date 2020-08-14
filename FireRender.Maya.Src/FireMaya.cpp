@@ -1944,7 +1944,7 @@ FireMaya::Scope::~Scope()
 }
 
 
-frw::Shader FireMaya::Scope::GetShader(MObject node, const FireRenderMesh* pMesh, bool forceUpdate)
+frw::Shader FireMaya::Scope::GetShader(MObject node, const FireRenderMeshCommon* pMesh, bool forceUpdate)
 {
 	if (node.isNull())
 	{
