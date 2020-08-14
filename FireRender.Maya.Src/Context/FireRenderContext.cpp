@@ -2188,6 +2188,10 @@ bool FireRenderContext::AddSceneObject(const MDagPath& dagPath)
 		{
 			ob = CreateSceneObject<FireRenderHairNHair, NodeCachingOptions::AddPath>(dagPath);
 		}
+		else if (dagNode.typeName() == "locator" && m_bIsGLTFExport)
+		{
+			ob = CreateSceneObject<FireRenderCustomEmitter, NodeCachingOptions::DontAddPath>(dagPath);
+		}
 		else if (dagNode.typeName() == "transform")
 		{
 			ob = CreateSceneObject<FireRenderNode, NodeCachingOptions::AddPath>(dagPath);
