@@ -2178,25 +2178,48 @@ void EnableAOVsFromRSIfEnvVarSet(FireRenderContext& context, FireRenderAOVs& aov
 extern char **environ;
 #endif
 
+class EnvironmentVarsWrapper
+{
+public:
+	static const std::map<std::string, std::string>& GetEnvVarsTable(void)
+	{
+		static EnvironmentVarsWrapper instance;
+
+		return instance.m_eVars;
+	}
+
+	EnvironmentVarsWrapper(EnvironmentVarsWrapper const&) = delete;
+	void operator=(EnvironmentVarsWrapper const&) = delete;
+
+private:
+	EnvironmentVarsWrapper(void) 
+	{
+		char *s = *environ;
+		int i = 1;
+		for (; s; i++)
+		{
+			std::string tmp(s);
+			std::string varName = tmp.substr(0, tmp.find("="));
+			std::string varValue = tmp.substr(tmp.find("=") + 1, tmp.length());
+
+			m_eVars[varName] = varValue;
+			s = *(environ + i);
+		};
+	}
+
+private:
+	std::map<std::string, std::string> m_eVars;
+};
+
+
 std::string ProcessEnvVarsInFilePath(const MString& in)
 {
 	std::string out(in.asUTF8());
 
+	const std::map<std::string, std::string>& eVars = EnvironmentVarsWrapper::GetEnvVarsTable();
+
 	// find environmental variables in the string
-	std::map<std::string, std::string> eVars;
-	char *s = *environ;
-	int i = 1;
-	for (; s; i++)
-	{
-		std::string tmp(s);
-		std::string varName = tmp.substr(0, tmp.find("="));
-		std::string varValue = tmp.substr(tmp.find("=") + 1, tmp.length());
-
-		eVars[varName] = varValue;
-		s = *(environ + i);
-	};
-
-	// replace them with real path
+	// and replace them with real path
 	for (auto& eVar : eVars)
 	{
 		std::string tmpVar = "%" + eVar.first + "%";
