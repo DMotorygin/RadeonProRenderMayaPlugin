@@ -2682,6 +2682,8 @@ frw::FrameBuffer GetOutFrameBuffer(const FireRenderContext::ReadFrameBufferReque
 // -----------------------------------------------------------------------------
 void FireRenderContext::rifShadowCatcherOutput(const ReadFrameBufferRequestParams& params)
 {
+	bool forceCPUContext = GetTahoeVersionToUse() == TahoePluginVersion::RPR2;
+
 	const rpr_framebuffer colorFrameBuffer = m.framebufferAOV_resolved[RPR_AOV_COLOR].Handle();
 	const rpr_framebuffer opacityFrameBuffer = m.framebufferAOV_resolved[RPR_AOV_OPACITY].Handle();
 	const rpr_framebuffer shadowCatcherFrameBuffer = m.framebufferAOV_resolved[RPR_AOV_SHADOW_CATCHER].Handle();
@@ -2692,7 +2694,7 @@ void FireRenderContext::rifShadowCatcherOutput(const ReadFrameBufferRequestParam
 		MString path;
 		MStatus s = MGlobal::executeCommand("getModulePath -moduleName RadeonProRender", path);
 		MString mlModelsFolder = path + "/data/models";
-		std::shared_ptr<ImageFilter> shadowCatcherFilter = std::shared_ptr<ImageFilter>(new ImageFilter(context(), m_width, m_height, mlModelsFolder.asChar()));
+		std::shared_ptr<ImageFilter> shadowCatcherFilter = std::shared_ptr<ImageFilter>(new ImageFilter(context(), m_width, m_height, mlModelsFolder.asChar(), forceCPUContext));
 		shadowCatcherFilter->CreateFilter(RifFilterType::ShadowCatcher);
 		shadowCatcherFilter->AddInput(RifColor, colorFrameBuffer, 0.1f);
 		shadowCatcherFilter->AddInput(RifOpacity, opacityFrameBuffer, 0.1f);
@@ -2746,6 +2748,8 @@ void FireRenderContext::rifShadowCatcherOutput(const ReadFrameBufferRequestParam
 
 void FireRenderContext::rifReflectionCatcherOutput(const ReadFrameBufferRequestParams& params)
 {
+	bool forceCPUContext = GetTahoeVersionToUse() == TahoePluginVersion::RPR2;
+
 	const rpr_framebuffer colorFrameBuffer = m.framebufferAOV_resolved[RPR_AOV_COLOR].Handle();
 	const rpr_framebuffer opacityFrameBuffer = m.framebufferAOV_resolved[RPR_AOV_OPACITY].Handle();
 	const rpr_framebuffer reflectionCatcherFrameBuffer = m.framebufferAOV_resolved[RPR_AOV_REFLECTION_CATCHER].Handle();
@@ -2756,7 +2760,7 @@ void FireRenderContext::rifReflectionCatcherOutput(const ReadFrameBufferRequestP
 		MString path;
 		MStatus s = MGlobal::executeCommand("getModulePath -moduleName RadeonProRender", path);
 		MString mlModelsFolder = path + "/data/models";
-		std::shared_ptr<ImageFilter> catcherFilter = std::shared_ptr<ImageFilter>(new ImageFilter(context(), m_width, m_height, mlModelsFolder.asChar()));
+		std::shared_ptr<ImageFilter> catcherFilter = std::shared_ptr<ImageFilter>(new ImageFilter(context(), m_width, m_height, mlModelsFolder.asChar(), forceCPUContext));
 		catcherFilter->CreateFilter(RifFilterType::ReflectionCatcher);
 		catcherFilter->AddInput(RifColor, colorFrameBuffer, 0.1f);
 		catcherFilter->AddInput(RifOpacity, opacityFrameBuffer, 0.1f);
@@ -2795,6 +2799,8 @@ void FireRenderContext::rifReflectionCatcherOutput(const ReadFrameBufferRequestP
 
 void FireRenderContext::rifReflectionShadowCatcherOutput(const ReadFrameBufferRequestParams& params)
 {
+	bool forceCPUContext = GetTahoeVersionToUse() == TahoePluginVersion::RPR2;
+
 	const rpr_framebuffer colorFrameBuffer = m.framebufferAOV_resolved[RPR_AOV_COLOR].Handle();
 	const rpr_framebuffer opacityFrameBuffer = m.framebufferAOV_resolved[RPR_AOV_OPACITY].Handle();
 	const rpr_framebuffer shadowCatcherFrameBuffer = m.framebufferAOV_resolved[RPR_AOV_SHADOW_CATCHER].Handle();
@@ -2806,7 +2812,7 @@ void FireRenderContext::rifReflectionShadowCatcherOutput(const ReadFrameBufferRe
 		MString path;
 		MStatus s = MGlobal::executeCommand("getModulePath -moduleName RadeonProRender", path);
 		MString mlModelsFolder = path + "/data/models";
-		std::shared_ptr<ImageFilter> catcherFilter = std::shared_ptr<ImageFilter>(new ImageFilter(context(), m_width, m_height, mlModelsFolder.asChar()));
+		std::shared_ptr<ImageFilter> catcherFilter = std::shared_ptr<ImageFilter>(new ImageFilter(context(), m_width, m_height, mlModelsFolder.asChar(), forceCPUContext));
 		catcherFilter->CreateFilter(RifFilterType::ShadowReflectionCatcher);
 		catcherFilter->AddInput(RifColor, colorFrameBuffer, 0.1f);
 		catcherFilter->AddInput(RifOpacity, opacityFrameBuffer, 0.1f);
