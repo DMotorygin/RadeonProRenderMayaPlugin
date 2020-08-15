@@ -28,9 +28,11 @@ limitations under the License.
 #include <maya/MFnSingleIndexedComponent.h>
 #include <maya/MFnDependencyNode.h>
 #include <maya/MFileObject.h>
+
 #include <cassert>
 #include <vector>
 #include <time.h>
+#include <iostream>
 
 #include "attributeNames.h"
 #include "OptionVarHelpers.h"
@@ -2171,6 +2173,10 @@ void EnableAOVsFromRSIfEnvVarSet(FireRenderContext& context, FireRenderAOVs& aov
 
 	aovs.applyToContext(context);
 }
+
+#ifdef __APPLE__ // https://stackoverflow.com/questions/31346887/header-for-environ-on-mac
+extern char **environ;
+#endif
 
 std::string ProcessEnvVarsInFilePath(const MString& in)
 {
