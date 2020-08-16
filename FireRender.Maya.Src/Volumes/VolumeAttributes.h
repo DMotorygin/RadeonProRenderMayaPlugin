@@ -191,7 +191,7 @@ public:
 	static void Initialize();
 
 	static MDataHandle GetVolumeGridDimentions(const MFnDependencyNode& node);
-	static MString GetVDBFilePath(const MFnDependencyNode& node);
+	static std::string GetVDBFilePath(const MFnDependencyNode& node);
 
 	static bool GetAlbedoEnabled(const MFnDependencyNode& node);
 	static VolumeGradient GetAlbedoGradientType(const MFnDependencyNode& node);

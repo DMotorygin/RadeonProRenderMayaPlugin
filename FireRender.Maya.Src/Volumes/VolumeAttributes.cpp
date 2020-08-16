@@ -20,6 +20,8 @@ limitations under the License.
 #include <maya/MDGModifier.h>
 #include <maya/MFnStringArrayData.h>
 #include <maya/MArrayDataBuilder.h>
+#include <maya/MAnimControl.h>
+#include <maya/MTime.h>
 
 #pragma warning(push)
 #pragma warning(disable : 4244)
@@ -279,20 +281,51 @@ MDataHandle RPRVolumeAttributes::GetVolumeGridDimentions(const MFnDependencyNode
 	return MDataHandle();
 }
 
-MString RPRVolumeAttributes::GetVDBFilePath(const MFnDependencyNode& node)
+std::string RPRVolumeAttributes::GetVDBFilePath(const MFnDependencyNode& node)
 {
 	MStatus status;
 
+	// get file name string
 	MPlug plug = node.findPlug(RPRVolumeAttributes::vdbFile, &status);
 	CHECK_MSTATUS(status);
 
 	assert(!plug.isNull());
-	if (!plug.isNull())
+	if (plug.isNull())
 	{
-		return plug.asString();
+		return "";
 	}
 
-	return MString();
+	std::string out;
+	out = plug.asString().asChar();
+	// - NIY => process env vars
+
+	// check if file exists
+	std::ifstream f(out);
+	bool fileExists = f.good();
+	if (fileExists)
+		return out;
+
+	// check if filename is part of sequence
+	// - get current animation frame
+	MTime currentTime = MAnimControl::currentTime();
+	double timeValue = currentTime.value();
+	MTime::Unit timeUnit = currentTime.uiUnit();
+	int currentAnimFrame = (int)timeValue;
+
+	// - check if vdb file with such frame number exists
+	const std::string fileExtension = ".vdb";
+	size_t fileExtensionIndex = out.find(fileExtension);
+	out =  // should replace this with input of schema of some kind
+		out.substr(0, fileExtensionIndex) + 
+		"_" + 
+		std::to_string(currentAnimFrame) + 
+		fileExtension;
+	std::ifstream anim(out);
+	bool sequenceExists = anim.good();
+	if (sequenceExists)
+		return out;
+
+	return "";
 }
 
 bool RPRVolumeAttributes::GetAlbedoEnabled(const MFnDependencyNode& node)
@@ -559,7 +592,7 @@ void ProcessTemperatureGrid(
 void RPRVolumeAttributes::SetupVolumeFromFile(MObject& node, FireRenderVolumeLocator::GridParams& gridParams)
 {
 	// get .vdb file from UI form
-	std::string filename = GetVDBFilePath(node).asChar();
+	std::string filename = GetVDBFilePath(node);
 	if (filename.empty())
 		return;
 
@@ -627,7 +660,7 @@ void RPRVolumeAttributes::FillVolumeData(VDBVolumeData& data, const MObject& nod
 {
 	MFnDependencyNode depNode(node);
 
-	std::string filename = GetVDBFilePath(depNode).asChar();
+	std::string filename = GetVDBFilePath(depNode);
 	if (filename.empty())
 		return;
 
