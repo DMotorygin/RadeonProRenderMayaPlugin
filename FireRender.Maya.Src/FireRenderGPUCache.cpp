@@ -107,6 +107,12 @@ std::string ProcessFilePath(MString& in)
 		size_t found = out.find(tmpVar);
 
 		if (found == std::string::npos)
+		{
+			tmpVar = "${" + eVar.first + "}";
+			found = out.find(tmpVar);
+		}
+
+		if (found == std::string::npos)
 			continue;
 
 		out.replace(found, tmpVar.length(), eVar.second);
@@ -328,10 +334,14 @@ void GenerateIndicesByFvr(std::vector<int>& out, const RPRAlembicWrapper::Polygo
 	uint32_t idx = 0;
 	for (uint32_t faceCount : mesh->faceCounts)
 	{
+		uint32_t currIdx = idx;
+
 		for (uint32_t idxInPolygon = 0; idxInPolygon < faceCount; ++idxInPolygon)
 		{
 			out.push_back(idx++);
 		}
+
+		std::reverse(out.end() - faceCount, out.end());
 	}
 }
 
@@ -368,7 +378,7 @@ frw::Shape TranslateAlembicMesh(const RPRAlembicWrapper::PolygonMeshObject* mesh
 		{ return pair.first == "P"; });
 
 	// in alembic indexes are reversed compared to what RPR expects
-	assert(pointsIt != keyScopeTags.end());
+	assert(pointsIt != keyScopeTags->end());
 	std::string pointsTag = pointsIt->second;
 
 	GenerateIndicesArray(vertexIndices, pointsTag, mesh, isTriangleMesh);
@@ -379,7 +389,7 @@ frw::Shape TranslateAlembicMesh(const RPRAlembicWrapper::PolygonMeshObject* mesh
 		auto normalsIt = find_if(keyScopeTags->begin(), keyScopeTags->end(), [](const auto& pair)
 			{ return pair.first == "N"; });
 
-		assert(normalsIt != keyScopeTags.end());
+		assert(normalsIt != keyScopeTags->end());
 		std::string normalsTag = normalsIt->second;
 
 		if (normalsTag == pointsTag)
@@ -398,7 +408,7 @@ frw::Shape TranslateAlembicMesh(const RPRAlembicWrapper::PolygonMeshObject* mesh
 		auto uvsIt = find_if(keyScopeTags->begin(), keyScopeTags->end(), [](const auto& pair)
 		{ return pair.first == "uv"; });
 
-		assert(uvsIt != keyScopeTags.end());
+		assert(uvsIt != keyScopeTags->end());
 		std::string uvsTag = uvsIt->second;
 
 		if (uvsTag == pointsTag)
