@@ -2192,16 +2192,16 @@ public:
 private:
 	EnvironmentVarsWrapper(void) 
 	{
-		char *s = *environ;
-		int i = 1;
-		for (; s; i++)
+		char *pEnvVarPair = *environ;
+		for (int idx = 1; pEnvVarPair; idx++)
 		{
-			std::string tmp(s);
-			std::string varName = tmp.substr(0, tmp.find("="));
-			std::string varValue = tmp.substr(tmp.find("=") + 1, tmp.length());
+			std::string tmp(pEnvVarPair);
+			size_t delimiter = tmp.find("=");
+			std::string varName = tmp.substr(0, delimiter);
+			std::string varValue = tmp.substr(delimiter + 1, tmp.length());
 
 			m_eVars[varName] = varValue;
-			s = *(environ + i);
+			pEnvVarPair = *(environ + idx);
 		};
 	}
 
@@ -2216,12 +2216,18 @@ std::string ProcessEnvVarsInFilePath(const MString& in)
 
 	const std::map<std::string, std::string>& eVars = EnvironmentVarsWrapper::GetEnvVarsTable();
 
-	// find environmental variables in the string
+	// find environmen variables in the string
 	// and replace them with real path
 	for (auto& eVar : eVars)
 	{
 		std::string tmpVar = "%" + eVar.first + "%";
 		size_t found = out.find(tmpVar);
+
+		if (found == std::string::npos)
+		{
+			tmpVar = "${" + eVar.first + "}";
+			found = out.find(tmpVar);
+		}
 
 		if (found == std::string::npos)
 			continue;
