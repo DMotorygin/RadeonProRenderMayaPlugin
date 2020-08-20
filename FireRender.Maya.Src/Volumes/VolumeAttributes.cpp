@@ -31,10 +31,12 @@ limitations under the License.
 
 #include <array>
 #include <fstream>
+#include <regex>
 
 
 // general
 MObject RPRVolumeAttributes::vdbFile;
+MObject RPRVolumeAttributes::namingSchema;
 MObject RPRVolumeAttributes::loadedGrids;
 
 // channels
@@ -206,6 +208,12 @@ void RPRVolumeAttributes::Initialize()
 	status = addAttribute(vdbFile);
 	CHECK_MSTATUS(status);
 
+	// - naming schema (for sequence)
+	namingSchema = nAttr.create("namingSchema", "nmsh", MFnNumericData::kInt, 0);
+	CHECK_MSTATUS(status);
+	tAttr.setHidden(true);
+	setAttribProps(tAttr, namingSchema);
+
 	MFnStringData stringData; // use textScrollList for UI
 	MStatus status2;
 	loadedGrids = tAttr.create("loadedGrids", "loag", MFnData::kString, stringData.create(&status2), &status); //https://download.autodesk.com/us/maya/2011help/API/cgfx_shader_node_8cpp-example.html#_a24
@@ -281,6 +289,45 @@ MDataHandle RPRVolumeAttributes::GetVolumeGridDimentions(const MFnDependencyNode
 	return MDataHandle();
 }
 
+bool ProcessSchema(int schemaId, int frame, const std::string& fileExtension, std::string& filePath)
+{
+	const static std::map<int, std::string> mayaNamePattern =
+	{
+		{ 0, "name.#.ext" },
+		{ 1, "name.ext.#" },
+		{ 2, "name.#"     },
+		{ 3, "name#.ext"  },
+		{ 4, "name_#.ext" }
+	};
+
+	auto it = mayaNamePattern.find(schemaId);
+	if (it == mayaNamePattern.end())
+		return false;
+
+	std::string pattern = it->second;
+
+	std::regex name_regex("name");
+	std::regex frame_regex("#");
+	std::regex extension_regex("ext");
+
+	std::regex extractFilename("^(.+)\/([^/]+)$");
+	std::smatch m;
+	std::string s(filePath);
+
+	while (std::regex_search(s, m, extractFilename))
+	{
+		for (auto x : m)
+		{
+			std::string test(x);
+			int debugi = 0;
+		}
+		
+		s = m.suffix().str();
+	}
+
+	return true;
+}
+
 std::string RPRVolumeAttributes::GetVDBFilePath(const MFnDependencyNode& node)
 {
 	MStatus status;
@@ -302,10 +349,13 @@ std::string RPRVolumeAttributes::GetVDBFilePath(const MFnDependencyNode& node)
 	// check if file exists
 	std::ifstream f(out);
 	bool fileExists = f.good();
-	if (fileExists)
-		return out;
+	if (!fileExists)
+		return "";
 
 	// check if filename is part of sequence
+	const std::string fileExtension = ".vdb";
+	ProcessSchema(0, 0, fileExtension, out);
+
 	// - get current animation frame
 	MTime currentTime = MAnimControl::currentTime();
 	double timeValue = currentTime.value();
@@ -313,7 +363,6 @@ std::string RPRVolumeAttributes::GetVDBFilePath(const MFnDependencyNode& node)
 	int currentAnimFrame = (int)timeValue;
 
 	// - check if vdb file with such frame number exists
-	const std::string fileExtension = ".vdb";
 	size_t fileExtensionIndex = out.find(fileExtension);
 	out =  // should replace this with input of schema of some kind
 		out.substr(0, fileExtensionIndex) + 

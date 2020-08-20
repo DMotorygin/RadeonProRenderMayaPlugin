@@ -222,6 +222,7 @@ public:
 	// General
 	// - VDB file
 	static MObject vdbFile;
+	static MObject namingSchema;
 	static MObject loadedGrids;
 
 	/*
