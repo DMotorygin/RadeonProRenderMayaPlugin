@@ -289,41 +289,47 @@ MDataHandle RPRVolumeAttributes::GetVolumeGridDimentions(const MFnDependencyNode
 	return MDataHandle();
 }
 
-bool ProcessSchema(int schemaId, int frame, const std::string& fileExtension, std::string& filePath)
+bool ProcessSchema(int schemaId, int frame, std::string& filePath)
 {
-	const static std::map<int, std::string> mayaNamePattern =
+	const std::string& fileExtension ("vdb");
+
+	const static std::map<int, std::tuple<std::regex, std::regex, std::string>> mayaNamePattern =
 	{
-		{ 0, "name.#.ext" },
-		{ 1, "name.ext.#" },
-		{ 2, "name.#"     },
-		{ 3, "name#.ext"  },
-		{ 4, "name_#.ext" }
+		{ 0, {std::regex(R"(^(?:[\w]\:)(\/[a-zA-Z_\-\s0-9\.]+)+(\.)([0-9])+\.(vdb)$)"), std::regex(R"((\.)([0-9])+\.(vdb)$)"),	"name.#.ext"	}},
+		{ 1, {std::regex(R"(^(?:[\w]\:)(\/[a-zA-Z_\-\s0-9\.]+)+(\.)(vdb)\.([0-9])+$)"), std::regex(R"((\.)(vdb)\.([0-9])+$)"),	"name.ext.#"	}},
+		{ 2, {std::regex(R"(^(?:[\w]\:)(\/[a-zA-Z_\-\s0-9\.]+)+\.([0-9])+$)"),			std::regex(R"(\.([0-9])+$)"),			"name.#"		}},
+		{ 3, {std::regex(R"(^(?:[\w]\:)(\/[a-zA-Z_\-\s0-9\.]+)+([0-9])+\.(vdb)$)"),		std::regex(R"(([0-9])+\.(vdb)$)"),		"name#.ext"		}},
+		{ 4, {std::regex(R"(^(?:[\w]\:)(\/[a-zA-Z_\-\s0-9\.]+)+(\_)([0-9])+\.(vdb)$)"), std::regex(R"((\_)([0-9])+\.(vdb))"),	"name_#.ext"	}}
 	};
 
+	// get regex record corresponding to ui option
 	auto it = mayaNamePattern.find(schemaId);
 	if (it == mayaNamePattern.end())
 		return false;
 
-	std::string pattern = it->second;
+	// ui option matches with input file name / path => proceed
+	const std::regex& fullPathCheck = std::get<0>(it->second);
+	bool matches = std::regex_match(filePath.begin(), filePath.end(), fullPathCheck);
+	if (!matches)
+		return false;
 
+	// extract file name (without frame and extention)
+	std::smatch match;
+	const std::regex& getFilename = std::get<1>(it->second); //getFilename(R"(([a-zA-Z_]+)\_([0-9]+)\.(vdb)$)");
+	bool found = std::regex_search(filePath, match, getFilename);
+	assert(found);
+	std::string tail = match[0];
+	std::string filename = filePath.substr(0, filePath.find(tail));
+
+	// form output string
 	std::regex name_regex("name");
 	std::regex frame_regex("#");
 	std::regex extension_regex("ext");
+	const std::string pattern = std::get<2>(it->second);
 
-	std::regex extractFilename("^(.+)\/([^/]+)$");
-	std::smatch m;
-	std::string s(filePath);
-
-	while (std::regex_search(s, m, extractFilename))
-	{
-		for (auto x : m)
-		{
-			std::string test(x);
-			int debugi = 0;
-		}
-		
-		s = m.suffix().str();
-	}
+	filePath = std::regex_replace(pattern, extension_regex, fileExtension);
+	filePath = std::regex_replace(filePath, frame_regex, std::to_string(frame));
+	filePath = std::regex_replace(filePath, name_regex, filename);
 
 	return true;
 }
@@ -333,17 +339,17 @@ std::string RPRVolumeAttributes::GetVDBFilePath(const MFnDependencyNode& node)
 	MStatus status;
 
 	// get file name string
-	MPlug plug = node.findPlug(RPRVolumeAttributes::vdbFile, &status);
+	MPlug vdbFilePlug = node.findPlug(RPRVolumeAttributes::vdbFile, &status);
 	CHECK_MSTATUS(status);
 
-	assert(!plug.isNull());
-	if (plug.isNull())
+	assert(!vdbFilePlug.isNull());
+	if (vdbFilePlug.isNull())
 	{
 		return "";
 	}
 
 	std::string out;
-	out = plug.asString().asChar();
+	out = vdbFilePlug.asString().asChar();
 	// - NIY => process env vars
 
 	// check if file exists
@@ -352,29 +358,18 @@ std::string RPRVolumeAttributes::GetVDBFilePath(const MFnDependencyNode& node)
 	if (!fileExists)
 		return "";
 
-	// check if filename is part of sequence
-	const std::string fileExtension = ".vdb";
-	ProcessSchema(0, 0, fileExtension, out);
-
-	// - get current animation frame
+	// get current animation frame
 	MTime currentTime = MAnimControl::currentTime();
 	double timeValue = currentTime.value();
 	MTime::Unit timeUnit = currentTime.uiUnit();
 	int currentAnimFrame = (int)timeValue;
 
-	// - check if vdb file with such frame number exists
-	size_t fileExtensionIndex = out.find(fileExtension);
-	out =  // should replace this with input of schema of some kind
-		out.substr(0, fileExtensionIndex) + 
-		"_" + 
-		std::to_string(currentAnimFrame) + 
-		fileExtension;
-	std::ifstream anim(out);
-	bool sequenceExists = anim.good();
-	if (sequenceExists)
-		return out;
+	// check if filename is part of sequence
+	MPlug vdbSchemaPlug = node.findPlug(RPRVolumeAttributes::namingSchema);
+	assert(!vdbSchemaPlug.isNull());
+	bool isSequence = ProcessSchema(vdbSchemaPlug.asInt(), currentAnimFrame, out);
 
-	return "";
+	return out;
 }
 
 bool RPRVolumeAttributes::GetAlbedoEnabled(const MFnDependencyNode& node)
