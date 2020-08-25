@@ -40,6 +40,9 @@ limitations under the License.
 #endif
 #include <iomanip>
 
+#include <codecvt>
+#include <locale>
+
 FireRenderExportCmd::FireRenderExportCmd()
 {
 }
@@ -70,24 +73,29 @@ MSyntax FireRenderExportCmd::newSyntax()
 	return syntax;
 }
 
-bool SaveExportConfig(std::string filePath, TahoeContext& ctx, std::string fileName)
+bool SaveExportConfig(std::wstring filePath, TahoeContext& ctx, std::wstring fileName)
 {
 	// get directory path and name of generated files
-	std::string directory = filePath;
+	std::wstring directory = filePath;
 	const size_t lastIdx = filePath.rfind('/');
 	if (std::string::npos != lastIdx)
 	{
 		directory = filePath.substr(0, lastIdx);
 	}
 	fileName.erase(0, directory.length() + 1);
-	directory += "/config.json";
-	std::ofstream json(directory);
+	directory += L"/config.json";
+
+	std::wofstream json(directory);
 	if (!json)
 		return false;
 
+	const std::locale utf8_locale
+		= std::locale(std::locale(), new std::codecvt_utf8<wchar_t>());
+	json.imbue(utf8_locale);
+
 	json << "{" << std::endl;
 
-	json << "\"output\" : " << "\"" << fileName << ".png\",\n";
+	json << "\"output\" : " << "\"" << fileName.c_str() << ".png\",\n";
 
 	json << "\"output.json\" : \"output.json\",\n";
 
@@ -108,40 +116,40 @@ bool SaveExportConfig(std::string filePath, TahoeContext& ctx, std::string fileN
 	json << "\"gamma\" : " << 1 << ",\n";
 
 	// - aovs
-	static std::map<unsigned int, std::string> aov2name =
+	static std::map<unsigned int, std::wstring> aov2name =
 	{
-		 {RPR_AOV_COLOR, "color"}
-		,{RPR_AOV_OPACITY, "opacity" }
-		,{RPR_AOV_WORLD_COORDINATE, "world.coordinate" }
-		,{RPR_AOV_UV, "uv" }
-		,{RPR_AOV_MATERIAL_IDX, "material.id" }
-		,{RPR_AOV_GEOMETRIC_NORMAL, "normal.geom" }
-		,{RPR_AOV_SHADING_NORMAL, "normal" }
-		,{RPR_AOV_DEPTH, "depth" }
-		,{RPR_AOV_OBJECT_ID, "object.id" }
-		,{RPR_AOV_OBJECT_GROUP_ID, "group.id" }
-		,{RPR_AOV_SHADOW_CATCHER, "shadow.catcher" }
-		,{RPR_AOV_BACKGROUND, "background" }
-		,{RPR_AOV_EMISSION, "emission" }
-		,{RPR_AOV_VELOCITY, "velocity" }
-		,{RPR_AOV_DIRECT_ILLUMINATION, "direct.illumination" }
-		,{RPR_AOV_INDIRECT_ILLUMINATION, "indirect.illumination"}
-		,{RPR_AOV_AO, "ao" }
-		,{RPR_AOV_DIRECT_DIFFUSE, "direct.diffuse" }
-		,{RPR_AOV_DIRECT_REFLECT, "direct.reflect" }
-		,{RPR_AOV_INDIRECT_DIFFUSE, "indirect.diffuse" }
-		,{RPR_AOV_INDIRECT_REFLECT, "indirect.reflect" }
-		,{RPR_AOV_REFRACT, "refract" }
-		,{RPR_AOV_VOLUME, "volume" }
-		,{RPR_AOV_LIGHT_GROUP0, "light.group0" }
-		,{RPR_AOV_LIGHT_GROUP1, "light.group1" }
-		,{RPR_AOV_LIGHT_GROUP2, "light.group2" }
-		,{RPR_AOV_LIGHT_GROUP3, "light.group3" }
-		,{RPR_AOV_DIFFUSE_ALBEDO, "albedo.diffuse" }
-		,{RPR_AOV_VARIANCE, "variance" }
-		,{RPR_AOV_VIEW_SHADING_NORMAL, "normal.view" }
-		,{RPR_AOV_REFLECTION_CATCHER, "reflection.catcher" }
-		,{RPR_AOV_MAX, "RPR_AOV_MAX" }
+		 {RPR_AOV_COLOR, L"color"}
+		,{RPR_AOV_OPACITY, L"opacity" }
+		,{RPR_AOV_WORLD_COORDINATE, L"world.coordinate" }
+		,{RPR_AOV_UV, L"uv" }
+		,{RPR_AOV_MATERIAL_IDX, L"material.id" }
+		,{RPR_AOV_GEOMETRIC_NORMAL, L"normal.geom" }
+		,{RPR_AOV_SHADING_NORMAL, L"normal" }
+		,{RPR_AOV_DEPTH, L"depth" }
+		,{RPR_AOV_OBJECT_ID, L"object.id" }
+		,{RPR_AOV_OBJECT_GROUP_ID, L"group.id" }
+		,{RPR_AOV_SHADOW_CATCHER, L"shadow.catcher" }
+		,{RPR_AOV_BACKGROUND, L"background" }
+		,{RPR_AOV_EMISSION, L"emission" }
+		,{RPR_AOV_VELOCITY, L"velocity" }
+		,{RPR_AOV_DIRECT_ILLUMINATION, L"direct.illumination" }
+		,{RPR_AOV_INDIRECT_ILLUMINATION, L"indirect.illumination"}
+		,{RPR_AOV_AO, L"ao" }
+		,{RPR_AOV_DIRECT_DIFFUSE, L"direct.diffuse" }
+		,{RPR_AOV_DIRECT_REFLECT, L"direct.reflect" }
+		,{RPR_AOV_INDIRECT_DIFFUSE, L"indirect.diffuse" }
+		,{RPR_AOV_INDIRECT_REFLECT, L"indirect.reflect" }
+		,{RPR_AOV_REFRACT, L"refract" }
+		,{RPR_AOV_VOLUME, L"volume" }
+		,{RPR_AOV_LIGHT_GROUP0, L"light.group0" }
+		,{RPR_AOV_LIGHT_GROUP1, L"light.group1" }
+		,{RPR_AOV_LIGHT_GROUP2, L"light.group2" }
+		,{RPR_AOV_LIGHT_GROUP3, L"light.group3" }
+		,{RPR_AOV_DIFFUSE_ALBEDO, L"albedo.diffuse" }
+		,{RPR_AOV_VARIANCE, L"variance" }
+		,{RPR_AOV_VIEW_SHADING_NORMAL, L"normal.view" }
+		,{RPR_AOV_REFLECTION_CATCHER, L"reflection.catcher" }
+		,{RPR_AOV_MAX, L"RPR_AOV_MAX" }
 	};
 
 	FireRenderGlobalsData globals;
@@ -149,7 +157,7 @@ bool SaveExportConfig(std::string filePath, TahoeContext& ctx, std::string fileN
 	FireRenderAOVs& aovsGlobal = globals.aovs;
 	aovsGlobal.applyToContext(ctx);
 
-	std::vector<std::string> aovs;
+	std::vector<std::wstring> aovs;
 	for (auto aov = RPR_AOV_OPACITY; aov != RPR_AOV_MAX; aov++)
 	{
 		auto it = aov2name.find(aov);
@@ -167,31 +175,31 @@ bool SaveExportConfig(std::string filePath, TahoeContext& ctx, std::string fileN
 	if (aov != aovs.end())
 	{
 		json << "\"aovs\" : {\n";
-		json << "\"" << *aov << "\":\"" << (*aov + ".png") << "\"";
+		json << "\"" << *aov << "\":\"" << (*aov + L".png") << "\"";
 		++aov;
 
 		for (; aov != aovs.end(); ++aov)
 		{
-			json << ",\n" << "\"" << *aov << "\":\"" << (*aov + ".png") << "\"";
+			json << ",\n" << "\"" << *aov << "\":\"" << (*aov + L".png") << "\"";
 		}
 		json << "\n}," << std::endl;
 	}
 
 	// - devices
-	std::vector<std::pair<std::string, int>> context;
+	std::vector<std::pair<std::wstring, int>> context;
 	MIntArray devicesUsing;
 	MGlobal::executeCommand("optionVar -q RPR_DevicesSelected", devicesUsing);
 	std::vector<HardwareResources::Device> allDevices = HardwareResources::GetAllDevices();
 	size_t numDevices = std::min<size_t>(devicesUsing.length(), allDevices.size());
 	for (size_t idx = 0; idx < numDevices; ++idx)
 	{
-		std::string device("gpu");
-		device += std::to_string(idx);
+		std::wstring device(L"gpu");
+		device += std::to_wstring(idx);
 		context.emplace_back();
 		context.back().first = device;
 		context.back().second = (devicesUsing[(unsigned int)idx] != 0);
 	}
-	context.emplace_back("debug", 0);
+	context.emplace_back(L"debug", 0);
 
 	json << "\"context\" : {\n";
 	auto it = context.begin();
@@ -447,11 +455,11 @@ MStatus FireRenderExportCmd::doIt(const MArgList & args)
 			#endif
 
 			// launch export
-			rpr_int statusExport = rprsExport(newFilePath.asChar(), context.context(), context.scene(),
+			rpr_int statusExport = rprsExport(newFilePath.asUTF8(), context.context(), context.scene(),
 				0, 0, 0, 0, 0, 0, exportFlags);
 
 			// save config
-			bool res = SaveExportConfig(filePath.asChar(), context, fileName.asChar());
+			bool res = SaveExportConfig(filePath.asWChar(), context, fileName.asWChar());
 			if (!res)
 			{
 				MGlobal::displayError("Unable to export render config!\n");
