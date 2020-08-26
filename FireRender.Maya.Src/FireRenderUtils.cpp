@@ -2181,76 +2181,56 @@ void EnableAOVsFromRSIfEnvVarSet(FireRenderContext& context, FireRenderAOVs& aov
 	aovs.applyToContext(context);
 }
 
-#ifdef __APPLE__ // https://stackoverflow.com/questions/31346887/header-for-environ-on-mac
-extern char **environ;
-#endif
-
-class EnvironmentVarsWrapper
+template<>
+char** GetEnviron(void)
 {
-public:
-	static const std::map<std::string, std::string>& GetEnvVarsTable(void)
-	{
-		static EnvironmentVarsWrapper instance;
+	return environ;
+}
 
-		return instance.m_eVars;
-	}
-
-	EnvironmentVarsWrapper(EnvironmentVarsWrapper const&) = delete;
-	void operator=(EnvironmentVarsWrapper const&) = delete;
-
-private:
-	EnvironmentVarsWrapper(void) 
-	{
-		char *pEnvVarPair = *environ;
-		for (int idx = 1; pEnvVarPair; idx++)
-		{
-			std::string tmp(pEnvVarPair);
-			size_t delimiter = tmp.find("=");
-			std::string varName = tmp.substr(0, delimiter);
-			std::string varValue = tmp.substr(delimiter + 1, tmp.length());
-
-			m_eVars[varName] = varValue;
-			pEnvVarPair = *(environ + idx);
-		};
-	}
-
-private:
-	std::map<std::string, std::string> m_eVars;
-};
-
-
-std::string ProcessEnvVarsInFilePath(const MString& in)
+template<>
+wchar_t** GetEnviron(void)
 {
-	std::string out(in.asUTF8());
+	return _wenviron;
+}
 
-	const std::map<std::string, std::string>& eVars = EnvironmentVarsWrapper::GetEnvVarsTable();
+bool IsUnicodeSystem(void)
+{
+	return GetEnviron<wchar_t*>() != nullptr;
+}
 
-	// find environmen variables in the string
-	// and replace them with real path
-	for (auto& eVar : eVars)
-	{
-		std::string tmpVar = "%" + eVar.first + "%";
-		size_t found = out.find(tmpVar);
+template <>
+std::pair<std::string, std::string> GetPathDelimiter(void)
+{ 
+	return std::make_pair(std::string("\\\\"), std::string("\\")); 
+}
 
-		if (found == std::string::npos)
-		{
-			tmpVar = "${" + eVar.first + "}";
-			found = out.find(tmpVar);
-		}
+template <>
+std::pair<std::wstring, std::wstring> GetPathDelimiter(void)
+{ 
+	return std::make_pair(std::wstring(L"\\\\"), std::wstring(L"\\"));
+}
 
-		if (found == std::string::npos)
-			continue;
+template <>
+size_t FindDelimiter(std::string& tmp)
+{
+	return tmp.find("=");
+}
 
-		out.replace(found, tmpVar.length(), eVar.second);
-	}
+template <>
+size_t FindDelimiter(std::wstring& tmp)
+{
+	return tmp.find(L"=");
+}
 
-	// replace "\\" with "/"
-	static const std::string toBeReplace("\\");
-	while (out.find(toBeReplace) != std::string::npos)
-	{
-		out.replace(out.find(toBeReplace), toBeReplace.size(), "/");
-	}
+template <>
+std::tuple<std::string, std::string> ProcessEVarSchema(const std::string& eVar)
+{
+	return std::make_tuple(std::string("%" + eVar + "%"), std::string("${" + eVar + "}"));
+}
 
-	return out;
+template <>
+std::tuple<std::wstring, std::wstring> ProcessEVarSchema(const std::wstring& eVar)
+{
+	return std::make_tuple(std::wstring(L"%" + eVar + L"%"), std::wstring(L"${" + eVar + L"}"));
 }
 

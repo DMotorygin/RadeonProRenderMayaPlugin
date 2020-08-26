@@ -73,7 +73,7 @@ MSyntax FireRenderExportCmd::newSyntax()
 	return syntax;
 }
 
-bool SaveExportConfig(std::wstring filePath, TahoeContext& ctx, std::wstring fileName)
+bool SaveExportConfig(const std::wstring& filePath, TahoeContext& ctx, const std::wstring& fileName)
 {
 	// get directory path and name of generated files
 	std::wstring directory = filePath;
@@ -82,7 +82,8 @@ bool SaveExportConfig(std::wstring filePath, TahoeContext& ctx, std::wstring fil
 	{
 		directory = filePath.substr(0, lastIdx);
 	}
-	fileName.erase(0, directory.length() + 1);
+	std::wstring tmpFileName(fileName);
+	tmpFileName.erase(0, directory.length() + 1);
 	directory += L"/config.json";
 
 	std::wofstream json(directory);
@@ -217,6 +218,42 @@ bool SaveExportConfig(std::wstring filePath, TahoeContext& ctx, std::wstring fil
 	return true;
 }
 
+unsigned int SetupExportFlags(bool isExportAsSingleFileEnabled, MString& compressionOption)
+{
+	unsigned int exportFlags = 0;
+	if (!isExportAsSingleFileEnabled)
+	{
+		exportFlags = RPRLOADSTORE_EXPORTFLAG_EXTERNALFILES;
+	}
+
+	if (compressionOption == "None")
+	{
+		// don't set any flag
+		// this line exists for better logic readibility; also maybe will need to set flag here in the future
+	}
+	else if (compressionOption == "Level 1")
+	{
+		exportFlags = exportFlags | RPRLOADSTORE_EXPORTFLAG_COMPRESS_IMAGE_LEVEL_1;
+	}
+	else if (compressionOption == "Level 2")
+	{
+		exportFlags = exportFlags | RPRLOADSTORE_EXPORTFLAG_COMPRESS_IMAGE_LEVEL_2;
+	}
+	else if (compressionOption == "Level 3")
+	{
+		exportFlags = exportFlags | RPRLOADSTORE_EXPORTFLAG_COMPRESS_IMAGE_LEVEL_2 | RPRLOADSTORE_EXPORTFLAG_COMPRESS_FLOAT_TO_HALF_NORMALS | RPRLOADSTORE_EXPORTFLAG_COMPRESS_FLOAT_TO_HALF_UV;
+	}
+
+#if RPR_VERSION_MAJOR_MINOR_REVISION >= 0x00103404 
+	// Always using this flag by default doesn't hurt :
+	// If rprObjectSetName(<path to image file>) has been called on all rpr_image, the performance of export is really better ( ~100x faster )
+	// If <path to image file> has not been set, or doesn't exist, then data from RPR is used to export the image.
+	exportFlags = exportFlags | RPRLOADSTORE_EXPORTFLAG_EMBED_FILE_IMAGES_USING_OBJECTNAME;
+#endif
+
+	return exportFlags;
+}
+
 MStatus FireRenderExportCmd::doIt(const MArgList & args)
 {
 	MStatus status;
@@ -241,7 +278,15 @@ MStatus FireRenderExportCmd::doIt(const MArgList & args)
 		return MS::kFailure;
 	}
 
-	std::string filePath = ProcessEnvVarsInFilePath(inFilePath);
+	MString processedFilePath; // using MString to convert between char and wchar because why not?
+	if (IsUnicodeSystem())
+	{
+		processedFilePath = ProcessEnvVarsInFilePath<std::wstring, wchar_t>(inFilePath.asWChar()).c_str();
+	}
+	else
+	{
+		processedFilePath = ProcessEnvVarsInFilePath<std::string, char>(inFilePath.asChar()).c_str();
+	}
 
 	MString materialName;
 	if (argData.isFlagSet(kMaterialFlag))
@@ -358,11 +403,12 @@ MStatus FireRenderExportCmd::doIt(const MArgList & args)
 		}
 
 		// process file path
-		std::string fileName;
-		std::string fileExtension = "rpr";
+		std::wstring fileName;
+		std::wstring fileExtension = L"rpr";
+		std::wstring filePath = processedFilePath.asWChar();
 
 		// Remove extension from file name, because it would be added later
-		size_t fileExtensionIndex = filePath.find("." + fileExtension);
+		size_t fileExtensionIndex = filePath.find(L"." + fileExtension);
 		bool fileExtensionNotProvided = fileExtensionIndex == -1;
 
 		if (fileExtensionNotProvided)
@@ -400,74 +446,42 @@ MStatus FireRenderExportCmd::doIt(const MArgList & args)
 			context.Freshen();
 
 			// update file path
-			std::string newFilePath;
+			std::wstring newFilePath;
 			if (isSequenceExportEnabled)
 			{
-				std::regex name_regex("name");
-				std::regex frame_regex("#");
-				std::regex extension_regex("ext");
-
-				std::string pattern = namePattern.asChar();
+				std::wstring name_regex(L"name");
+				std::wstring frame_regex(L"#");
+				std::wstring extension_regex(L"ext");
+				std::wstring pattern = namePattern.asWChar();
 
 				// Replace extension at first, because it shouldn't match name_regex or frame_regex for given .rpr format
-				std::string result = std::regex_replace(pattern, extension_regex, fileExtension);
+				std::wstring result = std::regex_replace(pattern, std::wregex(extension_regex), fileExtension);
 
-				std::stringstream frameStream;
-				frameStream << std::setfill('0') << std::setw(framePadding) << frame;
-				result = std::regex_replace(result, frame_regex, frameStream.str().c_str());
+				std::wstringstream frameStream;
+				frameStream << std::setfill(L'0') << std::setw(framePadding) << frame;
+				result = std::regex_replace(result, std::wregex(frame_regex), frameStream.str().c_str());
 
 				// Replace name after all operations, because it could match frame or extension regex
-				result = std::regex_replace(result, name_regex, fileName);
+				result = std::regex_replace(result, std::wregex(name_regex), fileName);
 
 				newFilePath = result.c_str();
 			}
 			else
 			{
-				newFilePath = fileName + "." + fileExtension;
+				newFilePath = fileName + L"." + fileExtension;
 			}
-
-			unsigned int exportFlags = 0;
-			if (!isExportAsSingleFileEnabled)
-			{
-				exportFlags = RPRLOADSTORE_EXPORTFLAG_EXTERNALFILES;
-			}
-
-			if (compressionOption == "None")
-			{
-				// don't set any flag
-				// this line exists for better logic readibility; also maybe will need to set flag here in the future
-			}
-			else if (compressionOption == "Level 1")
-			{
-				exportFlags = exportFlags | RPRLOADSTORE_EXPORTFLAG_COMPRESS_IMAGE_LEVEL_1;
-			}
-			else if (compressionOption == "Level 2")
-			{
-				exportFlags = exportFlags | RPRLOADSTORE_EXPORTFLAG_COMPRESS_IMAGE_LEVEL_2;
-			}
-			else if (compressionOption == "Level 3")
-			{
-				exportFlags = exportFlags | RPRLOADSTORE_EXPORTFLAG_COMPRESS_IMAGE_LEVEL_2 | RPRLOADSTORE_EXPORTFLAG_COMPRESS_FLOAT_TO_HALF_NORMALS | RPRLOADSTORE_EXPORTFLAG_COMPRESS_FLOAT_TO_HALF_UV;
-			}
-
-			#if RPR_VERSION_MAJOR_MINOR_REVISION >= 0x00103404 
-			// Always using this flag by default doesn't hurt :
-			// If rprObjectSetName(<path to image file>) has been called on all rpr_image, the performance of export is really better ( ~100x faster )
-			// If <path to image file> has not been set, or doesn't exist, then data from RPR is used to export the image.
-			exportFlags = exportFlags | RPRLOADSTORE_EXPORTFLAG_EMBED_FILE_IMAGES_USING_OBJECTNAME;
-			#endif
 
 			// launch export
-			rpr_int statusExport = rprsExport(newFilePath.asUTF8(), context.context(), context.scene(),
-				0, 0, 0, 0, 0, 0, exportFlags);
-
+			rpr_int statusExport = rprsExport(MString(newFilePath.c_str()).asUTF8(), context.context(), context.scene(),
+				0, 0, 0, 0, 0, 0, SetupExportFlags(isExportAsSingleFileEnabled, compressionOption));
+			
 			// save config
-			bool res = SaveExportConfig(filePath.asWChar(), context, fileName.asWChar());
+			bool res = SaveExportConfig(filePath, context, fileName);
 			if (!res)
 			{
 				MGlobal::displayError("Unable to export render config!\n");
 			}
-
+			
 			if (statusExport != RPR_SUCCESS)
 			{
 				MGlobal::displayError("Unable to export fire render scene\n");
