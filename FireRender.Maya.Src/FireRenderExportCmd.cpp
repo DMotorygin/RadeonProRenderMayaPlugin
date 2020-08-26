@@ -86,7 +86,7 @@ bool SaveExportConfig(const std::wstring& filePath, TahoeContext& ctx, const std
 	tmpFileName.erase(0, directory.length() + 1);
 	directory += L"/config.json";
 
-	std::wofstream json(directory);
+	std::wofstream json(directory.c_str());
 	if (!json)
 		return false;
 
