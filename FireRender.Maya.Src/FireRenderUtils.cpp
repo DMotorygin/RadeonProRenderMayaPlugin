@@ -2234,3 +2234,24 @@ std::tuple<std::wstring, std::wstring> ProcessEVarSchema(const std::wstring& eVa
 	return std::make_tuple(std::wstring(L"%" + eVar + L"%"), std::wstring(L"${" + eVar + L"}"));
 }
 
+// m_createMayaSoftwareCommonGlobalsTab.kExt3 = name.#.ext <= and corresponding pattern on non-English Mayas
+void GetUINameFrameExtPattern(std::wstring& nameOut, std::wstring& extOut)
+{
+	MString command = R"(
+		proc string _mayaVarToPlugin() 
+		{
+			return (uiRes("m_createMayaSoftwareCommonGlobalsTab.kExt3"));
+		}
+		_mayaVarToPlugin();
+	)";
+	MString result;
+	MStatus res = MGlobal::executeCommand(command, result);
+	CHECK_MSTATUS(res);
+
+	nameOut = result.asWChar();
+	size_t firstDelimiter = nameOut.find(L".");
+	size_t lastDelimiter = nameOut.rfind(L".");
+
+	extOut = nameOut.substr(lastDelimiter + 1, nameOut.length() - 1);
+	nameOut = nameOut.substr(0, firstDelimiter);
+}

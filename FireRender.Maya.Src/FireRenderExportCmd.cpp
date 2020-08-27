@@ -449,9 +449,11 @@ MStatus FireRenderExportCmd::doIt(const MArgList & args)
 			std::wstring newFilePath;
 			if (isSequenceExportEnabled)
 			{
-				std::wstring name_regex(L"name");
+				//GetPattern();
+				std::wstring name_regex;
 				std::wstring frame_regex(L"#");
-				std::wstring extension_regex(L"ext");
+				std::wstring extension_regex;
+				GetUINameFrameExtPattern(name_regex, extension_regex);
 				std::wstring pattern = namePattern.asWChar();
 
 				// Replace extension at first, because it shouldn't match name_regex or frame_regex for given .rpr format

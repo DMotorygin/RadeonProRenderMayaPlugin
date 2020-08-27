@@ -1055,6 +1055,8 @@ std::string string_format(const std::string& format, Args ... args)
 	return std::string(buf.get(), buf.get() + size - 1); // We don't want the '\0' inside
 }
 
+void GetUINameFrameExtPattern(std::wstring& nameOut, std::wstring& extOut);
+
 #ifdef __APPLE__ // https://stackoverflow.com/questions/31346887/header-for-environ-on-mac
 extern char **environ;
 extern wchar_t **_wenviron;
