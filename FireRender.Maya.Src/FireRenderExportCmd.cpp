@@ -43,6 +43,8 @@ limitations under the License.
 #include <codecvt>
 #include <locale>
 
+#include "../Utils/Utils.h"
+
 FireRenderExportCmd::FireRenderExportCmd()
 {
 }
@@ -86,7 +88,15 @@ bool SaveExportConfig(const std::wstring& filePath, TahoeContext& ctx, const std
 	tmpFileName.erase(0, directory.length() + 1);
 	directory += L"/config.json";
 
+#ifdef WIN32
+	// MSVS added an overload to accommodate using open with wide strings where xcode did not.
 	std::wofstream json(directory.c_str());
+#else
+	// thus different path for xcode is needed
+	std::string s_directory = SharedComponentsUtils::ws2s(directory);
+	std::wofstream json(s_directory);
+#endif
+
 	if (!json)
 		return false;
 
