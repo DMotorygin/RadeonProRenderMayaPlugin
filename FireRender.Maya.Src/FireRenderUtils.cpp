@@ -2195,7 +2195,11 @@ wchar_t** GetEnviron(void)
 
 bool IsUnicodeSystem(void)
 {
+#ifdef __APPLE__
+	return false
+#else
 	return GetEnviron<wchar_t*>() != nullptr;
+#endif
 }
 
 template <>
