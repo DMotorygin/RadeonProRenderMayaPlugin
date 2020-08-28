@@ -43,7 +43,7 @@ limitations under the License.
 #include <codecvt>
 #include <locale>
 
-#include "../Utils/Utils.h"
+#include "Utils/Utils.h"
 
 FireRenderExportCmd::FireRenderExportCmd()
 {
