@@ -150,10 +150,14 @@ global proc albedoGridSelectReplace( string $attrName, string $listAttrName )
 	string $multiAttr[] = `listAttr -multi ( $listAttrName )`;
 	for ( $attr in $multiAttr )
 	{
-		$len = size($listAttrName) - size($attr) + 3; // 3 is length of "[0]"
+		string $buffer[];
+		tokenize $attr "[" $buffer;
+
+		$len = size($listAttrName) - size($attr) + size($buffer[1]) + 1;
 		string $tmpstr = $listAttrName;
 		string $nodestr = `substring $tmpstr 1 $len`;
 		$attr = $nodestr + $attr;
+		
 		$val = `getAttr $attr`;
 		textScrollList -e -append $val albedoGridList;
 	}
@@ -206,10 +210,14 @@ global proc densityGridSelectReplace( string $attrName, string $listAttrName )
 	string $multiAttr[] = `listAttr -multi ( $listAttrName )`;
 	for ( $attr in $multiAttr )
 	{
-		$len = size($listAttrName) - size($attr) + 3; // 3 is length of "[0]"
+		string $buffer[];
+		tokenize $attr "[" $buffer;
+
+		$len = size($listAttrName) - size($attr) + size($buffer[1]) + 1;
 		string $tmpstr = $listAttrName;
 		string $nodestr = `substring $tmpstr 1 $len`;
 		$attr = $nodestr + $attr;
+		
 		$val = `getAttr $attr`;
 		textScrollList -e -append $val densityGridList;
 	}
@@ -270,10 +278,14 @@ global proc emissionGridSelectReplace( string $attrName, string $listAttrName )
 	string $multiAttr[] = `listAttr -multi ( $listAttrName )`;
 	for ( $attr in $multiAttr )
 	{
-		$len = size($listAttrName) - size($attr) + 3; // 3 is length of "[0]"
+		string $buffer[];
+		tokenize $attr "[" $buffer;
+
+		$len = size($listAttrName) - size($attr) + size($buffer[1]) + 1;
 		string $tmpstr = $listAttrName;
 		string $nodestr = `substring $tmpstr 1 $len`;
 		$attr = $nodestr + $attr;
+		
 		$val = `getAttr $attr`;
 		textScrollList -e -append $val emissionGridList;
 	}
