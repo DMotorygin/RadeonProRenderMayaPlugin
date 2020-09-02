@@ -662,10 +662,6 @@ void RPRVolumeAttributes::SetupVolumeFromFile(MObject& node, FireRenderVolumeLoc
 	MIntArray indices;
 	wPlug.getExistingArrayAttributeIndices(indices, &status);
 
-	std::vector<int> indices_arr;
-	DumpMayaArray(indices_arr, indices);
-	int debugi = 1;
-
 	for (int idx = 0; idx < indices.length(); ++idx) // turns out removeElement takes not the element in the array index but "internal" index
 	{
 		MStatus success = arrayBuilder.removeElement(indices[idx]);
