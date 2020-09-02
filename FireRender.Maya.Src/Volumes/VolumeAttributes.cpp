@@ -220,7 +220,11 @@ void RPRVolumeAttributes::Initialize()
 	tAttr.setArray(true);
 	tAttr.setHidden(true);
 	tAttr.setUsesArrayDataBuilder(true);
-	setAttribProps(tAttr, loadedGrids);
+	CHECK_MSTATUS(tAttr.setKeyable(true));
+	CHECK_MSTATUS(tAttr.setStorable(false));
+	CHECK_MSTATUS(tAttr.setReadable(true));
+	CHECK_MSTATUS(tAttr.setWritable(true));
+	CHECK_MSTATUS(MPxNode::addAttribute(loadedGrids));
 
 	// Albedo
 	albedoEnabled = nAttr.create("albedoEnabled", "ealb", MFnNumericData::kBoolean, 0);
