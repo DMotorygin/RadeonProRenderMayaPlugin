@@ -205,6 +205,7 @@ void RPRVolumeAttributes::Initialize()
 	vdbFile = tAttr.create("VdbFilePath", "file", MFnData::kString, defaultStringData, &status);
 	CHECK_MSTATUS(status);
 	tAttr.setConnectable(false);
+	tAttr.setUsedAsFilename(true);
 	status = addAttribute(vdbFile);
 	CHECK_MSTATUS(status);
 
