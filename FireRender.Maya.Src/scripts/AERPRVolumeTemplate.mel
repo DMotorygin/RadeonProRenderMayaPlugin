@@ -148,8 +148,6 @@ global proc albedoGridSelectReplace( string $attrName, string $listAttrName )
 
 global proc vdbGridSelectReplace(string $attrName, string $listAttrName, string $widgetName)
 {
-	print("\nvdbGridSelectReplace: $widgetName = "+$widgetName+"; $attrName = "+$attrName+";");
-
 	connectControl $widgetName $attrName;
 
 	textScrollList -e -removeAll $widgetName;
@@ -178,7 +176,6 @@ global proc vdbGridSelectReplace(string $attrName, string $listAttrName, string 
 	{
 		if ($tmp == $selectedValue)
 		{
-			print("\nvdbGridSelectReplace: $widgetName = "+$widgetName+"; $attrName = "+$attrName+"; $listAttrName = "+$listAttrName+"; $selectedValue = "+$selectedValue+";");
 			textScrollList -e -selectItem $selectedValue $widgetName;
 			break;
 		}
@@ -187,17 +184,11 @@ global proc vdbGridSelectReplace(string $attrName, string $listAttrName, string 
 
 global proc onAlbedoGridSelectClicked()
 {
-	print("\nonAlbedoGridSelectClicked");
-
 	string $selectedItems[];
 	$selectedItems = `textScrollList -q -selectItem albedoGridList`;
 	
 	$attrName = `attrControlGrp -query -attribute albedoGridList`;
 	setAttr $attrName -type "string" $selectedItems[0];
-
-	print("\n$attrName = "+$attrName);
-	print("\n$selectedItems[] = ");
-	print($selectedItems);
 }
 
 global proc densityGridSelectNew( string $attrName, string $listAttrName )
@@ -231,17 +222,11 @@ global proc densityGridSelectReplace( string $attrName, string $listAttrName )
 
 global proc onDensityGridSelectClicked()
 {
-	print("\nonDensityGridSelectClicked");
-
 	string $selectedItems[];
 	$selectedItems = `textScrollList -q -selectItem densityGridList`;
 	
 	$attrName = `attrControlGrp -query -attribute densityGridList`;
 	setAttr $attrName -type "string" $selectedItems[0];
-
-	print("\n$attrName = "+$attrName);
-	print("\n$selectedItems[] = ");
-	print($selectedItems);
 }
 
 global proc emissionGridSelectNew( string $attrName, string $listAttrName )
