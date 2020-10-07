@@ -96,7 +96,9 @@ void FireRenderLightCommon::onNodeRemoved(MObject &node, void *clientData)
 	}
 
 	// delete transform node
-	MGlobal::removeFromModel(pparent->m_transformObject);
+	MStatus mstatus;
+	mstatus = MGlobal::removeFromModel(pparent->m_transformObject);
+	assert(mstatus != MStatus::kFailure);
 }
 
 MSelectionMask FireRenderLightCommon::getShapeSelectionMask() const
