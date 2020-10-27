@@ -25,6 +25,7 @@ limitations under the License.
 #include <thread>
 #include <string>
 #include <thread>
+#include <experimental/filesystem>
 #include "StartupContextChecker.h"
 
 #define DEFAULT_RENDER_STAMP "Radeon ProRender for Maya %b | %h | Time: %pt | Passes: %pp | Objects: %so | Lights: %sl"
@@ -127,6 +128,8 @@ namespace
 		MObject renderQuality;
 
 		MObject tahoeVersion;
+
+		MObject textureCashPath;
 	}
 
     struct RenderingDeviceAttributes
@@ -235,6 +238,17 @@ void FireRenderGlobals::postConstructor()
 	m_attributeChangedCallback = MNodeMessage::addAttributeChangedCallback(obj, FireRenderGlobals::onAttributeChanged, nullptr, &status);
 
 	CHECK_MSTATUS(status);
+
+	// try creating folder for texture cache
+	MString workspace;
+	status = MGlobal::executeCommand(MString("workspace -q -dir;"),	workspace);
+	workspace += "/texture_cache";
+
+	namespace fs = std::experimental::filesystem;
+	if (!fs::is_directory(workspace.asChar()) || !fs::exists(workspace.asChar()))
+	{ // Check if src folder exists
+		fs::create_directory(workspace.asChar());
+	}
 }
 
 MStatus FireRenderGlobals::compute(const MPlug & plug, MDataBlock & data)
@@ -438,8 +452,29 @@ MStatus FireRenderGlobals::initialize()
 	eAttr.addField("RPR 1", TahoePluginVersion::RPR1);
 	eAttr.addField("RPR 2 (Experimental)", TahoePluginVersion::RPR2);
 
+	int textureCacheExists;
+	MGlobal::executeCommand("optionVar -ex RPR_TextureCache", textureCacheExists);
+	if (textureCacheExists == 0)
+	{
+		MString workspace;
+		status = MGlobal::executeCommand(MString("workspace -q -dir;"), workspace);
+		workspace += "/texture_cache";
+		MGlobal::executeCommand(MString("optionVar -sva RPR_TextureCache ") + workspace);
+
+		MObject defaultTextureCachePath = sData.create(workspace);
+		Attribute::textureCashPath = tAttr.create("textureCashPath", "tcp", MFnData::kString, defaultTextureCachePath);
+	}
+	else
+	{
+		MStringArray textureCachePath;
+		MGlobal::executeCommand("optionVar -q RPR_TextureCache", textureCachePath);
+		MObject defaultTextureCachePath = sData.create(textureCachePath[0]);
+		Attribute::textureCashPath = tAttr.create("textureCashPath", "tcp", MFnData::kString, defaultTextureCachePath);
+	}
+
 	MAKE_INPUT_CONST(eAttr);
 	CHECK_MSTATUS(addAttribute(Attribute::tahoeVersion));
+	CHECK_MSTATUS(addAttribute(Attribute::textureCashPath));
 
 	MObject switchDetailedLogAttribute = nAttr.create("detailedLog", "rdl", MFnNumericData::kBoolean, 0, &status);
 	MAKE_INPUT(nAttr);

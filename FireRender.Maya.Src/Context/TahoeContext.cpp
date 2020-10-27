@@ -241,6 +241,10 @@ void TahoeContext::setupContext(const FireRenderGlobalsData& fireRenderGlobalsDa
 	frstatus = rprContextSetParameterByKey1u(frcontext, RPR_CONTEXT_METAL_PERFORMANCE_SHADER, fireRenderGlobalsData.useMPS ? 1 : 0);
 	checkStatus(frstatus);
 
+	MStringArray textureCachePath;
+	MGlobal::executeCommand("optionVar -q RPR_TextureCache", textureCachePath);
+	frstatus = rprContextSetParameterByKeyString(frcontext, RPR_CONTEXT_TEXTURE_CACHE_PATH, textureCachePath[0].asChar());
+
 	updateTonemapping(fireRenderGlobalsData, disableWhiteBalance);
 }
 
