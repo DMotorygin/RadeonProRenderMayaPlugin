@@ -214,9 +214,7 @@ global proc saveTextureCacheFolder()
 
 	string $result[] = `fileDialog2 -dialogStyle 2 -dir ($mayaFolder) -fileMode 3`;
 
-	setAttr RadeonProRenderGlobals.textureCashPath -type "string" ($result[0]);
-	optionVar -rm RPR_TextureCache;
-	optionVar -sva RPR_TextureCache ($result[0]);
+	setAttr RadeonProRenderGlobals.textureCachePath -type "string" ($result[0]);
 }
 
 global proc dropTextureCacheFolder()
@@ -225,9 +223,7 @@ global proc dropTextureCacheFolder()
 	$mayaFolder = `workspace -q -dir`;
 	$mayaFolder = $mayaFolder + "texture_cache";
 
-	setAttr RadeonProRenderGlobals.textureCashPath -type "string" ($mayaFolder);
-	optionVar -rm RPR_TextureCache;
-	optionVar -sva RPR_TextureCache ($mayaFolder);
+	setAttr RadeonProRenderGlobals.textureCachePath -type "string" ($mayaFolder);
 }
 
 // texture cache
@@ -249,6 +245,6 @@ global proc createTextureCachePart()
 
 		setParent ..;
 
-	connectControl cacheFolderField RadeonProRenderGlobals.textureCashPath;
+	connectControl cacheFolderField RadeonProRenderGlobals.textureCachePath;
 }
 

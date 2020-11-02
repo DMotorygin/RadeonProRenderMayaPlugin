@@ -116,7 +116,7 @@ public:
 
 private:
 	static void onAttributeChanged(MNodeMessage::AttributeMessage msg, MPlug &plug, MPlug &otherPlug, void *clientData);
-	static void addAsGlobalAttribute(MFnAttribute& attr);
+	static void addAsGlobalAttribute(MFnAttribute& attr, bool isConnectable = false);
 
 	static void createLegacyAttributes();
 	static void setupProductionRayDepthParameters();

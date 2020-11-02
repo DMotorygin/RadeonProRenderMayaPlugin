@@ -16,6 +16,7 @@ limitations under the License.
 #include <maya/MFnMessageAttribute.h>
 #include <maya/MFnTypedAttribute.h>
 #include <maya/MFnStringData.h>
+
 #include "FireMaya.h"
 #include "FireRenderUtils.h"
 #include "FireRenderAOVs.h"
@@ -129,7 +130,7 @@ namespace
 
 		MObject tahoeVersion;
 
-		MObject textureCashPath;
+		MObject textureCachePath;
 	}
 
     struct RenderingDeviceAttributes
@@ -451,30 +452,31 @@ MStatus FireRenderGlobals::initialize()
 	Attribute::tahoeVersion = eAttr.create("tahoeVersion", "tahv", TahoePluginVersion::RPR1, &status);
 	eAttr.addField("RPR 1", TahoePluginVersion::RPR1);
 	eAttr.addField("RPR 2 (Experimental)", TahoePluginVersion::RPR2);
+	MAKE_INPUT_CONST(eAttr);
+	CHECK_MSTATUS(addAttribute(Attribute::tahoeVersion));
 
 	int textureCacheExists;
-	MGlobal::executeCommand("optionVar -ex RPR_TextureCache", textureCacheExists);
+	MGlobal::executeCommand("optionVar -ex RPR_textureCachePath", textureCacheExists);
 	if (textureCacheExists == 0)
 	{
 		MString workspace;
 		status = MGlobal::executeCommand(MString("workspace -q -dir;"), workspace);
-		workspace += "/texture_cache";
-		MGlobal::executeCommand(MString("optionVar -sva RPR_TextureCache ") + workspace);
+		workspace += "texture_cache";
+		MGlobal::executeCommand(MString("optionVar -sv RPR_textureCachePath") + workspace);
 
 		MObject defaultTextureCachePath = sData.create(workspace);
-		Attribute::textureCashPath = tAttr.create("textureCashPath", "tcp", MFnData::kString, defaultTextureCachePath);
+		Attribute::textureCachePath = tAttr.create("textureCachePath", "tcp", MFnData::kString, defaultTextureCachePath);
 	}
 	else
 	{
 		MStringArray textureCachePath;
-		MGlobal::executeCommand("optionVar -q RPR_TextureCache", textureCachePath);
+		MGlobal::executeCommand("optionVar -q RPR_textureCachePath", textureCachePath);
 		MObject defaultTextureCachePath = sData.create(textureCachePath[0]);
-		Attribute::textureCashPath = tAttr.create("textureCashPath", "tcp", MFnData::kString, defaultTextureCachePath);
+		MString tmpResult = textureCachePath[0];
+		Attribute::textureCachePath = tAttr.create("textureCachePath", "tcp", MFnData::kString, defaultTextureCachePath);
 	}
-
-	MAKE_INPUT_CONST(eAttr);
-	CHECK_MSTATUS(addAttribute(Attribute::tahoeVersion));
-	CHECK_MSTATUS(addAttribute(Attribute::textureCashPath));
+	tAttr.setUsedAsFilename(true);
+	addAsGlobalAttribute(tAttr, true);
 
 	MObject switchDetailedLogAttribute = nAttr.create("detailedLog", "rdl", MFnNumericData::kBoolean, 0, &status);
 	MAKE_INPUT(nAttr);
@@ -902,12 +904,12 @@ void FireRenderGlobals::createDenoiserAttributes()
 	CHECK_MSTATUS(addAttribute(Attribute::denoiserColorOnly));
 }
 
-void FireRenderGlobals::addAsGlobalAttribute(MFnAttribute& attr)
+void FireRenderGlobals::addAsGlobalAttribute(MFnAttribute& attr, bool isConnectable /*= false*/)
 {
 	MObject attrObj = attr.object();
 	
 	attr.setStorable(false);
-	attr.setConnectable(false);
+	attr.setConnectable(isConnectable);
 	CHECK_MSTATUS(addAttribute(attrObj));
 
 	m_globalAttributesList.push_back(attrObj);
