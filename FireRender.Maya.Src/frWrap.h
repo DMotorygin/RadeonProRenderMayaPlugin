@@ -1156,7 +1156,7 @@ namespace frw
 		Node GetDisplacementMap();
 		void RemoveDisplacement();
 		void SetSubdivisionFactor(int sub);
-		void SetAdaptiveSubdivisionFactor(float adaptiveFactor, rpr_camera camera, rpr_framebuffer frameBuf);
+		void SetAdaptiveSubdivisionFactor(float adaptiveFactor, rpr_camera /*camera*/, rpr_framebuffer /*frameBuf*/); // <= Removed AutoAdaptSubdivision and use rprShapeSetSubdivisionAutoRatioCap; keeping old interface in case we will want to revert this change
 		void SetSubdivisionCreaseWeight(float weight);
 		void SetSubdivisionBoundaryInterop(rpr_subdiv_boundary_interfop_type type);
 
@@ -3870,7 +3870,7 @@ namespace frw
 		checkStatus(res);
 	}
 
-	inline void Shape::SetAdaptiveSubdivisionFactor(float adaptiveFactor, rpr_camera camera, rpr_framebuffer frameBuf)
+	inline void Shape::SetAdaptiveSubdivisionFactor(float adaptiveFactor /*image_height*/, rpr_camera camera, rpr_framebuffer frameBuf)
 	{
 		// convert factor from size of subdiv in pixel to RPR
 		// RPR wants the subdiv factor as the "number of faces per pixel" 
@@ -3884,9 +3884,14 @@ namespace frw
 			adaptiveFactor = 0.0001f;
 		}
 
-		rpr_int calculatedFactor = int(log2(1.0 / adaptiveFactor * 16.0));
+		// commenting out the formula but not deleting it in case we will need to return it
+		//rpr_int calculatedFactor = int(log2(1.0 / adaptiveFactor * 16.0));
 
-		rpr_int res = rprShapeAutoAdaptSubdivisionFactor(Handle(), frameBuf, camera, calculatedFactor);
+		//Change adaptive subdivision to now use rprShapeSetSubdivisionAutoRatioCap now.
+		//defaut Setting should be 1 / image_height.
+		//I.e an adaptive subdivision setting should = 1 / image_height
+		rpr_int calculatedFactor = 1 / adaptiveFactor;
+		rpr_int res = rprShapeSetSubdivisionAutoRatioCap(Handle(), calculatedFactor);
 
 		checkStatusThrow(res, "Unable to set Adaptive Subdivision!");
 	}
