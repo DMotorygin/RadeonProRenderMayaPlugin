@@ -11,6 +11,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ********************************************************************/
 #include "TahoeContext.h"
+#include "maya/MColorManagementUtilities.h"
 
 TahoeContext::LoadedPluginMap TahoeContext::m_gLoadedPluginsIDsMap;
 
@@ -242,6 +243,31 @@ void TahoeContext::setupContext(const FireRenderGlobalsData& fireRenderGlobalsDa
 	checkStatus(frstatus);
 
 	updateTonemapping(fireRenderGlobalsData, disableWhiteBalance);
+
+	// OCIO
+	{
+		MStatus colorManagementStatus;
+		int isColorManagementOn = false;
+		colorManagementStatus = MGlobal::executeCommand(MString("colorManagementPrefs -q -cmEnabled;"), isColorManagementOn);
+
+		int isConfigFileEnable = false;
+		colorManagementStatus = MGlobal::executeCommand(MString("colorManagementPrefs -q -cmConfigFileEnabled;"), isConfigFileEnable);
+
+		if ((bool)isColorManagementOn && (bool)isConfigFileEnable)
+		{
+			MString configFilePath;
+			colorManagementStatus = MGlobal::executeCommand(MString("colorManagementPrefs -q -cfp;"), configFilePath);
+
+			MString renderingSpaceName;
+			colorManagementStatus = MGlobal::executeCommand(MString("colorManagementPrefs -q -rsn;"), renderingSpaceName);
+
+			frstatus = rprContextSetParameterByKeyString(frcontext, RPR_CONTEXT_OCIO_CONFIG_PATH, configFilePath.asChar());
+			checkStatus(frstatus);
+
+			frstatus = rprContextSetParameterByKeyString(frcontext, RPR_CONTEXT_OCIO_RENDERING_COLOR_SPACE, renderingSpaceName.asChar());
+			checkStatus(frstatus);
+		}
+	}
 }
 
 void TahoeContext::updateTonemapping(const FireRenderGlobalsData& fireRenderGlobalsData, bool disableWhiteBalance)
