@@ -241,10 +241,17 @@ void TahoeContext::setupContext(const FireRenderGlobalsData& fireRenderGlobalsDa
 	frstatus = rprContextSetParameterByKey1u(frcontext, RPR_CONTEXT_METAL_PERFORMANCE_SHADER, fireRenderGlobalsData.useMPS ? 1 : 0);
 	checkStatus(frstatus);
 
-	MStringArray textureCachePath;
-	MGlobal::executeCommand("optionVar -q RPR_TextureCache", textureCachePath);
-	frstatus = rprContextSetParameterByKeyString(frcontext, RPR_CONTEXT_TEXTURE_CACHE_PATH, textureCachePath[0].asChar());
-
+	{
+		MObject fireRenderGlobals;
+		GetRadeonProRenderGlobals(fireRenderGlobals);
+		MFnDependencyNode frGlobalsNode(fireRenderGlobals);
+		MPlug plug = frGlobalsNode.findPlug("textureCachePath");
+		if (!plug.isNull())
+		{
+			frstatus = rprContextSetParameterByKeyString(frcontext, RPR_CONTEXT_TEXTURE_CACHE_PATH, plug.asString().asChar());
+			checkStatus(frstatus);
+		}
+	}
 	updateTonemapping(fireRenderGlobalsData, disableWhiteBalance);
 }
 

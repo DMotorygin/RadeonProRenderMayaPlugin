@@ -455,28 +455,14 @@ MStatus FireRenderGlobals::initialize()
 	MAKE_INPUT_CONST(eAttr);
 	CHECK_MSTATUS(addAttribute(Attribute::tahoeVersion));
 
-	int textureCacheExists;
-	MGlobal::executeCommand("optionVar -ex RPR_textureCachePath", textureCacheExists);
-	if (textureCacheExists == 0)
-	{
-		MString workspace;
-		status = MGlobal::executeCommand(MString("workspace -q -dir;"), workspace);
-		workspace += "texture_cache";
-		MGlobal::executeCommand(MString("optionVar -sv RPR_textureCachePath") + workspace);
-
-		MObject defaultTextureCachePath = sData.create(workspace);
-		Attribute::textureCachePath = tAttr.create("textureCachePath", "tcp", MFnData::kString, defaultTextureCachePath);
-	}
-	else
-	{
-		MStringArray textureCachePath;
-		MGlobal::executeCommand("optionVar -q RPR_textureCachePath", textureCachePath);
-		MObject defaultTextureCachePath = sData.create(textureCachePath[0]);
-		MString tmpResult = textureCachePath[0];
-		Attribute::textureCachePath = tAttr.create("textureCachePath", "tcp", MFnData::kString, defaultTextureCachePath);
-	}
+	MString workspace;
+	status = MGlobal::executeCommand(MString("workspace -q -dir;"), workspace);
+	workspace += "texture_cache";
+	MGlobal::executeCommand(MString("optionVar -sv RPR_textureCachePath") + workspace);
+	MObject defaultTextureCachePath = sData.create(workspace);
+	Attribute::textureCachePath = tAttr.create("textureCachePath", "tcp", MFnData::kString, defaultTextureCachePath);
 	tAttr.setUsedAsFilename(true);
-	addAsGlobalAttribute(tAttr, true);
+	addAsGlobalAttribute(tAttr);
 
 	MObject switchDetailedLogAttribute = nAttr.create("detailedLog", "rdl", MFnNumericData::kBoolean, 0, &status);
 	MAKE_INPUT(nAttr);
@@ -904,12 +890,11 @@ void FireRenderGlobals::createDenoiserAttributes()
 	CHECK_MSTATUS(addAttribute(Attribute::denoiserColorOnly));
 }
 
-void FireRenderGlobals::addAsGlobalAttribute(MFnAttribute& attr, bool isConnectable /*= false*/)
+void FireRenderGlobals::addAsGlobalAttribute(MFnAttribute& attr)
 {
 	MObject attrObj = attr.object();
 	
 	attr.setStorable(false);
-	attr.setConnectable(isConnectable);
 	CHECK_MSTATUS(addAttribute(attrObj));
 
 	m_globalAttributesList.push_back(attrObj);
