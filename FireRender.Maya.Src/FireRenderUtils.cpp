@@ -393,7 +393,7 @@ void FireRenderGlobalsData::readFromCurrentScene()
 		if (!plug.isNull())
 			viewportMotionBlur = plug.asBool();
 
-		plug = frGlobalsNode.findPlug("motionBlurVelocityAOV");
+		plug = frGlobalsNode.findPlug("velocityAOVMotionBlur");
 		if (!plug.isNull())
 			velocityAOVMotionBlur = plug.asBool();
 		

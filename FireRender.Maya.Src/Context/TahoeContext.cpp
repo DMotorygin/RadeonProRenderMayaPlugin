@@ -129,10 +129,8 @@ void TahoeContext::setupContext(const FireRenderGlobalsData& fireRenderGlobalsDa
 	frstatus = rprContextSetParameterByKey1u(frcontext, RPR_CONTEXT_ADAPTIVE_SAMPLING_TILE_SIZE, fireRenderGlobalsData.adaptiveTileSize);
 	checkStatus(frstatus);
 
-	if (fireRenderGlobalsData.velocityAOVMotionBlur)
-	{ // setting RPR_CONTEXT_BEAUTY_MOTION_BLUR to false breaks motion blur
-		frstatus = rprContextSetParameterByKey1u(frcontext, RPR_CONTEXT_BEAUTY_MOTION_BLUR, fireRenderGlobalsData.velocityAOVMotionBlur);
-	}
+	bool velocityAOVMotionBlur = fireRenderGlobalsData.velocityAOVMotionBlur;
+	frstatus = rprContextSetParameterByKey1u(frcontext, RPR_CONTEXT_BEAUTY_MOTION_BLUR, fireRenderGlobalsData.velocityAOVMotionBlur);
 
 	if (GetRenderType() == RenderType::ProductionRender) // production (final) rendering
 	{
