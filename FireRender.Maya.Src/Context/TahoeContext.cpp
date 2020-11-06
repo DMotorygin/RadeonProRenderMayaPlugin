@@ -460,9 +460,9 @@ void TahoeContext::SetRenderUpdateCallback(RenderUpdateCallback callback, void* 
 	}
 }
 
-bool TahoeContext::IsGivenContextRPR2(FireRenderContext* pContext)
+bool TahoeContext::IsGivenContextRPR2(const FireRenderContext* pContext)
 {
-	TahoeContext* pTahoeContext = dynamic_cast<TahoeContext*> (pContext);
+	const TahoeContext* pTahoeContext = dynamic_cast<const TahoeContext*> (pContext);
 
 	if (pTahoeContext == nullptr)
 	{
