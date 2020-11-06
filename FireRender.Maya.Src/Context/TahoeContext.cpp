@@ -267,6 +267,14 @@ void TahoeContext::setupContext(const FireRenderGlobalsData& fireRenderGlobalsDa
 			frstatus = rprContextSetParameterByKeyString(frcontext, RPR_CONTEXT_OCIO_RENDERING_COLOR_SPACE, renderingSpaceName.asChar());
 			checkStatus(frstatus);
 		}
+		else
+		{
+			frstatus = rprContextSetParameterByKeyString(frcontext, RPR_CONTEXT_OCIO_CONFIG_PATH, "");
+			checkStatus(frstatus);
+
+			frstatus = rprContextSetParameterByKeyString(frcontext, RPR_CONTEXT_OCIO_RENDERING_COLOR_SPACE, "");
+			checkStatus(frstatus);
+		}
 	}
 }
 

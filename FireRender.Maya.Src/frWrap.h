@@ -1252,6 +1252,12 @@ namespace frw
 			checkStatus(res);
 		}
 
+		void SetColorSpace(const char *colorspace)
+		{
+			rpr_int res = rprImageSetOcioColorspace(Handle(), colorspace);
+			checkStatus(res);
+		}
+
 		void SetUDIM(rpr_uint tileIndex, frw::Image image)
 		{
 			rpr_int res = rprImageSetUDIM(Handle(), tileIndex, image.Handle());

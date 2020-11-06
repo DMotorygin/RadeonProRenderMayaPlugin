@@ -107,6 +107,7 @@ frw::Value MayaStandardNodeConverters::FileNodeConverter::Convert() const
 
 	frw::ImageNode imageNode(m_params.scope.MaterialSystem());
 	image.SetGamma(ColorSpace2Gamma(colorSpace));
+	image.SetColorSpace(colorSpace.asChar()); // if RPR_CONTEXT_OCIO_CONFIG_PATH is invalid, this colorspace is automatically ignored and the gamma will be used.
 	imageNode.SetMap(image);
 
 	frw::Value uvVal = m_params.scope.GetConnectedValue(m_params.shaderNode.findPlug("uvCoord"));
