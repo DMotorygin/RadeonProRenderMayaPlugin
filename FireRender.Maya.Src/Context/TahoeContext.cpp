@@ -250,13 +250,13 @@ void TahoeContext::setupContext(const FireRenderGlobalsData& fireRenderGlobalsDa
 	// OCIO
 	{
 		MStatus colorManagementStatus;
-		int isColorManagementOn = false;
+		int isColorManagementOn = 0;
 		colorManagementStatus = MGlobal::executeCommand(MString("colorManagementPrefs -q -cmEnabled;"), isColorManagementOn);
 
-		int isConfigFileEnable = false;
+		int isConfigFileEnable = 0;
 		colorManagementStatus = MGlobal::executeCommand(MString("colorManagementPrefs -q -cmConfigFileEnabled;"), isConfigFileEnable);
 
-		if ((bool)isColorManagementOn && (bool)isConfigFileEnable)
+		if ((isColorManagementOn > 0) && (isConfigFileEnable > 0))
 		{
 			MString configFilePath;
 			colorManagementStatus = MGlobal::executeCommand(MString("colorManagementPrefs -q -cfp;"), configFilePath);
