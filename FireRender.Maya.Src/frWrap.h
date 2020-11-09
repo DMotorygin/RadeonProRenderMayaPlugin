@@ -1254,8 +1254,18 @@ namespace frw
 
 		void SetColorSpace(const char *colorspace)
 		{
-			rpr_int res = rprImageSetOcioColorspace(Handle(), colorspace);
-			checkStatus(res);
+			if (data().m_udimsMap.empty())
+			{
+				rpr_int res = rprImageSetOcioColorspace(Handle(), colorspace);
+				checkStatus(res);
+			}
+			else
+			{
+				for (auto udimMap : data().m_udimsMap)
+				{
+					udimMap.second.SetColorSpace(colorspace);
+				}
+			}
 		}
 
 		void SetUDIM(rpr_uint tileIndex, frw::Image image)
