@@ -1043,11 +1043,7 @@ void FireRenderMesh::setupDisplacement(MObject shadingEngine, frw::Shape shape)
 							frw::Context ctx2 = scn.GetContext();
 							rpr_framebuffer fb = ctx->frameBufferAOV(RPR_AOV_COLOR);
 
-							// Change adaptive subdivision to now use rprShapeSetSubdivisionAutoRatioCap now.
-							// defaut Setting should be 1 / image_height.
-							// I.e an adaptive subdivision setting should = 1 / image_height
-							adaptiveFactor = ctx->height();
-							shape.SetAdaptiveSubdivisionFactor(adaptiveFactor, cam.Handle(), fb);
+							shape.SetAdaptiveSubdivisionFactor(adaptiveFactor, ctx->height(), cam.Handle(), fb);
 						}
 						shape.SetSubdivisionCreaseWeight(creaseWeight);
 						shape.SetSubdivisionBoundaryInterop(boundary);
