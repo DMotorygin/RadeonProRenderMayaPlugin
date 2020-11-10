@@ -263,14 +263,16 @@ void TahoeContext::setupContext(const FireRenderGlobalsData& fireRenderGlobalsDa
 		{
 			MString configFilePath;
 			colorManagementStatus = MGlobal::executeCommand(MString("colorManagementPrefs -q -cfp;"), configFilePath);
+			std::string strConfigFilePath = ProcessEnvVarsInFilePath<std::string, char>(configFilePath.asChar());
 
 			MString renderingSpaceName;
 			colorManagementStatus = MGlobal::executeCommand(MString("colorManagementPrefs -q -rsn;"), renderingSpaceName);
+			std::string strRenderingSpaceName = ProcessEnvVarsInFilePath<std::string, char>(renderingSpaceName.asChar());
 
-			frstatus = rprContextSetParameterByKeyString(frcontext, RPR_CONTEXT_OCIO_CONFIG_PATH, configFilePath.asChar());
+			frstatus = rprContextSetParameterByKeyString(frcontext, RPR_CONTEXT_OCIO_CONFIG_PATH, strConfigFilePath.c_str());
 			checkStatus(frstatus);
 
-			frstatus = rprContextSetParameterByKeyString(frcontext, RPR_CONTEXT_OCIO_RENDERING_COLOR_SPACE, renderingSpaceName.asChar());
+			frstatus = rprContextSetParameterByKeyString(frcontext, RPR_CONTEXT_OCIO_RENDERING_COLOR_SPACE, strRenderingSpaceName.c_str());
 			checkStatus(frstatus);
 		}
 		else
