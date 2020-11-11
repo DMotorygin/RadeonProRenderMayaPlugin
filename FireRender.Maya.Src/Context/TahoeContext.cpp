@@ -12,6 +12,7 @@ limitations under the License.
 ********************************************************************/
 #include "TahoeContext.h"
 #include "maya/MColorManagementUtilities.h"
+#include "maya/MFileObject.h"
 
 TahoeContext::LoadedPluginMap TahoeContext::m_gLoadedPluginsIDsMap;
 
@@ -252,6 +253,18 @@ void TahoeContext::setupContext(const FireRenderGlobalsData& fireRenderGlobalsDa
 
 	// OCIO
 	{
+		const auto& eVars = EnvironmentVarsWrapper<char>::GetEnvVarsTable();
+		auto envOCIOPath = eVars.find("OCIO");
+		if (envOCIOPath != eVars.end())
+		{
+			MFileObject path;
+			path.setRawFullName(envOCIOPath->second.c_str());
+			MString setupCommand = MString("colorManagementPrefs -e -configFilePath \"") + path.resolvedFullName() + MString("\";");
+			MGlobal::executeCommand(setupCommand);
+			MGlobal::executeCommand(MString("colorManagementPrefs -e -cmEnabled 1;"));
+			MGlobal::executeCommand(MString("colorManagementPrefs -e -cmConfigFileEnabled 1;"));
+		}
+
 		MStatus colorManagementStatus;
 		int isColorManagementOn = 0;
 		colorManagementStatus = MGlobal::executeCommand(MString("colorManagementPrefs -q -cmEnabled;"), isColorManagementOn);
@@ -263,16 +276,14 @@ void TahoeContext::setupContext(const FireRenderGlobalsData& fireRenderGlobalsDa
 		{
 			MString configFilePath;
 			colorManagementStatus = MGlobal::executeCommand(MString("colorManagementPrefs -q -cfp;"), configFilePath);
-			std::string strConfigFilePath = ProcessEnvVarsInFilePath<std::string, char>(configFilePath.asChar());
 
 			MString renderingSpaceName;
 			colorManagementStatus = MGlobal::executeCommand(MString("colorManagementPrefs -q -rsn;"), renderingSpaceName);
-			std::string strRenderingSpaceName = ProcessEnvVarsInFilePath<std::string, char>(renderingSpaceName.asChar());
 
-			frstatus = rprContextSetParameterByKeyString(frcontext, RPR_CONTEXT_OCIO_CONFIG_PATH, strConfigFilePath.c_str());
+			frstatus = rprContextSetParameterByKeyString(frcontext, RPR_CONTEXT_OCIO_CONFIG_PATH, configFilePath.asChar());
 			checkStatus(frstatus);
 
-			frstatus = rprContextSetParameterByKeyString(frcontext, RPR_CONTEXT_OCIO_RENDERING_COLOR_SPACE, strRenderingSpaceName.c_str());
+			frstatus = rprContextSetParameterByKeyString(frcontext, RPR_CONTEXT_OCIO_RENDERING_COLOR_SPACE, renderingSpaceName.asChar());
 			checkStatus(frstatus);
 		}
 		else
