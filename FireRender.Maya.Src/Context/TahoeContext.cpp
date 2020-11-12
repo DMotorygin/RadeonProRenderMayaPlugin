@@ -253,7 +253,7 @@ void TahoeContext::setupContext(const FireRenderGlobalsData& fireRenderGlobalsDa
 
 	// OCIO
 	{
-		const auto& eVars = EnvironmentVarsWrapper<char>::GetEnvVarsTable();
+		const std::map<std::string, std::string>& eVars = EnvironmentVarsWrapper<char>::GetEnvVarsTable();
 		auto envOCIOPath = eVars.find("OCIO");
 		if (envOCIOPath != eVars.end())
 		{
