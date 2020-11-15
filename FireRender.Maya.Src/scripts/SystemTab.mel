@@ -231,12 +231,6 @@ global proc dropTextureCacheFolder()
 		$oldCacheFile = $cacheFolder + "/" + $oldCacheFile;
 		$success = `sysFile -delete $oldCacheFile`;
 	}
-
-	string $mayaFolder;
-	$mayaFolder = `workspace -q -dir`;
-	$mayaFolder = $mayaFolder + "cache";
-
-	setAttr RadeonProRenderGlobals.textureCachePath -type "string" ($mayaFolder);
 }
 
 // texture cache
