@@ -114,8 +114,38 @@ void TahoeContext::setupContextPreSceneCreation(const FireRenderGlobalsData& fir
 
 	rpr_int frstatus = RPR_SUCCESS;
 
-	frstatus = rprContextSetParameterByKey1f(frcontext, CONTEXT_CONTOUR_USE_OBJECTID, fireRenderGlobalsData.giClampIrradiance ? fireRenderGlobalsData.giClampIrradianceValue : FLT_MAX);
-	checkStatus(frstatus);
+	// contour must be set before scene creation
+	bool isContourModeOn = fireRenderGlobalsData.contourIsEnabled;
+
+	if (isContourModeOn)
+	{
+		frstatus = rprContextSetParameterByKeyString(frcontext, RPR_CONTEXT_GPUINTEGRATOR, "gpucontour");
+		checkStatus(frstatus);
+
+		frstatus = rprContextSetParameterByKey1u(frcontext, RPR_CONTEXT_CONTOUR_USE_OBJECTID, fireRenderGlobalsData.contourUseObjectID);
+		checkStatus(frstatus);
+
+		frstatus = rprContextSetParameterByKey1u(frcontext, RPR_CONTEXT_CONTOUR_USE_MATERIALID, fireRenderGlobalsData.contourUseMaterialID);
+		checkStatus(frstatus);
+
+		frstatus = rprContextSetParameterByKey1u(frcontext, RPR_CONTEXT_CONTOUR_USE_NORMAL, fireRenderGlobalsData.contourUseShadingNormal);
+		checkStatus(frstatus);
+
+		frstatus = rprContextSetParameterByKey1f(frcontext, RPR_CONTEXT_CONTOUR_LINEWIDTH_OBJECTID, fireRenderGlobalsData.contourLineWidthObjectID);
+		checkStatus(frstatus);
+
+		frstatus = rprContextSetParameterByKey1f(frcontext, RPR_CONTEXT_CONTOUR_LINEWIDTH_MATERIALID, fireRenderGlobalsData.contourLineWidthMaterialID);
+		checkStatus(frstatus);
+
+		frstatus = rprContextSetParameterByKey1f(frcontext, RPR_CONTEXT_CONTOUR_LINEWIDTH_NORMAL, fireRenderGlobalsData.contourLineWidthShadingNormal);
+		checkStatus(frstatus);
+
+		frstatus = rprContextSetParameterByKey1f(frcontext, RPR_CONTEXT_CONTOUR_NORMAL_THRESHOLD, fireRenderGlobalsData.contourNormalThreshold);
+		checkStatus(frstatus);
+
+		frstatus = rprContextSetParameterByKey1f(frcontext, RPR_CONTEXT_CONTOUR_ANTIALIASING, fireRenderGlobalsData.contourAntialiasing);
+		checkStatus(frstatus);
+	}
 }
 
 void TahoeContext::setupContextPostSceneCreation(const FireRenderGlobalsData& fireRenderGlobalsData, bool disableWhiteBalance)
