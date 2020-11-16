@@ -85,15 +85,21 @@ global proc createFireRenderContourFrame(string $parent)
 	
 	attrControlGrp
 		-label "Use Object ID"
-		-attribute "RadeonProRenderGlobals.contourUseObjectID" contourUseObjectID;
+		-attribute "RadeonProRenderGlobals.contourUseObjectID"
+		-changeCommand "onUpdateUseObjectID"
+		contourUseObjectID;
 	
 	attrControlGrp
 		-label "Use Material Index"
-		-attribute "RadeonProRenderGlobals.contourUseMaterialID" contourUseMaterialID;
+		-attribute "RadeonProRenderGlobals.contourUseMaterialID"
+		-changeCommand "onUpdateUseMaterialIndex"
+		contourUseMaterialID;
 	
 	attrControlGrp
 		-label "Use Shading Normal"
-		-attribute "RadeonProRenderGlobals.contourUseShadingNormal" contourUseShadingNormal;
+		-attribute "RadeonProRenderGlobals.contourUseShadingNormal" 
+		-changeCommand onUpdateUseShadingNormal
+		contourUseShadingNormal;
 	
 	attrControlGrp
 		-label "Line Width Object"
@@ -119,6 +125,29 @@ global proc createFireRenderContourFrame(string $parent)
 	setUITemplate -popTemplate;
 
 	onUpdateContour();
+	onUpdateUseObjectID();
+	onUpdateUseMaterialIndex();
+}
+
+global proc onUpdateUseShadingNormal()
+{
+	int $isUseShadingNormal = `getAttr RadeonProRenderGlobals.contourUseShadingNormal`;
+
+	setAttr RadeonProRenderGlobals.aovShadingNormal $isUseShadingNormal;
+}
+
+global proc onUpdateUseMaterialIndex()
+{
+	int $isUseMaterialIndex = `getAttr RadeonProRenderGlobals.contourUseMaterialID`;
+
+	setAttr RadeonProRenderGlobals.aovMaterialIndex $isUseMaterialIndex;
+}
+
+global proc onUpdateUseObjectID()
+{
+	int $isUseObjectID = `getAttr RadeonProRenderGlobals.contourUseObjectID`;
+
+	setAttr RadeonProRenderGlobals.aovObjectId $isUseObjectID;
 }
 
 global proc onUpdateContour()
