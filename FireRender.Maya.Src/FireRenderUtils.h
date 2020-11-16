@@ -284,6 +284,17 @@ public:
 	bool velocityAOVMotionBlur;
 	float motionBlurCameraExposure;
 
+	// Contour
+	bool contourIsEnabled;
+	bool contourUseObjectID;
+	bool contourUseMaterialID;
+	bool contourUseShadingNormal;
+	float contourLineWidthObjectID;
+	float contourLineWidthMaterialID;
+	float contourLineWidthShadingNormal;
+	float contourNormalThreshold;
+	float contourAntialiasing;
+
 	// Camera type.
 	short cameraType;
 

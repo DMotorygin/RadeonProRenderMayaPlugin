@@ -322,7 +322,7 @@ bool FireRenderContext::buildScene(bool isViewport, bool glViewport, bool freshe
 		bool avoidMaterialSystemDeletion_workaround = isViewport && (createFlags & RPR_CREATION_FLAGS_ENABLE_CPU);
 
 		rpr_int res;
-		if (!createContextEtc(createFlags, !avoidMaterialSystemDeletion_workaround, glViewport, &res))
+		if (!createContextEtc(createFlags, !avoidMaterialSystemDeletion_workaround, glViewport, &res, false))
 		{
 			// Failed to create context
 			if (glViewport)
@@ -350,8 +350,10 @@ bool FireRenderContext::buildScene(bool isViewport, bool glViewport, bool freshe
 			}
 		}
 
+		setupContextPreSceneCreation(m_globals);
+		GetScope().CreateScene();
 		updateLimitsFromGlobalData(m_globals);
-		setupContext(m_globals);
+		setupContextPostSceneCreation(m_globals);
 
 		setMotionBlurParameters(m_globals);
 
@@ -842,7 +844,7 @@ void FireRenderContext::initSwatchScene()
 	m_sceneObjects["light"] = std::shared_ptr<FireRenderObject>(light);
 
 	m_globals.readFromCurrentScene();
-	setupContext(m_globals);
+	setupContextPostSceneCreation(m_globals);
 
 	UpdateCompletionCriteriaForSwatch();
 
@@ -1141,9 +1143,9 @@ void FireRenderContext::BuildLateinitObjects()
 	m_LateinitMASHInstancers.clear();
 }
 
-bool FireRenderContext::createContextEtc(rpr_creation_flags creation_flags, bool destroyMaterialSystemOnDelete, bool glViewport, int* pOutRes)
+bool FireRenderContext::createContextEtc(rpr_creation_flags creation_flags, bool destroyMaterialSystemOnDelete, bool glViewport, int* pOutRes, bool createScene /*= true*/)
 {
-	return FireRenderThread::RunOnceAndWait<bool>([this, &creation_flags, destroyMaterialSystemOnDelete, glViewport, pOutRes]()
+	return FireRenderThread::RunOnceAndWait<bool>([this, &creation_flags, destroyMaterialSystemOnDelete, glViewport, pOutRes, createScene]()
 	{
 		RPR_THREAD_ONLY;
 
@@ -1170,7 +1172,7 @@ bool FireRenderContext::createContextEtc(rpr_creation_flags creation_flags, bool
 			return false;
 		}
 
-		scope.Init(handle, destroyMaterialSystemOnDelete);
+		scope.Init(handle, destroyMaterialSystemOnDelete, createScene);
 
 #ifdef _DEBUG
 		static int dumpDebug;
@@ -1881,7 +1883,7 @@ void FireRenderContext::updateFromGlobals(bool applyLock)
     }
     
 	m_globals.readFromCurrentScene();
-	setupContext(m_globals);
+	setupContextPostSceneCreation(m_globals);
 
 	updateLimitsFromGlobalData(m_globals);
 	updateMotionBlurParameters(m_globals);

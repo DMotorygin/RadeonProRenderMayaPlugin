@@ -232,7 +232,7 @@ public:
 
 	bool isRenderView() const;
 
-	bool createContextEtc(rpr_creation_flags creation_flags, bool destroyMaterialSystemOnDelete = true, bool glViewport = false, int* pOutRes = nullptr);
+	bool createContextEtc(rpr_creation_flags creation_flags, bool destroyMaterialSystemOnDelete = true, bool glViewport = false, int* pOutRes = nullptr, bool createScene = true);
 
 	// Return the context
 	rpr_context context();
@@ -601,7 +601,8 @@ public:
 
 	virtual rpr_int SetRenderQuality(RenderQuality quality) { return RPR_SUCCESS; }
 
-	virtual void setupContext(const FireRenderGlobalsData& fireRenderGlobalsData, bool disableWhiteBalance = false) {}
+	virtual void setupContextPreSceneCreation(const FireRenderGlobalsData& fireRenderGlobalsData, bool disableWhiteBalance = false) {}
+	virtual void setupContextPostSceneCreation(const FireRenderGlobalsData& fireRenderGlobalsData, bool disableWhiteBalance = false) {}
 	virtual bool IsAOVSupported(int aov) const { return true; }
 
 	virtual bool IsRenderQualitySupported(RenderQuality quality) const override = 0;
@@ -800,6 +801,17 @@ private:
 
 	// Increasing iterations - 1, 2, 4, 8, etc up to 32 for now
 	bool m_IterationsPowerOf2Mode;
+
+	// contour mode
+	bool m_contourIsEnabled;
+	bool m_contourUseObjectID;
+	bool m_contourUseMaterialID;
+	bool m_contourUseShadingNormal;
+	float m_contourLineWidthObjectID;
+	float m_contourLineWidthMaterialID;
+	float m_contourLineWidthShadingNormal;
+	float m_contourNormalThreshold;
+	float m_contourAntialiasing;
 
 public:
 	FireRenderEnvLight *iblLight = nullptr;

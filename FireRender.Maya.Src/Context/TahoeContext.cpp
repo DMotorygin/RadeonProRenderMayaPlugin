@@ -105,7 +105,18 @@ rpr_int TahoeContext::CreateContextInternal(rpr_creation_flags createFlags, rpr_
 	return res;
 }
 
-void TahoeContext::setupContext(const FireRenderGlobalsData& fireRenderGlobalsData, bool disableWhiteBalance)
+void TahoeContext::setupContextPreSceneCreation(const FireRenderGlobalsData& fireRenderGlobalsData, bool disableWhiteBalance /*= false*/)
+{
+	frw::Context context = GetContext();
+	rpr_context frcontext = context.Handle();
+
+	rpr_int frstatus = RPR_SUCCESS;
+
+	frstatus = rprContextSetParameterByKey1f(frcontext, CONTEXT_CONTOUR_USE_OBJECTID, fireRenderGlobalsData.giClampIrradiance ? fireRenderGlobalsData.giClampIrradianceValue : FLT_MAX);
+	checkStatus(frstatus);
+}
+
+void TahoeContext::setupContextPostSceneCreation(const FireRenderGlobalsData& fireRenderGlobalsData, bool disableWhiteBalance)
 {
 	frw::Context context = GetContext();
 	rpr_context frcontext = context.Handle();
