@@ -86,19 +86,16 @@ global proc createFireRenderContourFrame(string $parent)
 	attrControlGrp
 		-label "Use Object ID"
 		-attribute "RadeonProRenderGlobals.contourUseObjectID"
-		-changeCommand "onUpdateUseObjectID"
 		contourUseObjectID;
 	
 	attrControlGrp
 		-label "Use Material Index"
 		-attribute "RadeonProRenderGlobals.contourUseMaterialID"
-		-changeCommand "onUpdateUseMaterialIndex"
 		contourUseMaterialID;
 	
 	attrControlGrp
 		-label "Use Shading Normal"
-		-attribute "RadeonProRenderGlobals.contourUseShadingNormal" 
-		-changeCommand onUpdateUseShadingNormal
+		-attribute "RadeonProRenderGlobals.contourUseShadingNormal"
 		contourUseShadingNormal;
 	
 	attrControlGrp
@@ -125,34 +122,24 @@ global proc createFireRenderContourFrame(string $parent)
 	setUITemplate -popTemplate;
 
 	onUpdateContour();
-	onUpdateUseObjectID();
-	onUpdateUseMaterialIndex();
-}
-
-global proc onUpdateUseShadingNormal()
-{
-	int $isUseShadingNormal = `getAttr RadeonProRenderGlobals.contourUseShadingNormal`;
-
-	setAttr RadeonProRenderGlobals.aovShadingNormal $isUseShadingNormal;
-}
-
-global proc onUpdateUseMaterialIndex()
-{
-	int $isUseMaterialIndex = `getAttr RadeonProRenderGlobals.contourUseMaterialID`;
-
-	setAttr RadeonProRenderGlobals.aovMaterialIndex $isUseMaterialIndex;
-}
-
-global proc onUpdateUseObjectID()
-{
-	int $isUseObjectID = `getAttr RadeonProRenderGlobals.contourUseObjectID`;
-
-	setAttr RadeonProRenderGlobals.aovObjectId $isUseObjectID;
 }
 
 global proc onUpdateContour()
 {
 	$enabled = `getAttr RadeonProRenderGlobals.contourIsEnabled`;
+
+	if($enabled)
+	{
+		setAttr RadeonProRenderGlobals.aovShadingNormal -lock $enabled $enabled;
+		setAttr RadeonProRenderGlobals.aovMaterialIndex -lock $enabled $enabled;
+		setAttr RadeonProRenderGlobals.aovObjectId -lock $enabled $enabled;
+	}
+	else
+	{
+		setAttr RadeonProRenderGlobals.aovShadingNormal -lock $enabled;
+		setAttr RadeonProRenderGlobals.aovMaterialIndex -lock $enabled;
+		setAttr RadeonProRenderGlobals.aovObjectId -lock $enabled;
+	}
 
 	attrControlGrp -edit -enable $enabled contourUseObjectID;
 	attrControlGrp -edit -enable $enabled contourUseMaterialID;

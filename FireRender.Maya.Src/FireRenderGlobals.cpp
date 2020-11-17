@@ -458,10 +458,10 @@ MStatus FireRenderGlobals::initialize()
 	MAKE_INPUT(nAttr);
 	nAttr.setMin(1.0f);
 	nAttr.setMax(10.0f);
-	Attribute::contourNormalThreshold = nAttr.create("contourNormalThreshold", "cont", MFnNumericData::kFloat, FireMaya::deg2rad(45.0f), &status);
+	Attribute::contourNormalThreshold = nAttr.create("contourNormalThreshold", "cont", MFnNumericData::kFloat, 45.0f, &status);
 	MAKE_INPUT(nAttr);
 	nAttr.setMin(0.0f);
-	nAttr.setMax(FireMaya::deg2rad(180.0f));
+	nAttr.setMax(180.0f);
 	Attribute::contourAntialiasing = nAttr.create("contourAntialiasing", "coaa", MFnNumericData::kFloat, 1.0f, &status);
 	MAKE_INPUT(nAttr);
 	nAttr.setMin(0.0f);
