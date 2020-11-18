@@ -147,6 +147,9 @@ void TahoeContext::setupContextPreSceneCreation(const FireRenderGlobalsData& fir
 
 			frstatus = rprContextSetParameterByKey1f(frcontext, RPR_CONTEXT_CONTOUR_ANTIALIASING, fireRenderGlobalsData.contourAntialiasing);
 			checkStatus(frstatus);
+
+			frstatus = rprContextSetParameterByKey1u(frcontext, RPR_CONTEXT_CONTOUR_DEBUG_ENABLED, fireRenderGlobalsData.contourIsDebugEnabled);
+			checkStatus(frstatus);
 		}
 	}
 }

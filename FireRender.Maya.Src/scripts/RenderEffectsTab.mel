@@ -118,6 +118,10 @@ global proc createFireRenderContourFrame(string $parent)
 		-label "Antialiasing"
 		-attribute "RadeonProRenderGlobals.contourAntialiasing" contourAntialiasing;
 
+	attrControlGrp
+		-label "Debug"
+		-attribute "RadeonProRenderGlobals.contourIsDebugEnabled" contourIsDebugEnabled;
+
 	setParent ..;
 	setUITemplate -popTemplate;
 
@@ -149,6 +153,7 @@ global proc onUpdateContour()
 	attrControlGrp -edit -enable $enabled contourLineWidthShadingNormal;
 	attrControlGrp -edit -enable $enabled contourNormalThreshold;
 	attrControlGrp -edit -enable $enabled contourAntialiasing;
+	attrControlGrp -edit -enable $enabled contourIsDebugEnabled;
 }
 
 global proc createFireRenderMotionBlurFrame(string $parent)

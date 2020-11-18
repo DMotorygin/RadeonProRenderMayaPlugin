@@ -670,7 +670,9 @@ private:
 
 	void initBuffersForAOV(frw::Context& context, int index, rpr_GLuint* glTexture = nullptr);
 
+	void forceTurnOnAOVs(static const std::vector<int>& aovsToAdd, bool allocBuffer = false);
 	void turnOnAOVsForDenoiser(bool allocBuffer = false);
+	void turnOnAOVsForContour(bool allocBuffer = false);
 	bool CanCreateAiDenoiser() const;
 	void setupDenoiserFB(void);
 	void setupDenoiserRAM(void);

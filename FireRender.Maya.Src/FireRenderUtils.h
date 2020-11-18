@@ -294,6 +294,7 @@ public:
 	float contourLineWidthShadingNormal;
 	float contourNormalThreshold;
 	float contourAntialiasing;
+	bool contourIsDebugEnabled;
 
 	// Camera type.
 	short cameraType;

@@ -143,6 +143,7 @@ namespace
 		MObject contourLineWidthShadingNormal;
 		MObject contourNormalThreshold;
 		MObject contourAntialiasing;
+		MObject contourIsDebugEnabled;
 	}
 
     struct RenderingDeviceAttributes
@@ -626,6 +627,9 @@ void FireRenderGlobals::createContourEffectAttributes()
 	nAttr.setMin(0.0f);
 	nAttr.setMax(1.0f);
 
+	Attribute::contourIsDebugEnabled = nAttr.create("contourIsDebugEnabled", "code", MFnNumericData::kBoolean, 0, &status);
+	MAKE_INPUT(nAttr);
+
 	CHECK_MSTATUS(addAttribute(Attribute::contourIsEnabled));
 	CHECK_MSTATUS(addAttribute(Attribute::contourUseObjectID));
 	CHECK_MSTATUS(addAttribute(Attribute::contourUseMaterialID));
@@ -635,6 +639,7 @@ void FireRenderGlobals::createContourEffectAttributes()
 	CHECK_MSTATUS(addAttribute(Attribute::contourLineWidthShadingNormal));
 	CHECK_MSTATUS(addAttribute(Attribute::contourNormalThreshold));
 	CHECK_MSTATUS(addAttribute(Attribute::contourAntialiasing));
+	CHECK_MSTATUS(addAttribute(Attribute::contourIsDebugEnabled));
 }
 
 void FireRenderGlobals::createCompletionCriteriaAttributes()

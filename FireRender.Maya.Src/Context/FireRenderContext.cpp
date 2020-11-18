@@ -301,6 +301,11 @@ bool FireRenderContext::buildScene(bool isViewport, bool glViewport, bool freshe
 	{
 		turnOnAOVsForDenoiser();
 	}
+	
+	if (m_interactive && m_globals.contourIsEnabled)
+	{
+		turnOnAOVsForContour();
+	}
 
 	auto createFlags = FireMaya::Options::GetContextDeviceFlags(m_RenderType);
 
@@ -400,6 +405,24 @@ void FireRenderContext::turnOnAOVsForDenoiser(bool allocBuffer)
 		RPR_AOV_OBJECT_ID, RPR_AOV_DEPTH, RPR_AOV_DIFFUSE_ALBEDO };
 
 	// Turn on necessary AOVs
+	forceTurnOnAOVs(aovsToAdd, allocBuffer);	
+}
+
+void FireRenderContext::turnOnAOVsForContour(bool allocBuffer /*= false*/)
+{
+	static const std::vector<int> aovsToAdd = {
+		RPR_AOV_OBJECT_ID, 
+		RPR_AOV_SHADING_NORMAL,
+		RPR_AOV_MATERIAL_ID 
+	};
+
+	// Turn on necessary AOVs
+	forceTurnOnAOVs(aovsToAdd, allocBuffer);
+}
+
+void FireRenderContext::forceTurnOnAOVs(static const std::vector<int>& aovsToAdd, bool allocBuffer /*= false*/)
+{
+	// Turn on necessary AOVs
 	for (const int aov : aovsToAdd)
 	{
 		if (!isAOVEnabled(aov))
@@ -408,7 +431,7 @@ void FireRenderContext::turnOnAOVsForDenoiser(bool allocBuffer)
 
 			if (allocBuffer)
 			{
-                auto ctx = scope.Context();
+				auto ctx = scope.Context();
 				initBuffersForAOV(ctx, aov);
 			}
 		}
