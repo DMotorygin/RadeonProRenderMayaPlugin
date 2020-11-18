@@ -805,17 +805,6 @@ private:
 	// Increasing iterations - 1, 2, 4, 8, etc up to 32 for now
 	bool m_IterationsPowerOf2Mode;
 
-	// contour mode
-	bool m_contourIsEnabled;
-	bool m_contourUseObjectID;
-	bool m_contourUseMaterialID;
-	bool m_contourUseShadingNormal;
-	float m_contourLineWidthObjectID;
-	float m_contourLineWidthMaterialID;
-	float m_contourLineWidthShadingNormal;
-	float m_contourNormalThreshold;
-	float m_contourAntialiasing;
-
 public:
 	FireRenderEnvLight *iblLight = nullptr;
 	MObject iblTransformObject = MObject();
