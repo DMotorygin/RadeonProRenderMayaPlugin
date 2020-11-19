@@ -455,6 +455,10 @@ void FireRenderGlobalsData::readFromCurrentScene()
 		if (!plug.isNull())
 			contourAntialiasing = plug.asFloat();
 
+		plug = frGlobalsNode.findPlug("contourIsDebugEnabled");
+		if (!plug.isNull())
+			contourUseMaterialID = plug.asBool();
+
 		aovs.readFromGlobals(frGlobalsNode);
 
 		readDenoiserParameters(frGlobalsNode);
