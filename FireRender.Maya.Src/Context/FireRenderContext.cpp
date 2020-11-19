@@ -420,7 +420,7 @@ void FireRenderContext::turnOnAOVsForContour(bool allocBuffer /*= false*/)
 	forceTurnOnAOVs(aovsToAdd, allocBuffer);
 }
 
-void FireRenderContext::forceTurnOnAOVs(static const std::vector<int>& aovsToAdd, bool allocBuffer /*= false*/)
+void FireRenderContext::forceTurnOnAOVs(const std::vector<int>& aovsToAdd, bool allocBuffer /*= false*/)
 {
 	// Turn on necessary AOVs
 	for (const int aov : aovsToAdd)

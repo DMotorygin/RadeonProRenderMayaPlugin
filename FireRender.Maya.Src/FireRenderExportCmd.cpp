@@ -212,7 +212,7 @@ bool SaveExportConfig(const std::wstring& filePath, TahoeContext& ctx, const std
 		json << "\"linewidth.normal\" : " << globals.contourLineWidthShadingNormal << ",\n";
 		json << "\"antialiasing\" : " << globals.contourAntialiasing << ",\n";
 
-		json << "\"debug\" : " << (globals.contourIsDebugEnabled ? 1 : 0) << ",\n";
+		json << "\"debug\" : " << (globals.contourIsDebugEnabled ? 1 : 0);
 
 		json << "\n}," << std::endl;
 	}
