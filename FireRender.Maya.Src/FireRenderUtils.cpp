@@ -457,7 +457,7 @@ void FireRenderGlobalsData::readFromCurrentScene()
 
 		plug = frGlobalsNode.findPlug("contourIsDebugEnabled");
 		if (!plug.isNull())
-			contourUseMaterialID = plug.asBool();
+			contourIsDebugEnabled = plug.asBool();
 
 		aovs.readFromGlobals(frGlobalsNode);
 

@@ -593,13 +593,13 @@ void FireRenderGlobals::createContourEffectAttributes()
 	Attribute::contourIsEnabled = nAttr.create("contourIsEnabled", "coen", MFnNumericData::kBoolean, 0, &status);
 	MAKE_INPUT(nAttr);
 
-	Attribute::contourUseObjectID = nAttr.create("contourUseObjectID", "coob", MFnNumericData::kBoolean, 0, &status);
+	Attribute::contourUseObjectID = nAttr.create("contourUseObjectID", "coob", MFnNumericData::kBoolean, 1, &status);
 	MAKE_INPUT(nAttr);
 
-	Attribute::contourUseMaterialID = nAttr.create("contourUseMaterialID", "comt", MFnNumericData::kBoolean, 0, &status);
+	Attribute::contourUseMaterialID = nAttr.create("contourUseMaterialID", "comt", MFnNumericData::kBoolean, 1, &status);
 	MAKE_INPUT(nAttr);
 
-	Attribute::contourUseShadingNormal = nAttr.create("contourUseShadingNormal", "cosn", MFnNumericData::kBoolean, 0, &status);
+	Attribute::contourUseShadingNormal = nAttr.create("contourUseShadingNormal", "cosn", MFnNumericData::kBoolean, 1, &status);
 	MAKE_INPUT(nAttr);
 
 	Attribute::contourLineWidthObjectID = nAttr.create("contourLineWidthObjectID", "cowb", MFnNumericData::kFloat, 1.0f, &status);

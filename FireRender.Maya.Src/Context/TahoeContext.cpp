@@ -190,7 +190,14 @@ void TahoeContext::setupContextPostSceneCreation(const FireRenderGlobalsData& fi
 		frstatus = rprContextSetParameterByKey1u(frcontext, RPR_CONTEXT_RENDER_MODE, fireRenderGlobalsData.renderMode);
 		checkStatus(frstatus);
 
-		setSamplesPerUpdate(fireRenderGlobalsData.samplesPerUpdate);
+		if (fireRenderGlobalsData.contourIsEnabled)
+		{
+			setSamplesPerUpdate(1);
+		}
+		else
+		{
+			setSamplesPerUpdate(fireRenderGlobalsData.samplesPerUpdate);
+		}
 
 		frstatus = rprContextSetParameterByKey1u(frcontext, RPR_CONTEXT_MAX_RECURSION, fireRenderGlobalsData.maxRayDepth);
 		checkStatus(frstatus);
