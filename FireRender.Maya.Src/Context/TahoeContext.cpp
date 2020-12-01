@@ -107,7 +107,7 @@ rpr_int TahoeContext::CreateContextInternal(rpr_creation_flags createFlags, rpr_
 	return res;
 }
 
-void TahoeContext::setupContextPreSceneCreation(const FireRenderGlobalsData& fireRenderGlobalsData, bool disableWhiteBalance /*= false*/)
+void TahoeContext::setupContextPreSceneCreation(const FireRenderGlobalsData& fireRenderGlobalsData, int createFlags, bool disableWhiteBalance /*= false*/)
 {
 	frw::Context context = GetContext();
 	rpr_context frcontext = context.Handle();
@@ -117,7 +117,7 @@ void TahoeContext::setupContextPreSceneCreation(const FireRenderGlobalsData& fir
 	if (m_PluginVersion == TahoePluginVersion::RPR2)
 	{
 		// contour must be set before scene creation
-		bool isContourModeOn = fireRenderGlobalsData.contourIsEnabled;
+		bool isContourModeOn = fireRenderGlobalsData.contourIsEnabled && !(createFlags & RPR_CREATION_FLAGS_ENABLE_CPU);
 
 		if (isContourModeOn)
 		{

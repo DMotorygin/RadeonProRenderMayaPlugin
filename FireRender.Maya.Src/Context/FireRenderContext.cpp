@@ -355,7 +355,7 @@ bool FireRenderContext::buildScene(bool isViewport, bool glViewport, bool freshe
 			}
 		}
 
-		setupContextPreSceneCreation(m_globals);
+		setupContextPreSceneCreation(m_globals, createFlags);
 		GetScope().CreateScene();
 		updateLimitsFromGlobalData(m_globals);
 		setupContextPostSceneCreation(m_globals);
@@ -969,7 +969,7 @@ void FireRenderContext::render(bool lock)
 	else
 		context.Render();
 
-	if (m_IterationsPowerOf2Mode)
+	if (m_IterationsPowerOf2Mode && !m_globals.contourIsEnabled)
 	{
 		const int maxIterations = 32;
 		if (m_samplesPerUpdate < maxIterations)
