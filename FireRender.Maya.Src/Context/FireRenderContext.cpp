@@ -1906,7 +1906,10 @@ void FireRenderContext::updateFromGlobals(bool applyLock)
         LOCKFORUPDATE(this);
     }
     
+	auto createFlags = FireMaya::Options::GetContextDeviceFlags(m_RenderType);
+
 	m_globals.readFromCurrentScene();
+	setupContextPreSceneCreation(m_globals, createFlags);
 	setupContextPostSceneCreation(m_globals);
 
 	updateLimitsFromGlobalData(m_globals);
