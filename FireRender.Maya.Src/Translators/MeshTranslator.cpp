@@ -235,7 +235,13 @@ MObject FireMaya::MeshTranslator::GenerateSmoothMesh(const MObject& object, cons
 
 	// copy original mesh and smooth is via mel
 	MFnDagNode dagMesh(object);
-	MString meshName = dagMesh.name();
+	MDagPath meshPath; 
+	dagMesh.getPath(meshPath);
+	MString meshName = meshPath.fullPathName(&status);
+
+	assert(status == MStatus::kSuccess);
+	if (status != MStatus::kSuccess)
+		return MObject::kNullObj;
 
 	MString command = R"(
 		proc string generateSmoothMesh() 
