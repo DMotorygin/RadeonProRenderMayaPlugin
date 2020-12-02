@@ -134,9 +134,13 @@ global proc onUpdateContour()
 
 	if($enabled)
 	{
-		setAttr RadeonProRenderGlobals.aovShadingNormal -lock $enabled $enabled;
-		setAttr RadeonProRenderGlobals.aovMaterialIndex -lock $enabled $enabled;
-		setAttr RadeonProRenderGlobals.aovObjectId -lock $enabled $enabled;
+		$settable = `getAttr -se RadeonProRenderGlobals.aovShadingNormal`;
+		if($settable)
+		{
+			setAttr RadeonProRenderGlobals.aovShadingNormal -lock $enabled $enabled;
+			setAttr RadeonProRenderGlobals.aovMaterialIndex -lock $enabled $enabled;
+			setAttr RadeonProRenderGlobals.aovObjectId -lock $enabled $enabled;
+		}
 	}
 	else
 	{
