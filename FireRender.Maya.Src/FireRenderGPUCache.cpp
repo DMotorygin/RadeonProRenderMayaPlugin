@@ -435,24 +435,47 @@ void FireRenderGPUCache::GetShapes(std::vector<frw::Shape>& outShapes, std::vect
 	frw::Context ctx = context()->GetContext();
 	assert(ctx.IsValid());
 
-	// ensure correct input
-	if (!m_scene)
-		return;
+	const FireRenderMeshCommon* mainMesh = this->context()->GetMainMesh(uuid());
 
-	// translate alembic data into RPR shapes (to be decomposed...)
-	for (auto alembicObj : m_scene->objects)
+	if (mainMesh != nullptr)
 	{
-		if (alembicObj->visible == false) 
-			continue;
+		const std::vector<FrElement>& elements = mainMesh->Elements();
 
-		if (RPRAlembicWrapper::PolygonMeshObject* mesh = alembicObj.as_polygonMesh())
+		outShapes.reserve(elements.size());
+
+		for (const FrElement& element : elements)
 		{
-			outShapes.emplace_back();
-			outShapes.back() = TranslateAlembicMesh(mesh, ctx);
-
-			// - transformation matrix
-			tmMatrs.emplace_back(mesh->combinedXforms.m_value);
+			outShapes.push_back(element.shape.CreateInstance(Context()));
+			tmMatrs.push_back(element.TM);
 		}
+
+		m.isMainInstance = false;
+	}
+
+	if (mainMesh == nullptr)
+	{
+		// ensure correct input
+		if (!m_scene)
+			return;
+
+		// translate alembic data into RPR shapes (to be decomposed...)
+		for (auto alembicObj : m_scene->objects)
+		{
+			if (alembicObj->visible == false)
+				continue;
+
+			if (RPRAlembicWrapper::PolygonMeshObject* mesh = alembicObj.as_polygonMesh())
+			{
+				outShapes.emplace_back();
+				outShapes.back() = TranslateAlembicMesh(mesh, ctx);
+
+				// - transformation matrix
+				tmMatrs.emplace_back(mesh->combinedXforms.m_value);
+			}
+		}
+
+		m.isMainInstance = true;
+		context()->AddMainMesh(this);
 	}
 }
 
