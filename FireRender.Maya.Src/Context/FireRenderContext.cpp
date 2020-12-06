@@ -2208,7 +2208,9 @@ bool FireRenderContext::AddSceneObject(const MDagPath& dagPath)
 		{
 			if (isGPUCacheNode)
 			{
+				#ifdef WIN32
 				ob = CreateSceneObject<FireRenderGPUCache, NodeCachingOptions::DontAddPath>(dagPathTmp);
+				#endif
 			}
 			else
 			{

@@ -87,7 +87,7 @@ void FireRenderGPUCache::Freshen()
 void FireRenderGPUCache::ReadAlembicFile()
 {
 	MStatus res;
-
+	
 	// get name of alembic file from Maya node
 	const MObject& node = Object();
 	MFnDependencyNode nodeFn(node);
@@ -102,10 +102,20 @@ void FireRenderGPUCache::ReadAlembicFile()
 	if (!abcFile.good())
 		return;
 
+	m_file = abcCache.find(cacheFilePath);
+	if (m_file != abcCache.end())
+	{
+		return;
+	}
+	
 	// proceed reading file
+	abcCache[cacheFilePath] = RPRAlembicWrapperCacheEntry();
+	m_file = abcCache.find(cacheFilePath);
+	assert(m_file != abcCache.end());
+	
 	try
 	{
-		m_archive = IArchive(Alembic::AbcCoreOgawa::ReadArchive(), cacheFilePath);
+		m_file->second.m_archive = IArchive(Alembic::AbcCoreOgawa::ReadArchive(), cacheFilePath);
 	}
 	catch (std::exception &e)
 	{
@@ -114,14 +124,14 @@ void FireRenderGPUCache::ReadAlembicFile()
 		MGlobal::displayError(error);
 		return;
 	}
-
-	if (!m_archive.valid())
+	
+	if (!m_file->second.m_archive.valid())
 		return;
 
-	uint32_t getNumTimeSamplings = m_archive.getNumTimeSamplings();
+	uint32_t getNumTimeSamplings = m_file->second.m_archive.getNumTimeSamplings();
 
 	std::string errorMessage;
-	if (m_storage.open(cacheFilePath, errorMessage) == false)
+	if (m_file->second.m_storage.open(cacheFilePath, errorMessage) == false)
 	{
 		errorMessage = "AlembicStorage::open error: " + errorMessage;
 		MGlobal::displayError(errorMessage.c_str());
@@ -129,8 +139,8 @@ void FireRenderGPUCache::ReadAlembicFile()
 	}
 
 	static int sampleIdx = 0;
-	m_scene = m_storage.read(sampleIdx, errorMessage);
-	if (!m_scene)
+	m_file->second.m_scene = m_file->second.m_storage.read(sampleIdx, errorMessage);
+	if (!m_file->second.m_scene)
 	{
 		errorMessage = "sample error: " + errorMessage;
 		MGlobal::displayError(errorMessage.c_str());
@@ -431,6 +441,8 @@ frw::Shape TranslateAlembicMesh(const RPRAlembicWrapper::PolygonMeshObject* mesh
 
 void FireRenderGPUCache::GetShapes(std::vector<frw::Shape>& outShapes, std::vector<std::array<float, 16>>& tmMatrs)
 {
+	assert(m_file != abcCache.end());
+
 	outShapes.clear();
 	frw::Context ctx = context()->GetContext();
 	assert(ctx.IsValid());
@@ -455,11 +467,11 @@ void FireRenderGPUCache::GetShapes(std::vector<frw::Shape>& outShapes, std::vect
 	if (mainMesh == nullptr)
 	{
 		// ensure correct input
-		if (!m_scene)
+		if (!m_file->second.m_scene)
 			return;
 
 		// translate alembic data into RPR shapes (to be decomposed...)
-		for (auto alembicObj : m_scene->objects)
+		for (auto alembicObj : m_file->second.m_scene->objects)
 		{
 			if (alembicObj->visible == false)
 				continue;
