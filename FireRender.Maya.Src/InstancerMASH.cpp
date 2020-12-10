@@ -150,6 +150,10 @@ std::vector<MObject> GetShapesFromNode(MObject node)
 	if (MStatus::kSuccess != status)
 		MGlobal::displayError("MItDag::MItDag");
 
+	status = itDag.reset(node, MItDag::kDepthFirst, MFn::kMesh);
+	if (MStatus::kSuccess != status)
+		MGlobal::displayError("MItDag::MItDag");
+
 	for (; !itDag.isDone(); itDag.next())
 	{
 		MObject mesh = itDag.currentItem(&status);
