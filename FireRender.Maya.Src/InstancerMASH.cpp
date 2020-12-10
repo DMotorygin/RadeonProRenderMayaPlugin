@@ -216,8 +216,9 @@ void InstancerMASH::GenerateInstances()
 	std::vector<MObject> targetObjects = GetTargetObjects();
 
 	std::map<size_t, std::vector<MObject>> shapesCache;
-	for (auto& objectIndex : objectIndexArray)
+	for (int idx = 0; idx < objectIndexArray.length(); ++idx)
 	{
+		size_t objectIndex = (size_t)objectIndexArray[idx];
 		shapesCache[(size_t)objectIndex] = GetShapesFromNode(targetObjects.at((size_t)objectIndex));
 	}
 
