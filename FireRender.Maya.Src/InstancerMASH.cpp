@@ -92,8 +92,7 @@ void InstancerMASH::OnPlugDirty(MObject& node, MPlug& plug)
 	{
 		for (auto o : m_instancedObjects)
 		{
-			auto it = o.second.begin();
-			for (; it != o.second.end(); ++it)
+			for (auto it = o.second.begin(); it != o.second.end(); ++it)
 				(*it)->setVisibility(false);
 		}
 		m_instancedObjects.clear();
