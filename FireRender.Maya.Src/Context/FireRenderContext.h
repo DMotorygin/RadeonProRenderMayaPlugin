@@ -650,6 +650,8 @@ protected:
 
 	virtual void OnPreRender() {}
 
+	int GetAOVMaxValue();
+
 private:
 	struct CallbacksAttachmentHelper
 	{

@@ -118,6 +118,24 @@ FireRenderAOVs::FireRenderAOVs() :
 	AddAOV(RPR_AOV_REFLECTION_CATCHER, "aovReflectionCatcher", "ReflectionCatcher", "refcatcher",
 		{ { "R", "G", "B" },{ TypeDesc::FLOAT, TypeDesc::VEC3, TypeDesc::COLOR } });
 
+	AddAOV(RPR_AOV_CRYPTOMATTE_MAT0, "aovCryptoMaterialMat0", "Crypto Material Mat0", "cryptoMaterialMat0",
+		{ { "R", "G", "B", "A" },{ TypeDesc::FLOAT, TypeDesc::VEC4, TypeDesc::COLOR } });
+
+	AddAOV(RPR_AOV_CRYPTOMATTE_MAT1, "aovCryptoMaterialMat1", "Crypto Material Mat1", "cryptoMaterialMat1",
+		{ { "R", "G", "B", "A" },{ TypeDesc::FLOAT, TypeDesc::VEC4, TypeDesc::COLOR } });
+
+	AddAOV(RPR_AOV_CRYPTOMATTE_MAT2, "aovCryptoMaterialMat2", "Crypto Material Mat2", "cryptoMaterialMat2",
+		{ { "R", "G", "B", "A" },{ TypeDesc::FLOAT, TypeDesc::VEC4, TypeDesc::COLOR } });
+
+	AddAOV(RPR_AOV_CRYPTOMATTE_OBJ0, "aovCryptoMaterialObj0", "Crypto Material Obj0", "cryptoMaterialObj0",
+		{ { "R", "G", "B", "A" },{ TypeDesc::FLOAT, TypeDesc::VEC4, TypeDesc::COLOR } });
+
+	AddAOV(RPR_AOV_CRYPTOMATTE_OBJ1, "aovCryptoMaterialObj1", "Crypto Material Obj1", "cryptoMaterialObj1",
+		{ { "R", "G", "B", "A" },{ TypeDesc::FLOAT, TypeDesc::VEC4, TypeDesc::COLOR } });
+
+	AddAOV(RPR_AOV_CRYPTOMATTE_OBJ2, "aovCryptoMaterialObj2", "Crypto Material Obj2", "cryptoMaterialObj2",
+		{ { "R", "G", "B", "A" },{ TypeDesc::FLOAT, TypeDesc::VEC4, TypeDesc::COLOR } });
+
 	InitEXRCompressionMap();
 }
 
