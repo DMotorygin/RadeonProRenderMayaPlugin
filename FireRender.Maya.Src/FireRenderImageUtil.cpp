@@ -173,56 +173,43 @@ bool FireRenderImageUtil::saveMultichannelAOVs(MString filePath,
 	imgSpec.attribute("ImageDescription", comments);
 	imgSpec.attribute("compression", aovs.GetEXRCompressionType().asChar());
 
-	bool isCryptomatteMaterial = aovs.IsCryptomatteMaterial();
-	if (isCryptomatteMaterial)
+	if (aovs.IsCryptomatteMaterial())
 	{
 		imgSpec.attribute("cryptomatte/be93ba3/conversion", "uint32_to_float32");
 		imgSpec.attribute("cryptomatte/be93ba3/hash", "MurmurHash3_32");
 		imgSpec.attribute("cryptomatte/be93ba3/name", "CryptoMaterial");
 	}
 
-	bool isCryptomatteObject = aovs.IsCryptomatteObject();
-	if (isCryptomatteObject)
+	if (aovs.IsCryptomatteObject())
 	{
 		imgSpec.attribute("cryptomatte/d593dd7/conversion", "uint32_to_float32");
 		imgSpec.attribute("cryptomatte/d593dd7/hash", "MurmurHash3_32");
 		imgSpec.attribute("cryptomatte/d593dd7/name", "CryptoObject");
 	}
 
-	if (isCryptomatteMaterial || isCryptomatteObject)
-	{
-		imgSpec.set_format(TypeDesc::FLOAT);
-	}
-	else
-	{
-		imgSpec.set_format(aovs.GetChannelFormat());
-	}
-
 	//fill image spec setting up channels for each aov
 	aovs.ForEachActiveAOV([&](FireRenderAOV& aov)
 	{
-		if (aov.active)
+		assert(aov.IsActive());
+
+		int aov_component_count = 0;
+
+		for (const char* c : aov.description.components)
 		{
-			int aov_component_count = 0;
+			if (!c)
+				continue;
 
-			for (auto c : aov.description.components)
-			{
-				if (c)
-				{
-					++aov_component_count;
-					++imgSpec.nchannels;
+			++aov_component_count;
+			++imgSpec.nchannels;
 
-					std::string name;
-					if (0 == aov.id)
-						name = c;//standard name for COLOR channel
-					else
-						name = std::string(aov.folder.asChar()) + "." + c;
+			std::string name = (0 == aov.id) ? c : (std::string(aov.folder.asChar()) + "." + c);
+			imgSpec.channelnames.push_back(name);
 
-					imgSpec.channelnames.push_back(name);
-				}
-			}
-			aovs_component_count[aov.id] = aov_component_count;
+			TypeDesc::BASETYPE channelFormat = aov.IsCryptomateiralAOV() ? TypeDesc::FLOAT : aovs.GetChannelFormat();
+			imgSpec.channelformats.push_back(channelFormat);
 		}
+
+		aovs_component_count[aov.id] = aov_component_count;
 	});
 
 	size_t pixel_size = imgSpec.nchannels;

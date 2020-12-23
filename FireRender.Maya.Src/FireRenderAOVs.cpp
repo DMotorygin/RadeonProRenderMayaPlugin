@@ -427,48 +427,36 @@ void FireRenderAOVs::ForEachActiveAOV(std::function<void(FireRenderAOV& aov)> ac
 {
 	for (auto& aov : m_aovs)
 	{
-		if (aov.second->active)
+		if (aov.second->IsActive())
 			actionFunc(*aov.second.get());
 	}
 }
 
-bool FireRenderAOVs::IsCryptomatteMaterial(void) const
+bool FireRenderAOVs::IsAOVActive(std::vector<int>& ids) const
 {
-	if (m_aovs.find(RPR_AOV_CRYPTOMATTE_MAT0) != m_aovs.end())
-	{
-		return true;
-	}
+	std::remove_reference<decltype(m_aovs)>::type::const_iterator it;
 
-	if (m_aovs.find(RPR_AOV_CRYPTOMATTE_MAT1) != m_aovs.end())
+	for (int id : ids)
 	{
-		return true;
-	}
-
-	if (m_aovs.find(RPR_AOV_CRYPTOMATTE_MAT2) != m_aovs.end())
-	{
-		return true;
+		it = m_aovs.find(id);
+		if ((it != m_aovs.end()) && (it->second->IsActive()))
+		{
+			return true;
+		}
 	}
 
 	return false;
 }
 
+bool FireRenderAOVs::IsCryptomatteMaterial(void) const
+{
+	std::vector<int> ids = { RPR_AOV_CRYPTOMATTE_MAT0, RPR_AOV_CRYPTOMATTE_MAT1, RPR_AOV_CRYPTOMATTE_MAT2 };
+	return IsAOVActive(ids);
+}
+
 bool FireRenderAOVs::IsCryptomatteObject(void) const
 {
-	if (m_aovs.find(RPR_AOV_CRYPTOMATTE_OBJ0) != m_aovs.end())
-	{
-		return true;
-	}
-
-	if (m_aovs.find(RPR_AOV_CRYPTOMATTE_OBJ1) != m_aovs.end())
-	{
-		return true;
-	}
-
-	if (m_aovs.find(RPR_AOV_CRYPTOMATTE_OBJ2) != m_aovs.end())
-	{
-		return true;
-	}
-
-	return false;
+	std::vector<int> ids = { RPR_AOV_CRYPTOMATTE_OBJ0, RPR_AOV_CRYPTOMATTE_OBJ1, RPR_AOV_CRYPTOMATTE_OBJ2 };
+	return IsAOVActive(ids);
 }
 

@@ -104,6 +104,8 @@ private:
 
 	void InitEXRCompressionMap();
 
+	bool IsAOVActive(std::vector<int>& ids) const;
+
 private:
 	// Members
 	// -----------------------------------------------------------------------------
