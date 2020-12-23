@@ -173,21 +173,30 @@ bool FireRenderImageUtil::saveMultichannelAOVs(MString filePath,
 	imgSpec.attribute("ImageDescription", comments);
 	imgSpec.attribute("compression", aovs.GetEXRCompressionType().asChar());
 
-	if (aovs.IsCryptomatteMaterial())
+	bool isCryptomatteMaterial = aovs.IsCryptomatteMaterial();
+	if (isCryptomatteMaterial)
 	{
 		imgSpec.attribute("cryptomatte/be93ba3/conversion", "uint32_to_float32");
 		imgSpec.attribute("cryptomatte/be93ba3/hash", "MurmurHash3_32");
 		imgSpec.attribute("cryptomatte/be93ba3/name", "CryptoMaterial");
 	}
 
-	if (aovs.IsCryptomatteObject())
+	bool isCryptomatteObject = aovs.IsCryptomatteObject();
+	if (isCryptomatteObject)
 	{
 		imgSpec.attribute("cryptomatte/d593dd7/conversion", "uint32_to_float32");
 		imgSpec.attribute("cryptomatte/d593dd7/hash", "MurmurHash3_32");
 		imgSpec.attribute("cryptomatte/d593dd7/name", "CryptoObject");
 	}
 
-	imgSpec.set_format(aovs.GetChannelFormat());
+	if (isCryptomatteMaterial || isCryptomatteObject)
+	{
+		imgSpec.set_format(TypeDesc::FLOAT);
+	}
+	else
+	{
+		imgSpec.set_format(aovs.GetChannelFormat());
+	}
 
 	//fill image spec setting up channels for each aov
 	aovs.ForEachActiveAOV([&](FireRenderAOV& aov)
