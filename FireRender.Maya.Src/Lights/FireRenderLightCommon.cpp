@@ -19,6 +19,7 @@ limitations under the License.
 #include <maya/MDGMessage.h>
 #include <maya/MGlobal.h>
 #include <maya/MViewport2Renderer.h>
+#include <maya/MDagModifier.h>
 
 #include <assert.h>
 
@@ -97,7 +98,12 @@ void FireRenderLightCommon::onNodeRemoved(MObject &node, void *clientData)
 
 	// delete transform node
 	MStatus mstatus;
-	mstatus = MGlobal::removeFromModel(pparent->m_transformObject);
+	MFnDagNode fnDag (pparent->m_transformObject);
+	MString command = "delete " + fnDag.name();
+	mstatus = MGlobal::executeCommand(command, true, true);
+	assert(mstatus != MStatus::kFailure);
+
+	mstatus = MDGMessage::removeCallback(pparent->m_nodeRemovedCallback);
 	assert(mstatus != MStatus::kFailure);
 }
 
