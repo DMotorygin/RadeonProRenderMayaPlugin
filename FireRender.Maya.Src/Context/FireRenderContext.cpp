@@ -43,7 +43,6 @@ limitations under the License.
 #include "FireRenderThread.h"
 #include "FireRenderMaterialSwatchRender.h"
 #include "CompositeWrapper.h"
-#include "TahoeContext.h"
 
 #ifdef WIN32 // alembic support is disabled on MAC until alembic build issue on MAC is resolved
 #include "FireRenderGPUCache.h"
@@ -156,11 +155,6 @@ void FireRenderContext::resize(unsigned int w, unsigned int h, bool renderView, 
 
 int FireRenderContext::GetAOVMaxValue()
 {
-	bool isRPR20 = TahoeContext::IsGivenContextRPR2(this);
-
-	if (isRPR20)
-		return RPR_AOV_MAX;
-
 	return 0x20;
 }
 
