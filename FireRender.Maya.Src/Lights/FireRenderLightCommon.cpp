@@ -20,6 +20,7 @@ limitations under the License.
 #include <maya/MGlobal.h>
 #include <maya/MViewport2Renderer.h>
 #include <maya/MDagModifier.h>
+#include <maya/MSceneMessage.h>
 
 #include <assert.h>
 
@@ -27,6 +28,8 @@ FireRenderLightCommon::FireRenderLightCommon() :
 	m_modelEditorChangedCallback(0),
 	m_aboutToDeleteCallback(0),
 	m_nodeRemovedCallback(0),
+	m_newFileCallback(0),
+	m_openFileCallback(0),
 	m_transformObject(MObject::kNullObj)
 {
 }
@@ -46,6 +49,16 @@ FireRenderLightCommon::~FireRenderLightCommon()
 	if (m_modelEditorChangedCallback != 0)
 	{
 		MNodeMessage::removeCallback(m_modelEditorChangedCallback);
+	}
+
+	if (m_newFileCallback != 0)
+	{
+		MSceneMessage::removeCallback(m_newFileCallback);
+	}
+
+	if (m_openFileCallback != 0)
+	{
+		MSceneMessage::removeCallback(m_openFileCallback);
 	}
 }
 
@@ -74,7 +87,6 @@ void FireRenderLightCommon::onAboutToDelete(MObject &node, MDGModifier& modifier
 	// save parent node in light locator object
 	FireRenderLightCommon* pLocator = static_cast<FireRenderLightCommon*>(clientData);
 	pLocator->m_transformObject = parent;
-	MString nodeTypeName(pLocator->GetNodeTypeName());
 
 	pLocator->m_nodeRemovedCallback = MDGMessage::addNodeRemovedCallback(
 		FireRenderLightCommon::onNodeRemoved,
@@ -99,7 +111,7 @@ void FireRenderLightCommon::onNodeRemoved(MObject &node, void *clientData)
 	// delete transform node
 	MStatus mstatus;
 	MFnDagNode fnDag (pparent->m_transformObject);
-	MString command = "delete " + fnDag.name();
+	MString command = "delete " + fnDag.fullPathName();
 	mstatus = MGlobal::executeCommand(command, true, true);
 	assert(mstatus != MStatus::kFailure);
 
@@ -121,6 +133,17 @@ void FireRenderLightCommon::OnModelEditorChanged(void* clientData)
 	}
 }
 
+void FireRenderLightCommon::OnSceneClose(void* clientData)
+{
+	FireRenderLightCommon* light = static_cast<FireRenderLightCommon*>(clientData);
+	if (!light)
+		return;
+
+	MStatus mstatus;
+	mstatus = MNodeMessage::removeCallback(light->m_aboutToDeleteCallback);
+	assert(mstatus != MStatus::kFailure);
+}
+
 void FireRenderLightCommon::postConstructor()
 {
 	MStatus status;
@@ -130,6 +153,12 @@ void FireRenderLightCommon::postConstructor()
 	assert(status == MStatus::kSuccess);
 
 	m_modelEditorChangedCallback = MEventMessage::addEventCallback("modelEditorChanged", OnModelEditorChanged, this, &status);
+	assert(status == MStatus::kSuccess);
+
+	m_newFileCallback = MSceneMessage::addCallback(MSceneMessage::kBeforeNew, OnSceneClose, this, &status);
+	assert(status == MStatus::kSuccess);
+
+	m_openFileCallback = MSceneMessage::addCallback(MSceneMessage::kBeforeOpen, OnSceneClose, this, &status);
 	assert(status == MStatus::kSuccess);
 }
 
