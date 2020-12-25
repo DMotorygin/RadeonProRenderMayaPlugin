@@ -117,6 +117,7 @@ void FireRenderLightCommon::onNodeRemoved(MObject &node, void *clientData)
 
 	mstatus = MDGMessage::removeCallback(pparent->m_nodeRemovedCallback);
 	assert(mstatus != MStatus::kFailure);
+	pparent->m_nodeRemovedCallback = 0;
 }
 
 MSelectionMask FireRenderLightCommon::getShapeSelectionMask() const
@@ -142,6 +143,7 @@ void FireRenderLightCommon::OnSceneClose(void* clientData)
 	MStatus mstatus;
 	mstatus = MNodeMessage::removeCallback(light->m_aboutToDeleteCallback);
 	assert(mstatus != MStatus::kFailure);
+	light->m_aboutToDeleteCallback = 0;
 }
 
 void FireRenderLightCommon::postConstructor()
