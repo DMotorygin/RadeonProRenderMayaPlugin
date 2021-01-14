@@ -153,6 +153,11 @@ void FireRenderContext::resize(unsigned int w, unsigned int h, bool renderView, 
 	setResolution(w, h, renderView, glTexture);
 }
 
+int FireRenderContext::GetAOVMaxValue()
+{
+	return 0x20;
+}
+
 void FireRenderContext::setResolution(unsigned int w, unsigned int h, bool renderView, rpr_GLuint* glTexture)
 {
 	RPR_THREAD_ONLY;
@@ -166,7 +171,8 @@ void FireRenderContext::setResolution(unsigned int w, unsigned int h, bool rende
 	if (!context)
 		return;
 
-	for (int i = 0; i != RPR_AOV_MAX; ++i)
+	int MaxAOV = GetAOVMaxValue();
+	for (int i = 0; i != MaxAOV; ++i)
 	{
 		initBuffersForAOV(context, i, glTexture);
 	}
@@ -210,6 +216,20 @@ void FireRenderContext::enableAOVAndReset(int index, bool flag, rpr_GLuint* glTe
 	resetAOV(index, flag ? glTexture : nullptr);
 }
 
+bool aovExists(int index)
+{
+	if (index <= RPR_AOV_CAMERA_NORMAL)
+		return true;
+
+	if ((index >= RPR_AOV_CRYPTOMATTE_MAT0) && (index <= RPR_AOV_CRYPTOMATTE_MAT2))
+		return true;
+
+	if ((index >= RPR_AOV_CRYPTOMATTE_OBJ0) && (index <= RPR_AOV_CRYPTOMATTE_OBJ2))
+		return true;
+
+	return false;
+}
+
 void FireRenderContext::initBuffersForAOV(frw::Context& context, int index, rpr_GLuint* glTexture)
 {
 	rpr_framebuffer_format fmt = { 4, RPR_COMPONENT_TYPE_FLOAT32 };
@@ -218,6 +238,11 @@ void FireRenderContext::initBuffersForAOV(frw::Context& context, int index, rpr_
 	m.framebufferAOV_resolved[index].Reset();
 
 	if (!IsAOVSupported(index))
+	{
+		return;
+	}
+
+	if (!aovExists(index))
 	{
 		return;
 	}
@@ -301,6 +326,11 @@ bool FireRenderContext::buildScene(bool isViewport, bool glViewport, bool freshe
 	{
 		turnOnAOVsForDenoiser();
 	}
+	
+	if (m_interactive && m_globals.contourIsEnabled)
+	{
+		turnOnAOVsForContour();
+	}
 
 	auto createFlags = FireMaya::Options::GetContextDeviceFlags(m_RenderType);
 
@@ -322,7 +352,7 @@ bool FireRenderContext::buildScene(bool isViewport, bool glViewport, bool freshe
 		bool avoidMaterialSystemDeletion_workaround = isViewport && (createFlags & RPR_CREATION_FLAGS_ENABLE_CPU);
 
 		rpr_int res;
-		if (!createContextEtc(createFlags, !avoidMaterialSystemDeletion_workaround, glViewport, &res))
+		if (!createContextEtc(createFlags, !avoidMaterialSystemDeletion_workaround, glViewport, &res, false))
 		{
 			// Failed to create context
 			if (glViewport)
@@ -350,8 +380,10 @@ bool FireRenderContext::buildScene(bool isViewport, bool glViewport, bool freshe
 			}
 		}
 
+		GetScope().CreateScene();
 		updateLimitsFromGlobalData(m_globals);
-		setupContext(m_globals);
+		setupContextContourMode(m_globals, createFlags);
+		setupContextPostSceneCreation(m_globals);
 
 		setMotionBlurParameters(m_globals);
 
@@ -398,6 +430,24 @@ void FireRenderContext::turnOnAOVsForDenoiser(bool allocBuffer)
 		RPR_AOV_OBJECT_ID, RPR_AOV_DEPTH, RPR_AOV_DIFFUSE_ALBEDO };
 
 	// Turn on necessary AOVs
+	forceTurnOnAOVs(aovsToAdd, allocBuffer);	
+}
+
+void FireRenderContext::turnOnAOVsForContour(bool allocBuffer /*= false*/)
+{
+	static const std::vector<int> aovsToAdd = {
+		RPR_AOV_OBJECT_ID, 
+		RPR_AOV_SHADING_NORMAL,
+		RPR_AOV_MATERIAL_ID 
+	};
+
+	// Turn on necessary AOVs
+	forceTurnOnAOVs(aovsToAdd, allocBuffer);
+}
+
+void FireRenderContext::forceTurnOnAOVs(const std::vector<int>& aovsToAdd, bool allocBuffer /*= false*/)
+{
+	// Turn on necessary AOVs
 	for (const int aov : aovsToAdd)
 	{
 		if (!isAOVEnabled(aov))
@@ -406,7 +456,7 @@ void FireRenderContext::turnOnAOVsForDenoiser(bool allocBuffer)
 
 			if (allocBuffer)
 			{
-                auto ctx = scope.Context();
+				auto ctx = scope.Context();
 				initBuffersForAOV(ctx, aov);
 			}
 		}
@@ -841,7 +891,7 @@ void FireRenderContext::initSwatchScene()
 	m_sceneObjects["light"] = std::shared_ptr<FireRenderObject>(light);
 
 	m_globals.readFromCurrentScene();
-	setupContext(m_globals);
+	setupContextPostSceneCreation(m_globals);
 
 	UpdateCompletionCriteriaForSwatch();
 
@@ -884,7 +934,8 @@ void FireRenderContext::render(bool lock)
 
 	if (m_restartRender)
 	{
-		for (int i = 0; i != RPR_AOV_MAX; ++i) 
+		int MaxAOV = GetAOVMaxValue();
+		for (int i = 0; i != MaxAOV; ++i) 
 		{
 			if (aovEnabled[i])
 			{
@@ -944,7 +995,7 @@ void FireRenderContext::render(bool lock)
 	else
 		context.Render();
 
-	if (m_IterationsPowerOf2Mode)
+	if (m_IterationsPowerOf2Mode && !m_globals.contourIsEnabled)
 	{
 		const int maxIterations = 32;
 		if (m_samplesPerUpdate < maxIterations)
@@ -1142,9 +1193,9 @@ void FireRenderContext::BuildLateinitObjects()
 	m_LateinitMASHInstancers.clear();
 }
 
-bool FireRenderContext::createContextEtc(rpr_creation_flags creation_flags, bool destroyMaterialSystemOnDelete, bool glViewport, int* pOutRes)
+bool FireRenderContext::createContextEtc(rpr_creation_flags creation_flags, bool destroyMaterialSystemOnDelete, bool glViewport, int* pOutRes, bool createScene /*= true*/)
 {
-	return FireRenderThread::RunOnceAndWait<bool>([this, &creation_flags, destroyMaterialSystemOnDelete, glViewport, pOutRes]()
+	return FireRenderThread::RunOnceAndWait<bool>([this, &creation_flags, destroyMaterialSystemOnDelete, glViewport, pOutRes, createScene]()
 	{
 		RPR_THREAD_ONLY;
 
@@ -1171,7 +1222,7 @@ bool FireRenderContext::createContextEtc(rpr_creation_flags creation_flags, bool
 			return false;
 		}
 
-		scope.Init(handle, destroyMaterialSystemOnDelete);
+		scope.Init(handle, destroyMaterialSystemOnDelete, createScene);
 
 #ifdef _DEBUG
 		static int dumpDebug;
@@ -1347,6 +1398,12 @@ void FireRenderContext::DebugDumpAOV(int aov) const
 		,{RPR_AOV_VARIANCE, "RPR_AOV_VARIANCE" }
 		,{RPR_AOV_VIEW_SHADING_NORMAL, "RPR_AOV_VIEW_SHADING_NORMAL" }
 		,{RPR_AOV_REFLECTION_CATCHER, "RPR_AOV_REFLECTION_CATCHER" }
+		,{RPR_AOV_CRYPTOMATTE_MAT0, "RPR_AOV_CRYPTOMATTE_MAT0" }
+		,{RPR_AOV_CRYPTOMATTE_MAT1, "RPR_AOV_CRYPTOMATTE_MAT1" }
+		,{RPR_AOV_CRYPTOMATTE_MAT2, "RPR_AOV_CRYPTOMATTE_MAT2" }
+		,{RPR_AOV_CRYPTOMATTE_OBJ0, "RPR_AOV_CRYPTOMATTE_OBJ0" }
+		,{RPR_AOV_CRYPTOMATTE_OBJ1, "RPR_AOV_CRYPTOMATTE_OBJ1" }
+		,{RPR_AOV_CRYPTOMATTE_OBJ2, "RPR_AOV_CRYPTOMATTE_OBJ2" }
 		,{RPR_AOV_MAX, "RPR_AOV_MAX" }
 	};
 
@@ -1881,8 +1938,11 @@ void FireRenderContext::updateFromGlobals(bool applyLock)
         LOCKFORUPDATE(this);
     }
     
+	auto createFlags = FireMaya::Options::GetContextDeviceFlags(m_RenderType);
+
 	m_globals.readFromCurrentScene();
-	setupContext(m_globals);
+	setupContextContourMode(m_globals, createFlags);
+	setupContextPostSceneCreation(m_globals);
 
 	updateLimitsFromGlobalData(m_globals);
 	updateMotionBlurParameters(m_globals);
@@ -2133,6 +2193,8 @@ bool FireRenderContext::AddSceneObject(const MDagPath& dagPath)
 		MFnDagNode dagNode(node);
 		MDagPath dagPathTmp;
 
+		bool isGPUCacheNode = false;
+
 		if (isGeometry(node))
 		{
 			ob = CreateSceneObject<FireRenderMesh, NodeCachingOptions::AddPath>(dagPath);
@@ -2202,9 +2264,18 @@ bool FireRenderContext::AddSceneObject(const MDagPath& dagPath)
 		{
 			ob = CreateSceneObject<FireRenderHairOrnatrix, NodeCachingOptions::AddPath>(dagPath);
 		}
-		else if (isTransformWithInstancedShape(node, dagPathTmp))
+		else if (isTransformWithInstancedShape(node, dagPathTmp, isGPUCacheNode))
 		{
-			ob = CreateSceneObject<FireRenderMesh, NodeCachingOptions::DontAddPath>(dagPathTmp);
+			if (isGPUCacheNode)
+			{
+				#ifdef WIN32
+				ob = CreateSceneObject<FireRenderGPUCache, NodeCachingOptions::DontAddPath>(dagPathTmp);
+				#endif
+			}
+			else
+			{
+				ob = CreateSceneObject<FireRenderMesh, NodeCachingOptions::DontAddPath>(dagPathTmp);
+			}
 		}
 		else if (dagNode.typeName() == "pfxHair" && hairSupported)
 		{

@@ -814,11 +814,23 @@ void FireRenderMeshCommon::setRenderStats(MDagPath dagPath)
 	bool isVisisble = IsMeshVisible(dagPath, context());
 	setVisibility(isVisisble);
 
+	MFnDagNode mdag(dagPath.node());
+	MFnDependencyNode parentTransform(mdag.parent(0));
+	MPlug contourVisibilityPlug = parentTransform.findPlug("RPRContourVisibility");
+	bool isVisibleInContour = false;
+	if (!contourVisibilityPlug.isNull())
+	{
+		MStatus res = contourVisibilityPlug.getValue(isVisibleInContour);
+		CHECK_MSTATUS(res);
+	}
+
 	setPrimaryVisibility(primaryVisibility);
 
 	setReflectionVisibility(visibleInReflections);
 
 	setRefractionVisibility(visibleInRefractions);
+
+	setContourVisibility(isVisibleInContour);
 
 	setCastShadows(castsShadows);
 }
@@ -905,6 +917,15 @@ void FireRenderMeshCommon::setPrimaryVisibility(bool primaryVisibility)
 	{
 		if (auto shape = element.shape)
 			shape.SetPrimaryVisibility(primaryVisibility);
+	}
+}
+
+void FireRenderMeshCommon::setContourVisibility(bool contourVisibility)
+{
+	for (auto element : m.elements)
+	{
+		if (auto shape = element.shape)
+			shape.SetContourVisibilityFlag(contourVisibility);
 	}
 }
 
@@ -1485,7 +1506,7 @@ void FireRenderMesh::GetShapes(std::vector<frw::Shape>& outShapes)
 {
 	FireRenderContext* context = this->context();
 
-	const FireRenderMesh* mainMesh = context->GetMainMesh(uuid());
+	const FireRenderMeshCommon* mainMesh = context->GetMainMesh(uuid());
 
 	if (mainMesh != nullptr)
 	{
@@ -1506,6 +1527,14 @@ void FireRenderMesh::GetShapes(std::vector<frw::Shape>& outShapes)
 		outShapes = FireMaya::MeshTranslator::TranslateMesh(context->GetContext(), Object());
 		m.isMainInstance = true;
 		context->AddMainMesh(this);
+	}
+
+	MDagPath dagPath = DagPath();
+	for (int i = 0; i < outShapes.size(); i++)
+	{
+		MString fullPathName = dagPath.fullPathName();
+		std::string shapeName = std::string(fullPathName.asChar()) + "_" + std::to_string(i);
+		outShapes[i].SetName(shapeName.c_str());
 	}
 
 	SaveUsedUV(Object());
@@ -1559,9 +1588,9 @@ void FireRenderMesh::SaveUsedUV(const MObject& meshNode)
 
 void FireRenderMesh::RebuildTransforms()
 {
-	auto node = Object();
+	MObject node = Object();
 	MFnDagNode meshFn(node);
-	auto meshPath = DagPath();
+	MDagPath meshPath = DagPath();
 
 	MMatrix matrix = GetSelfTransform();
 	
@@ -1584,7 +1613,7 @@ void FireRenderMesh::RebuildTransforms()
 		if (TahoeContext::IsGivenContextRPR2(context()))
 		{
 			float nextFrameFloats[4][4];
-			FireMaya::GetMatrixForTheNextFrame(meshFn, nextFrameFloats);
+			FireMaya::GetMatrixForTheNextFrame(meshFn, nextFrameFloats, Instance());
 
 			for (auto& element : m.elements)
 			{
@@ -1600,7 +1629,7 @@ void FireRenderMesh::RebuildTransforms()
 			MVector rotationAxis(1, 0, 0);
 			double rotationAngle = 0.0;
 
-			FireMaya::CalculateMotionBlurParams(meshFn, GetSelfTransform(), linearMotion, rotationAxis, rotationAngle);
+			FireMaya::CalculateMotionBlurParams(meshFn, GetSelfTransform(), linearMotion, rotationAxis, rotationAngle, Instance());
 
 			for (auto& element : m.elements)
 			{

@@ -42,7 +42,7 @@ limitations under the License.
 
 //#define FRW_LOGGING 1
 
-#define RPR_AOV_MAX 0x20
+#define RPR_AOV_MAX 0x3b
 
 #if FRW_LOGGING
 
@@ -1114,6 +1114,20 @@ namespace frw
 		void SetShadowFlag(bool castsShadows)
 		{
 			auto res = rprShapeSetVisibilityFlag(Handle(), RPR_SHAPE_VISIBILITY_SHADOW, castsShadows);
+
+			if (res == RPR_ERROR_UNSUPPORTED)
+			{
+				return;
+			}
+			else
+			{
+				checkStatus(res);
+			}
+		}
+
+		void SetContourVisibilityFlag(bool isContourVisible)
+		{
+			auto res = rprShapeSetContourIgnore(Handle(), !isContourVisible);
 
 			if (res == RPR_ERROR_UNSUPPORTED)
 			{
