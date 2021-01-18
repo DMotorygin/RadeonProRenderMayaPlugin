@@ -109,8 +109,25 @@ std::vector<frw::Shape> FireMaya::MeshTranslator::TranslateMesh(const frw::Conte
 		return resultShapes;
 	}
 
-	// Get mesh from tesselated object
-	MObject object = !tessellated.isNull() ? tessellated : originalObject;
+	MObject smoothed = GetSmoothedObjectIfNecessary(originalObject, mayaStatus);
+	if (MStatus::kSuccess != mayaStatus)
+	{
+		mayaStatus.perror("Tesselation error");
+		return resultShapes;
+	}
+
+	// Consider geting mesh from tesselated or smoothed objects
+	MObject object = originalObject;
+
+	if (!tessellated.isNull())
+	{
+		object = tessellated;
+	}
+
+	if (!smoothed.isNull())
+	{
+		object = smoothed;
+	}
 
 	MFnMesh fnMesh(object, &mayaStatus);
 	if (MStatus::kSuccess != mayaStatus)
@@ -154,6 +171,10 @@ std::vector<frw::Shape> FireMaya::MeshTranslator::TranslateMesh(const frw::Conte
 	if (!tessellated.isNull())
 	{
 		RemoveTesselatedTemporaryMesh(node, tessellated);
+	}
+	if (!smoothed.isNull())
+	{
+		RemoveSmoothedTemporaryMesh(node, smoothed);
 	}
 
 #ifdef OPTIMIZATION_CLOCK
@@ -330,6 +351,42 @@ MObject FireMaya::MeshTranslator::TessellateNurbsSurface(const MObject& object, 
 	return surface.tesselate(params, parent, &status);
 }
 
+MObject FireMaya::MeshTranslator::GetSmoothedObjectIfNecessary(const MObject& originalObject, MStatus& mstatus)
+{
+	MFnDagNode node(originalObject);
+
+	DebugPrint("TranslateMesh: %s", node.fullPathName().asUTF8());
+
+	MObject parent = node.parent(0);
+
+	// tessellate to mesh if we aren't already one
+	if (!originalObject.hasFn(MFn::kMesh))
+	{
+		return MObject::kNullObj;
+	}
+
+	// is mesh => can smooth
+	MObject smoothed = GenerateSmoothMesh(originalObject, parent, mstatus);
+	if (mstatus != MStatus::kSuccess)
+	{
+		mstatus.perror("MFnMesh::generateSmoothMesh");
+		return MObject::kNullObj;
+	}
+
+	if (smoothed != MObject::kNullObj)
+	{
+		// get shape
+		MDagPath createdMeshPath;
+		MFnDagNode smoothedObj(smoothed);
+		mstatus = smoothedObj.getPath(createdMeshPath);
+		assert(mstatus == MStatus::kSuccess);
+		createdMeshPath.extendToShape();
+		smoothed = createdMeshPath.node();
+	}
+
+	return smoothed;
+}
+
 MObject FireMaya::MeshTranslator::GetTesselatedObjectIfNecessary(const MObject& originalObject, MStatus& mstatus)
 {
 #ifdef OPTIMIZATION_CLOCK
@@ -341,27 +398,9 @@ MObject FireMaya::MeshTranslator::GetTesselatedObjectIfNecessary(const MObject& 
 
 	MObject parent = node.parent(0);
 
-	MObject tessellated;
-	// tessellate to mesh if we aren't already one
-	if (originalObject.hasFn(MFn::kMesh))
-	{
-		// all good
-		tessellated = GenerateSmoothMesh(originalObject, parent, mstatus);
-		if (mstatus != MStatus::kSuccess)
-		{
-			mstatus.perror("MFnMesh::generateSmoothMesh");
-		}
-		if (tessellated != MObject::kNullObj)
-		{
-			MDagPath createdMeshPath;
-			MFnDagNode smoothedObj(tessellated);
-			mstatus = smoothedObj.getPath(createdMeshPath);
-			assert(mstatus == MStatus::kSuccess);
-			createdMeshPath.extendToShape();
-			tessellated = createdMeshPath.node();
-		}
-	}
-	else if (originalObject.hasFn(MFn::kNurbsSurface))
+	MObject tessellated = MObject::kNullObj;
+	// tessellate to mesh
+	if (originalObject.hasFn(MFn::kNurbsSurface))
 	{
 		tessellated = TessellateNurbsSurface(originalObject, parent, mstatus);
 		if (mstatus != MStatus::kSuccess)
@@ -391,12 +430,45 @@ MObject FireMaya::MeshTranslator::GetTesselatedObjectIfNecessary(const MObject& 
 
 void FireMaya::MeshTranslator::RemoveTesselatedTemporaryMesh(const MFnDagNode& node, MObject tessellated)
 {
+	MStatus mayaStatus;
+	MObject parent = node.parent(0);
+	FireRenderThread::RunProcOnMainThread([&]
+	{
+#ifdef OPTIMIZATION_CLOCK
+		std::chrono::steady_clock::time_point start_del = std::chrono::steady_clock::now();
+#endif
+		MFnDagNode parentNode(parent, &mayaStatus);
+		if (MStatus::kSuccess == mayaStatus)
+		{
+			mayaStatus = parentNode.removeChild(tessellated);
+			if (MStatus::kSuccess != mayaStatus)
+			{
+				mayaStatus.perror("MFnDagNode::removeChild");
+			}
+		}
+
+		// double-check if node hasn't already been removed
+		if (!tessellated.isNull())
+		{
+			MGlobal::deleteNode(tessellated);
+		}
+
+#ifdef OPTIMIZATION_CLOCK
+		std::chrono::steady_clock::time_point fin_del = std::chrono::steady_clock::now();
+		std::chrono::microseconds elapsed_del = std::chrono::duration_cast<std::chrono::microseconds>(fin_del - start_del);
+		FireRenderContext::deleteNodes += elapsed_del.count();
+#endif
+	});
+}
+
+void FireMaya::MeshTranslator::RemoveSmoothedTemporaryMesh(const MFnDagNode& node, MObject smoothed)
+{
 	FireRenderThread::RunProcOnMainThread([&]
 		{
 #ifdef OPTIMIZATION_CLOCK
 			std::chrono::steady_clock::time_point start_del = std::chrono::steady_clock::now();
 #endif
-			MFnDagNode shapeNode(tessellated);
+			MFnDagNode shapeNode(smoothed);
 			assert(shapeNode.parentCount() == 1);
 			MObject parent = shapeNode.parent(0);
 			assert(!parent.isNull());
