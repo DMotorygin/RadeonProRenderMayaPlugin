@@ -261,7 +261,7 @@ MObject FireMaya::MeshTranslator::GenerateSmoothMesh(const MObject& object, cons
 	MString command = R"(
 		proc string generateSmoothMesh() 
 		{
-			$res = `duplicate  ^1s`;
+			$res = `duplicate -rc ^1s`;
 			polySmooth -dv 4 $res[0];
 			select -clear;
 			select -add $res[0];
