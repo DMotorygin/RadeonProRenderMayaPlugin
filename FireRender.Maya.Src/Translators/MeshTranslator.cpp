@@ -274,7 +274,9 @@ MObject FireMaya::MeshTranslator::GenerateSmoothMesh(const MObject& object, cons
 	status = MGlobal::executeCommand(command, result);
 
 	if (status != MStatus::kSuccess) // failed to generate smoothMesh
+	{
 		return MObject::kNullObj;
+	}
 
 	// find generated mesh by returned name
 	MObject smoothedMesh = MObject::kNullObj;
@@ -288,9 +290,6 @@ MObject FireMaya::MeshTranslator::GenerateSmoothMesh(const MObject& object, cons
 	int len = clonedMeshSelection.length();
 	assert(len == 1);
 	status = clonedMeshSelection.getDependNode(0, smoothedMesh);
-
-	MFnDagNode fnCloned(smoothedMesh);
-	MString nameCloned = fnCloned.name();
 
 	// set selection to previous selection
 	MGlobal::setActiveSelectionList(currentSelection);
@@ -323,7 +322,8 @@ MObject FireMaya::MeshTranslator::TessellateNurbsSurface(const MObject& object, 
 		MTesselationParams::kGeneralFormat,
 		MTesselationParams::kTriangles);
 
-	const std::map<int, int> modeToTesParam = { {1, MTesselationParams::kSurface3DEquiSpaced },
+	const std::map<int, int> modeToTesParam = { 
+										{ 1, MTesselationParams::kSurface3DEquiSpaced },
 										{ 2, MTesselationParams::kSurfaceEquiSpaced },
 										{ 3, MTesselationParams::kSpanEquiSpaced },
 										{ 4, MTesselationParams::kSurfaceEquiSpaced } };
@@ -348,7 +348,8 @@ MObject FireMaya::MeshTranslator::TessellateNurbsSurface(const MObject& object, 
 	// Tessellate the surface and return the resulting mesh object.
 	MFnNurbsSurface surface(object);
 
-	return surface.tesselate(params, parent, &status);
+	MObject tesselated = surface.tesselate(params, parent, &status); // failure is possible and should be handled
+	return tesselated;
 }
 
 MObject FireMaya::MeshTranslator::GetSmoothedObjectIfNecessary(const MObject& originalObject, MStatus& mstatus)
