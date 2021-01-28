@@ -147,7 +147,7 @@ HashValue FireRenderObject::GetHash(const MObject& ob)
 		if (status != MStatus::kSuccess)
 			return hash;
 
-		int attrCount = depNode.attributeCount();
+		unsigned int attrCount = depNode.attributeCount();
 		for (unsigned int i = 0; i < attrCount; i++)
 		{
 			auto oAttr = depNode.attribute(i);
