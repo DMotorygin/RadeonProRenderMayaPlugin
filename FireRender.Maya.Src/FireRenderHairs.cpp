@@ -507,6 +507,8 @@ void FireRenderHair::Freshen()
 
 			attachToScene();
 		}
+
+		setRenderStats(path);
 	}
 
 	FireRenderNode::Freshen();
@@ -545,6 +547,66 @@ void FireRenderHair::detachFromScene()
 	}
 
 	m_isVisible = false;
+}
+
+void FireRenderHair::setPrimaryVisibility(bool primaryVisibility)
+{
+	for (frw::Curve& curve : m_Curves)
+	{
+		curve.SetPrimaryVisibility(primaryVisibility);
+	}
+}
+
+void FireRenderHair::setReflectionVisibility(bool reflectionVisibility)
+{
+	for (frw::Curve& curve : m_Curves)
+	{
+		curve.SetReflectionVisibility(reflectionVisibility);
+	}
+}
+
+void FireRenderHair::setRefractionVisibility(bool refractionVisibility)
+{
+	for (frw::Curve& curve : m_Curves)
+	{
+		curve.setRefractionVisibility(refractionVisibility);
+	}
+}
+
+void FireRenderHair::setCastShadows(bool castShadow)
+{
+	for (frw::Curve& curve : m_Curves)
+	{
+		curve.SetShadowFlag(castShadow);
+	}
+}
+
+void FireRenderHair::setRenderStats(MDagPath dagPath)
+{
+	if (!dagPath.isValid())
+		return;
+
+	MFnDependencyNode depNode(dagPath.node());
+
+	MPlug visibleInReflectionsPlug = depNode.findPlug("visibleInReflections");
+	bool visibleInReflections;
+	visibleInReflectionsPlug.getValue(visibleInReflections);
+	setReflectionVisibility(visibleInReflections);
+
+	MPlug visibleInRefractionsPlug = depNode.findPlug("visibleInRefractions");
+	bool visibleInRefractions;
+	visibleInRefractionsPlug.getValue(visibleInRefractions);
+	setRefractionVisibility(visibleInRefractions);
+
+	MPlug castsShadowsPlug = depNode.findPlug("castsShadows");
+	bool castsShadows;
+	castsShadowsPlug.getValue(castsShadows);
+	setCastShadows(castsShadows);
+
+	MPlug primaryVisibilityPlug = depNode.findPlug("primaryVisibility");
+	bool primaryVisibility;
+	primaryVisibilityPlug.getValue(primaryVisibility);
+	setPrimaryVisibility(primaryVisibility);
 }
 
 FireRenderHairXGenGrooming::FireRenderHairXGenGrooming(FireRenderContext* context, const MDagPath& dagPath)

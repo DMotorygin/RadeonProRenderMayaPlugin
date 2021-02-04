@@ -791,6 +791,13 @@ public:
 	// node dirty
 	virtual void OnShaderDirty(void);
 
+	// set visibility flags
+	void setRenderStats(MDagPath dagPath);
+	void setPrimaryVisibility(bool primaryVisibility);
+	void setReflectionVisibility(bool reflectionVisibility);
+	void setRefractionVisibility(bool refractionVisibility);
+	void setCastShadows(bool castShadow);
+
 protected:
 	// applies transform to node
 	void ApplyTransform(void);
