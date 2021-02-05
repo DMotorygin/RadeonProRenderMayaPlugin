@@ -836,6 +836,9 @@ public:
 	// Destructor
 	virtual ~FireRenderHairXGenGrooming();
 
+	// visibility flags
+	virtual void setRenderStats(MDagPath dagPath);
+
 protected:
 	virtual bool CreateCurves(void);
 };
@@ -848,6 +851,9 @@ public:
 
 	// Destructor
 	virtual ~FireRenderHairOrnatrix();
+
+	// visibility flags
+	virtual void setRenderStats(MDagPath dagPath);
 
 protected:
 	virtual bool CreateCurves(void);

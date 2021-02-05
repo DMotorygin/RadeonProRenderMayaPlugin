@@ -612,14 +612,6 @@ void FireRenderHair::setRenderStats(MDagPath dagPath)
 		castsShadowsPlug.getValue(castsShadows);
 		setCastShadows(castsShadows);
 	}
-
-	MPlug primaryVisibilityPlug = depNode.findPlug("primaryVisibility");
-	if (!primaryVisibilityPlug.isNull())
-	{
-		bool primaryVisibility;
-		primaryVisibilityPlug.getValue(primaryVisibility);
-		setPrimaryVisibility(primaryVisibility);
-	}
 }
 
 FireRenderHairXGenGrooming::FireRenderHairXGenGrooming(FireRenderContext* context, const MDagPath& dagPath)
@@ -1094,21 +1086,49 @@ frw::Shader FireRenderHairNHair::ParseNodeAttributes(MObject hairObject, const F
 	return translatedHairShader;
 }
 
-void FireRenderHairNHair::setRenderStats(MDagPath dagPath)
+void SetHairPrimaryVisibility(FireRenderHair* pHair, MDagPath& dagPath)
 {
-	if (!dagPath.isValid())
-		return;
+	assert(pHair != nullptr);
+	assert(dagPath.isValid());
 
 	MFnDependencyNode depNode(dagPath.node());
 
-	// in nhair we have to check different nodes for plug value
 	MPlug primaryVisibilityPlug = depNode.findPlug("primaryVisibility");
 	if (!primaryVisibilityPlug.isNull())
 	{
 		bool primaryVisibility;
 		primaryVisibilityPlug.getValue(primaryVisibility);
-		setPrimaryVisibility(primaryVisibility);
+		pHair->setPrimaryVisibility(primaryVisibility);
 	}
+}
+
+void FireRenderHairXGenGrooming::setRenderStats(MDagPath dagPath)
+{
+	if (!dagPath.isValid())
+		return;
+
+	SetHairPrimaryVisibility(this, dagPath);
+
+	FireRenderHair::setRenderStats(dagPath);
+}
+
+void FireRenderHairOrnatrix::setRenderStats(MDagPath dagPath)
+{
+	if (!dagPath.isValid())
+		return;
+
+	SetHairPrimaryVisibility(this, dagPath);
+
+	FireRenderHair::setRenderStats(dagPath);
+}
+
+void FireRenderHairNHair::setRenderStats(MDagPath dagPath)
+{
+	if (!dagPath.isValid())
+		return;
+
+	// in nhair we have to check different nodes for plug value
+	SetHairPrimaryVisibility(this, dagPath);
 
 	// for the rest of the flags we check pfxHairShape object
 	MObject hairObject = dagPath.node();
