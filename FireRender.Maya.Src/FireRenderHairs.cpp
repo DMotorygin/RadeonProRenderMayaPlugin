@@ -498,7 +498,6 @@ void FireRenderHair::Freshen()
 		MDagPath path = MDagPath::getAPathTo(node);
 		if (path.isVisible())
 		{
-			MDagPath dagPath = DagPath();
 			for (int i = 0; i < m_Curves.size(); i++)
 			{
 				std::string shapeName = std::string(name.asChar()) + "_" + std::to_string(i);
@@ -589,24 +588,38 @@ void FireRenderHair::setRenderStats(MDagPath dagPath)
 	MFnDependencyNode depNode(dagPath.node());
 
 	MPlug visibleInReflectionsPlug = depNode.findPlug("visibleInReflections");
-	bool visibleInReflections;
-	visibleInReflectionsPlug.getValue(visibleInReflections);
-	setReflectionVisibility(visibleInReflections);
+	if (!visibleInReflectionsPlug.isNull())
+	{
+		MString dbgName = visibleInReflectionsPlug.name();
+
+		bool visibleInReflections;
+		visibleInReflectionsPlug.getValue(visibleInReflections);
+		setReflectionVisibility(visibleInReflections);
+	}
 
 	MPlug visibleInRefractionsPlug = depNode.findPlug("visibleInRefractions");
-	bool visibleInRefractions;
-	visibleInRefractionsPlug.getValue(visibleInRefractions);
-	setRefractionVisibility(visibleInRefractions);
+	if (!visibleInRefractionsPlug.isNull())
+	{
+		bool visibleInRefractions;
+		visibleInRefractionsPlug.getValue(visibleInRefractions);
+		setRefractionVisibility(visibleInRefractions);
+	}
 
 	MPlug castsShadowsPlug = depNode.findPlug("castsShadows");
-	bool castsShadows;
-	castsShadowsPlug.getValue(castsShadows);
-	setCastShadows(castsShadows);
+	if (!castsShadowsPlug.isNull())
+	{
+		bool castsShadows;
+		castsShadowsPlug.getValue(castsShadows);
+		setCastShadows(castsShadows);
+	}
 
 	MPlug primaryVisibilityPlug = depNode.findPlug("primaryVisibility");
-	bool primaryVisibility;
-	primaryVisibilityPlug.getValue(primaryVisibility);
-	setPrimaryVisibility(primaryVisibility);
+	if (!primaryVisibilityPlug.isNull())
+	{
+		bool primaryVisibility;
+		primaryVisibilityPlug.getValue(primaryVisibility);
+		setPrimaryVisibility(primaryVisibility);
+	}
 }
 
 FireRenderHairXGenGrooming::FireRenderHairXGenGrooming(FireRenderContext* context, const MDagPath& dagPath)
@@ -1079,6 +1092,23 @@ frw::Shader FireRenderHairNHair::ParseNodeAttributes(MObject hairObject, const F
 	translatedHairShader.xSetValue(RPR_MATERIAL_INPUT_UBER_REFRACTION_WEIGHT, { 0.05*specularPower });
 
 	return translatedHairShader;
+}
+
+void FireRenderHairNHair::setRenderStats(MDagPath dagPath)
+{
+	MObject hairObject = dagPath.node();
+
+	// get hairSystemShape object from pfxHairShape object
+	MObject hairSystemShapeObj = GetHairSystemFromHairShape(hairObject);
+	if (hairSystemShapeObj.isNull())
+		return;
+
+	MFnDagNode dagHairSystemShapeObj(hairSystemShapeObj);
+	MDagPath hairSystemShapePath;
+	MStatus status = dagHairSystemShapeObj.getPath(hairSystemShapePath);
+	assert(status == MStatus::kSuccess);
+
+	FireRenderHair::setRenderStats(hairSystemShapePath);
 }
 
 

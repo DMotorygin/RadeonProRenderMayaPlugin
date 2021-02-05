@@ -791,8 +791,8 @@ public:
 	// node dirty
 	virtual void OnShaderDirty(void);
 
-	// set visibility flags
-	void setRenderStats(MDagPath dagPath);
+	// visibility flags
+	virtual void setRenderStats(MDagPath dagPath);
 	void setPrimaryVisibility(bool primaryVisibility);
 	void setReflectionVisibility(bool reflectionVisibility);
 	void setRefractionVisibility(bool refractionVisibility);
@@ -864,6 +864,9 @@ public:
 
 	// Register the callback
 	virtual void RegisterCallbacks(void) override;
+
+	// visibility flags
+	virtual void setRenderStats(MDagPath dagPath);
 
 protected:
 	virtual bool CreateCurves(void);
