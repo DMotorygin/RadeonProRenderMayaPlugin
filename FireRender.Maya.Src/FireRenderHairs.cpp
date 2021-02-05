@@ -1096,6 +1096,21 @@ frw::Shader FireRenderHairNHair::ParseNodeAttributes(MObject hairObject, const F
 
 void FireRenderHairNHair::setRenderStats(MDagPath dagPath)
 {
+	if (!dagPath.isValid())
+		return;
+
+	MFnDependencyNode depNode(dagPath.node());
+
+	// in nhair we have to check different nodes for plug value
+	MPlug primaryVisibilityPlug = depNode.findPlug("primaryVisibility");
+	if (!primaryVisibilityPlug.isNull())
+	{
+		bool primaryVisibility;
+		primaryVisibilityPlug.getValue(primaryVisibility);
+		setPrimaryVisibility(primaryVisibility);
+	}
+
+	// for the rest of the flags we check pfxHairShape object
 	MObject hairObject = dagPath.node();
 
 	// get hairSystemShape object from pfxHairShape object

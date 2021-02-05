@@ -26,7 +26,6 @@ global proc fireRenderNodeTemplateCallback(string $nodeName)
 		editorTemplate -beginLayout "RPR" -collapse true;
 			editorTemplate -addControl "rprHairMaterial";
 			editorTemplate -addControl "castsShadows";
-			editorTemplate -addControl "primaryVisibility";
 		editorTemplate -endLayout;
 	}
 }

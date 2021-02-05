@@ -475,10 +475,6 @@ void AddExtensionAttributes()
 	nAttr.setNiceNameOverride("Hair Casts Shadows");
 	status = hairSystemClass.addExtensionAttribute(hairCastShadows);
 
-	MObject primaryVisibility = nAttr.create("primaryVisibility", "prvb", MFnNumericData::kBoolean, true, &status);
-	nAttr.setNiceNameOverride("Primary Visibility");
-	status = hairSystemClass.addExtensionAttribute(primaryVisibility);
-
 	// Adding RPRObjectId to all transforms
 	MObject objectIdAttr = nAttr.create("RPRObjectId", "roi", MFnNumericData::kLong, 0);
 
