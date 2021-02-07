@@ -592,7 +592,7 @@ void FireRenderHair::setRenderStats(MDagPath dagPath)
 	{
 		MString dbgName = visibleInReflectionsPlug.name();
 
-		bool visibleInReflections;
+		bool visibleInReflections = false;
 		visibleInReflectionsPlug.getValue(visibleInReflections);
 		setReflectionVisibility(visibleInReflections);
 	}
@@ -600,7 +600,7 @@ void FireRenderHair::setRenderStats(MDagPath dagPath)
 	MPlug visibleInRefractionsPlug = depNode.findPlug("visibleInRefractions");
 	if (!visibleInRefractionsPlug.isNull())
 	{
-		bool visibleInRefractions;
+		bool visibleInRefractions = false;
 		visibleInRefractionsPlug.getValue(visibleInRefractions);
 		setRefractionVisibility(visibleInRefractions);
 	}
@@ -608,7 +608,7 @@ void FireRenderHair::setRenderStats(MDagPath dagPath)
 	MPlug castsShadowsPlug = depNode.findPlug("castsShadows");
 	if (!castsShadowsPlug.isNull())
 	{
-		bool castsShadows;
+		bool castsShadows = false;
 		castsShadowsPlug.getValue(castsShadows);
 		setCastShadows(castsShadows);
 	}
@@ -1096,7 +1096,7 @@ void SetHairPrimaryVisibility(FireRenderHair* pHair, MDagPath& dagPath)
 	MPlug primaryVisibilityPlug = depNode.findPlug("primaryVisibility");
 	if (!primaryVisibilityPlug.isNull())
 	{
-		bool primaryVisibility;
+		bool primaryVisibility = true;
 		primaryVisibilityPlug.getValue(primaryVisibility);
 		pHair->setPrimaryVisibility(primaryVisibility);
 	}
