@@ -895,13 +895,13 @@ bool FireRenderHairNHair::CreateCurves()
 	MRenderLineArray flowerLines;
 	status = hHairs.getLineData(mainLines, leafLines, flowerLines,
 		true, //doLines
-		true, //doTwist
+		false, //doTwist
 		true, //doWidth
-		true, //doFlatness
+		false, //doFlatness
 		true, //doParameter
-		true, //doColor
-		true, //doIncandescence
-		true, //doTransparency
+		false, //doColor
+		false, //doIncandescence
+		false, //doTransparency
 		false //worldSpace
 		);
 	assert(status == MStatus::kSuccess);
