@@ -667,10 +667,15 @@ void FireRenderContext::setupDenoiserFB()
 				m_denoiserFilter->AddInput(RifNormal, fbShadingNormal, 0.0f);
 				m_denoiserFilter->AddInput(RifDepth, fbDepth, 0.0f);
 				m_denoiserFilter->AddInput(RifAlbedo, fbDiffuseAlbedo, 0.0f);
-			}
 
-			p = { RifParamType::RifOther, m_globals.denoiserSettings.enable16bitCompute };
-			m_denoiserFilter->AddParam("enable16bitCompute", p);
+				p = { RifParamType::RifOther, false };
+				m_denoiserFilter->AddParam("enable16bitCompute", p);
+			}
+			else
+			{
+				p = { RifParamType::RifOther, m_globals.denoiserSettings.enable16bitCompute };
+				m_denoiserFilter->AddParam("enable16bitCompute", p);
+			}
 
 			break;
 
