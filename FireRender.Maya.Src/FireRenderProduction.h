@@ -133,7 +133,7 @@ private:
 
 	std::tuple<size_t, long long> GeSceneTexturesCountAndSize() const;
 
-	void OnBufferAvailableCallback();
+	void OnBufferAvailableCallback(float progress);
 
 private:
 

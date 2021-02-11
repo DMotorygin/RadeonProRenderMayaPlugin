@@ -514,7 +514,8 @@ bool TahoeContext::IsRenderQualitySupported(RenderQuality quality) const
 
 bool TahoeContext::IsDenoiserSupported() const
 {
-	return m_PluginVersion == TahoePluginVersion::RPR1;
+	return true;
+	/*return m_PluginVersion == TahoePluginVersion::RPR1;*/
 }
 
 bool TahoeContext::IsDisplacementSupported() const

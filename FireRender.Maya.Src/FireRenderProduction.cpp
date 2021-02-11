@@ -306,7 +306,7 @@ bool FireRenderProduction::start()
 
 		if (!m_globals.tileRenderingEnabled)
 		{
-			m_NorthStarRenderingHelper.SetData(m_contextPtr.get(), std::bind(&FireRenderProduction::OnBufferAvailableCallback, this));
+			m_NorthStarRenderingHelper.SetData(m_contextPtr.get(), std::bind(&FireRenderProduction::OnBufferAvailableCallback, this, std::placeholders::_1));
 		}
 
 		m_aovs->setFromContext(*m_contextPtr);
@@ -402,10 +402,17 @@ bool FireRenderProduction::start()
 	return ret;
 }
 
-void FireRenderProduction::OnBufferAvailableCallback()
+void FireRenderProduction::OnBufferAvailableCallback(float progress)
 {
 	AutoMutexLock pixelsLock(m_pixelsLock);
-	m_renderViewAOV->readFrameBuffer(*m_contextPtr, true);
+
+	bool frameFinished = fabs(1.0f - progress) <= FLT_EPSILON;
+	bool shouldUpdateRenderView = !m_contextPtr->IsDenoiserEnabled() || (m_contextPtr->IsDenoiserEnabled() && frameFinished);
+
+	m_renderViewAOV->readFrameBuffer(*m_contextPtr, true, !frameFinished);
+	
+	if (!shouldUpdateRenderView)
+		return;
 
 	FireRenderThread::RunProcOnMainThread([this]()
 		{
