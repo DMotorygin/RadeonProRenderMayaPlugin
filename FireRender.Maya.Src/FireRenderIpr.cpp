@@ -187,7 +187,7 @@ bool FireRenderIpr::start()
 
 		if (TahoeContext::IsGivenContextRPR2(m_contextPtr.get()))
 		{
-			m_NorthStarRenderingHelper.SetData(m_contextPtr.get(), std::bind(&FireRenderIpr::OnBufferAvailableCallback, this));
+			m_NorthStarRenderingHelper.SetData(m_contextPtr.get(), std::bind(&FireRenderIpr::OnBufferAvailableCallback, this, std::placeholders::_1));
 		}
 
 		SetupOOC(globals);
@@ -312,7 +312,7 @@ bool FireRenderIpr::stop()
 	return true;
 }
 
-void FireRenderIpr::OnBufferAvailableCallback()
+void FireRenderIpr::OnBufferAvailableCallback(float progress)
 {
 	AutoMutexLock pixelsLock(m_pixelsLock);
 
