@@ -609,7 +609,7 @@ void FireRenderContext::setupDenoiserFB()
 		MStatus s = MGlobal::executeCommand("getModulePath -moduleName RadeonProRender", path);
 		MString mlModelsFolder = path + "/data/models";
 
-		m_denoiserFilter = std::shared_ptr<ImageFilter>(new ImageFilter(context(), m_width, m_height, mlModelsFolder.asChar()));
+		m_denoiserFilter = std::shared_ptr<ImageFilter>(new ImageFilter(context(), m_width, m_height, mlModelsFolder.asChar(), ShouldForceCPUDenoiser()));
 
 		RifParam p;
 
