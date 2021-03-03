@@ -201,6 +201,8 @@ public:
 	/** AOV pixel data. Allocated if the buffer is active. */
 	PixelBuffer pixels;
 
+	const RenderRegion& GetRenderRegion(void) const { return m_region; }
+
 	/** Getting settings for making post processing*/
 	virtual void ReadFromGlobals(const MFnDependencyNode& globals) {}
 

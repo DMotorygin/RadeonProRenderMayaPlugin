@@ -609,7 +609,7 @@ void FireRenderContext::setupDenoiserFB()
 		MStatus s = MGlobal::executeCommand("getModulePath -moduleName RadeonProRender", path);
 		MString mlModelsFolder = path + "/data/models";
 
-		m_denoiserFilter = std::shared_ptr<ImageFilter>(new ImageFilter(context(), m_width, m_height, mlModelsFolder.asChar(), ShouldForceCPUDenoiser()));
+		m_denoiserFilter = std::shared_ptr<ImageFilter>(new ImageFilter(context(), m_width, m_height, mlModelsFolder.asChar()));
 
 		RifParam p;
 
@@ -1558,25 +1558,9 @@ void FireRenderContext::readFrameBuffer(ReadFrameBufferRequestParams& params)
 	// load data normally either from RIF or from AOV
 	bool shouldRunDenoiser = (params.aov == RPR_AOV_COLOR && IsDenoiserEnabled() && (!params.isDenoiserDisabled));
 
+	// load data from AOV
 	RV_PIXEL* data = nullptr;
-	std::vector<float> vecData;
-	if (shouldRunDenoiser && (params.aov == RPR_AOV_COLOR))
-	{
-		// - run RIF and load data
-		bool denoiseResult = false;
-		vecData = GetDenoisedData(denoiseResult);
-		if (!denoiseResult)
-			return;
-
-		assert(vecData.size() == params.PixelCount() * 4);
-
-		data = (RV_PIXEL*)&vecData[0];
-	}
-	else
-	{
-		// load data from AOV
-		data = GetAOVData(params);
-	}
+	data = GetAOVData(params);
 
 	// No need to merge opacity for any FB other then color
 	MergeOpacity(params, (sizeof(RV_PIXEL) * params.PixelCount()));

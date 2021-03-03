@@ -517,9 +517,9 @@ bool TahoeContext::IsDenoiserSupported() const
 	return true;
 }
 
-bool TahoeContext::ShouldForceCPUDenoiser() const
+bool TahoeContext::ShouldForceRAMDenoiser() const
 {
-	return m_PluginVersion == TahoePluginVersion::RPR2;
+	return m_PluginVersion == TahoePluginVersion::RPR2;;
 }
 
 bool TahoeContext::IsDisplacementSupported() const

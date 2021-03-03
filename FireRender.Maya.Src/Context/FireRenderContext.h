@@ -612,7 +612,7 @@ public:
 	virtual bool IsDisplacementSupported() const override { return true; }
 	virtual bool IsHairSupported() const override { return true; }
 	virtual bool IsVolumeSupported() const override { return true; }
-	virtual bool ShouldForceCPUDenoiser() const override { return false; }
+	virtual bool ShouldForceRAMDenoiser() const override { return false; }
 
 	virtual bool IsPhysicalLightTypeSupported(PLType lightType) const { return true; }
 

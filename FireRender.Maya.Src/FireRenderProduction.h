@@ -57,8 +57,16 @@ public:
 	/** True if render is cancelled*/
 	bool isCancelled() const;
 
+	/** True if tile render is enabled*/
+	bool isTileRender() const;
+
+	/** Update globals from render settings */
+	void UpdateGlobals(void);
+
 	/** Start a threaded IPR render. */
-	bool start();
+	bool startFullFrameRender();
+
+	bool startTileRender();
 
 	/** Pause the threaded IPR render. */
 	bool pause(bool value);
@@ -105,11 +113,13 @@ private:
 
 	// Private Methods
 	// -----------------------------------------------------------------------------
+	bool Init(int contextWidth, int contextHeight, RenderRegion& region);
 
 	void SetupWorkProgressCallback();
 
-	void RenderFullFrame();
-	void RenderTiles();
+	void RenderFullFrame(void);
+	void RenderTiles(void);
+	void DenoiseFromAOVs(void);
 
 	/** Schedule a render view update. */
 	void scheduleRenderViewUpdate();

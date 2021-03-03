@@ -1205,3 +1205,5 @@ long TimeDiffChrono(TimePoint currTime, TimePoint startTime)
 	return (long)std::chrono::duration_cast<T>(currTime - startTime).count();
 }
 
+void ImageMirrorByY(RV_PIXEL* imageData, unsigned int width, unsigned int height);
+

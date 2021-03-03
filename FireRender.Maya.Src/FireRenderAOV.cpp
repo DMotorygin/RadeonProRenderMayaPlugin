@@ -20,6 +20,9 @@ limitations under the License.
 #include <maya/MViewport2Renderer.h>
 #include <maya/MGlobal.h>
 
+#include <thread>
+#include <ostream>
+
 
 void PixelBuffer::resize(size_t newCount)
 {
@@ -235,6 +238,14 @@ void FireRenderAOV::readFrameBuffer(FireRenderContext& context, bool flip, bool 
 	// Check that the AOV is active and in a valid state.
 	if (!active || !pixels || m_region.isZeroArea() || !context.IsAOVSupported(id))
 		return;
+
+	if (id == RPR_AOV_COLOR)
+	{
+		auto threadId = std::this_thread::get_id();
+		std::stringstream out;
+		out << threadId;
+		DebugPrint("FireRenderAOV::readFrameBuffer flip = %d\n, thread id = %s", (int)flip, out.str());
+	}
 
 	bool opacityMerge = context.camera().GetAlphaMask() && context.isAOVEnabled(RPR_AOV_OPACITY);
 
