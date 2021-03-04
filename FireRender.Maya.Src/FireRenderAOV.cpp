@@ -239,14 +239,6 @@ void FireRenderAOV::readFrameBuffer(FireRenderContext& context, bool flip, bool 
 	if (!active || !pixels || m_region.isZeroArea() || !context.IsAOVSupported(id))
 		return;
 
-	if (id == RPR_AOV_COLOR)
-	{
-		auto threadId = std::this_thread::get_id();
-		std::stringstream out;
-		out << threadId;
-		DebugPrint("FireRenderAOV::readFrameBuffer flip = %d\n, thread id = %s", (int)flip, out.str());
-	}
-
 	bool opacityMerge = context.camera().GetAlphaMask() && context.isAOVEnabled(RPR_AOV_OPACITY);
 
 	// setup params

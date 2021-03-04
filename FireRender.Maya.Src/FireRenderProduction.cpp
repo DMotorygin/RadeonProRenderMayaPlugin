@@ -939,13 +939,6 @@ void FireRenderProduction::DenoiseFromAOVs()
 		if (it == outBuffers.end())
 			return;
 
-		if (aov.id == RPR_AOV_COLOR)
-		{
-			auto threadId = std::this_thread::get_id();
-			std::stringstream out;
-			out << threadId;
-			DebugPrint("FireRenderProduction::DenoiseFromAOVs pre overwrite thread id = %s", out.str());
-		}
 		it->second.overwrite(aov.pixels.get(), m_region, m_height, m_width, aov.id);
 	});
 
@@ -965,6 +958,10 @@ void FireRenderProduction::DenoiseFromAOVs()
 	vecData = m_contextPtr->GetDenoisedData(denoiseResult);
 	RV_PIXEL* data = (RV_PIXEL*)vecData.data();
 
+	{
+		m_renderViewAOV->pixels.overwrite(data, m_region, m_height, m_width, RPR_AOV_COLOR);
+	}
+
 	// Need to flip by Y because Maya render view is mirrored by Y compared to frame buffer in RPR 
 	ImageMirrorByY(data, m_width, m_height);
 
@@ -976,6 +973,8 @@ void FireRenderProduction::DenoiseFromAOVs()
 
 		MRenderView::refresh(0, m_width - 1, 0, m_height - 1);
 	});
+
+
 
 	outBuffers.clear();
 }
