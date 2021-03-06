@@ -921,6 +921,10 @@ bool FireRenderProduction::RunOnViewportThread()
 
 void FireRenderProduction::DenoiseFromAOVs()
 {
+	bool shouldDenoise = m_contextPtr->IsDenoiserSupported() && m_globals.denoiserSettings.enabled;
+	if (!shouldDenoise)
+		return;
+
 	// run denoiser
 	std::vector<float> vecData = m_contextPtr->DenoiseIntoRAM();
 	assert(vecData.size() != 0);
@@ -928,6 +932,18 @@ void FireRenderProduction::DenoiseFromAOVs()
 	// output denoiser result
 	RV_PIXEL* data = (RV_PIXEL*)vecData.data();
 	m_renderViewAOV->pixels.overwrite(data, m_region, m_height, m_width, RPR_AOV_COLOR);
+
+	// apply render stamp
+	FireMaya::RenderStamp renderStamp;
+	MString stampStr;
+	m_aovs->ForEachActiveAOV([&](FireRenderAOV& aov) 
+	{
+		if (aov.id != RPR_AOV_COLOR)
+			return;
+
+		stampStr = aov.renderStamp;
+	});
+	renderStamp.AddRenderStamp(*m_contextPtr, data, m_width, m_height, false, stampStr.asChar());
 
 	// Need to flip by Y because Maya render view is mirrored by Y compared to frame buffer in RPR 
 	ImageMirrorByY(data, m_width, m_height);
