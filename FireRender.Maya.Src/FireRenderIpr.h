@@ -157,6 +157,8 @@ private:
 
 	bool m_needsContextRefresh;
 
+	bool m_finishedFrame;
+
 	unsigned int m_currentAOVToDisplay;
 
 	/** True if a render view update is scheduled. */

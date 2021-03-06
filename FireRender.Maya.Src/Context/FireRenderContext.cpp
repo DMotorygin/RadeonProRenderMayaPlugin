@@ -1562,9 +1562,6 @@ void FireRenderContext::readFrameBuffer(ReadFrameBufferRequestParams& params)
 	if (isShadowReflectionCatcherUsed)
 		return; // fo now; should run denoiser if enabled instead
 
-	// load data normally either from RIF or from AOV
-	bool shouldRunDenoiser = (params.aov == RPR_AOV_COLOR && IsDenoiserEnabled() && (!params.isDenoiserDisabled));
-
 	// load data from AOV
 	RV_PIXEL* data = nullptr;
 	data = GetAOVData(params);
@@ -3229,6 +3226,4 @@ std::vector<float> FireRenderContext::DenoiseIntoRAM()
 
 	return vecData;
 }
-
-
 

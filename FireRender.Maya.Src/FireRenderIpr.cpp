@@ -41,6 +41,7 @@ FireRenderIpr::FireRenderIpr() :
 	m_isRegion(false),
 	m_renderStarted(false),
 	m_needsContextRefresh(false),
+	m_finishedFrame(false),
 	m_previousSelectionList(),
 	m_currentAOVToDisplay(RPR_AOV_COLOR)
 {
@@ -192,9 +193,11 @@ bool FireRenderIpr::start()
 
 		SetupOOC(globals);
 
+		AOVPixelBuffers& outBuffers = m_contextPtr->PixelBuffers();
+		outBuffers.clear();
+
 		m_needsContextRefresh = true;
 		m_contextPtr->setResolution(m_width, m_height, true);
-		m_contextPtr->ConsiderSetupDenoiser();
 		m_contextPtr->setCamera(m_camera, true);
 		m_contextPtr->setStartedRendering();
 		m_contextPtr->setUseRegion(m_isRegion);
@@ -357,6 +360,8 @@ bool FireRenderIpr::RunOnViewportThread()
 		{
 			try
 			{
+				m_finishedFrame = false;
+
 				// Render.
 				AutoMutexLock contextLock(m_contextLock);
 				m_contextPtr->render(false);
@@ -372,6 +377,26 @@ bool FireRenderIpr::RunOnViewportThread()
 			{
 				scheduleRenderViewUpdate();
 				throw;
+			}
+		}
+		else
+		{
+			if (!m_finishedFrame)
+			{
+				m_finishedFrame = true;
+
+				// run denoiser
+				std::vector<float> vecData = m_contextPtr->DenoiseIntoRAM();
+				assert(vecData.size() != 0);
+				RV_PIXEL* data = (RV_PIXEL*)vecData.data();
+
+				// Need to flip by Y because Maya render view is mirrored by Y compared to frame buffer in RPR 
+				ImageMirrorByY(data, m_width, m_height);
+				
+				// put denoised image to ipr buffer
+				memcpy(m_pixels.data(), data, sizeof(RV_PIXEL) * m_pixels.size());
+
+				scheduleRenderViewUpdate();
 			}
 		}
 
