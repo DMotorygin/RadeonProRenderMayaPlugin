@@ -86,7 +86,7 @@ void PixelBuffer::overwrite(const RV_PIXEL* input, const RenderRegion& region, u
 void generateBitmapImage(unsigned char *image, int height, int width, int pitch, const char* imageFileName);
 #endif
 
-void PixelBuffer::debugDump(unsigned int totalHeight, unsigned int totalWidth, std::string& fbName)
+void PixelBuffer::debugDump(unsigned int totalHeight, unsigned int totalWidth, const std::string& fbName)
 {
 #ifdef _DEBUG
 #ifdef DUMP_PIXELS_PIXELBUFF

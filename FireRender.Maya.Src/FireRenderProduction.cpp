@@ -921,46 +921,13 @@ bool FireRenderProduction::RunOnViewportThread()
 
 void FireRenderProduction::DenoiseFromAOVs()
 {
-	AOVPixelBuffers& outBuffers = m_contextPtr->PixelBuffers();
-	outBuffers.clear();
+	// run denoiser
+	std::vector<float> vecData = m_contextPtr->DenoiseIntoRAM();
+	assert(vecData.size() != 0);
 
-	m_aovs->readFrameBuffers(*m_contextPtr, false);
-
-	m_aovs->ForEachActiveAOV([&](FireRenderAOV& aov)
-	{
-		auto ret = outBuffers.insert(std::pair<unsigned int, PixelBuffer>(aov.id, PixelBuffer()));
-		ret.first->second.resize(m_width, m_height);
-	});
-
-	m_aovs->ForEachActiveAOV([&](FireRenderAOV& aov)
-	{
-		auto it = outBuffers.find(aov.id);
-
-		if (it == outBuffers.end())
-			return;
-
-		it->second.overwrite(aov.pixels.get(), m_region, m_height, m_width, aov.id);
-	});
-
-	bool useRAMBuffer = m_contextPtr->ShouldForceRAMDenoiser();
-	bool isDenoiserInitialized = m_contextPtr->ConsiderSetupDenoiser(useRAMBuffer); //will read data from outBuffers if useRAMBuffer == true
-	assert(isDenoiserInitialized);
-	if (!isDenoiserInitialized)
-		return;
-
-	if (!m_contextPtr->IsDenoiserEnabled() || (!m_renderViewAOV->id == RPR_AOV_COLOR))
-		return;
-
-	std::vector<float> vecData;
-
-	// run denoiser on cached data
-	bool denoiseResult = false;
-	vecData = m_contextPtr->GetDenoisedData(denoiseResult);
+	// output denoiser result
 	RV_PIXEL* data = (RV_PIXEL*)vecData.data();
-
-	{
-		m_renderViewAOV->pixels.overwrite(data, m_region, m_height, m_width, RPR_AOV_COLOR);
-	}
+	m_renderViewAOV->pixels.overwrite(data, m_region, m_height, m_width, RPR_AOV_COLOR);
 
 	// Need to flip by Y because Maya render view is mirrored by Y compared to frame buffer in RPR 
 	ImageMirrorByY(data, m_width, m_height);
@@ -973,10 +940,6 @@ void FireRenderProduction::DenoiseFromAOVs()
 
 		MRenderView::refresh(0, m_width - 1, 0, m_height - 1);
 	});
-
-
-
-	outBuffers.clear();
 }
 
 void FireRenderProduction::RenderTiles()

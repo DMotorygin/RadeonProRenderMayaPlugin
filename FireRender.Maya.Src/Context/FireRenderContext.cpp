@@ -424,25 +424,30 @@ bool FireRenderContext::buildScene(bool isViewport, bool glViewport, bool freshe
 	return true;
 }
 
+static const std::vector<int> denoiser_aovs = { 
+	RPR_AOV_SHADING_NORMAL, 
+	RPR_AOV_WORLD_COORDINATE,
+	RPR_AOV_OBJECT_ID, 
+	RPR_AOV_DEPTH, 
+	RPR_AOV_DIFFUSE_ALBEDO 
+};
+
 void FireRenderContext::turnOnAOVsForDenoiser(bool allocBuffer)
 {
-	static const std::vector<int> aovsToAdd = { RPR_AOV_SHADING_NORMAL, RPR_AOV_WORLD_COORDINATE,
-		RPR_AOV_OBJECT_ID, RPR_AOV_DEPTH, RPR_AOV_DIFFUSE_ALBEDO };
-
 	// Turn on necessary AOVs
-	forceTurnOnAOVs(aovsToAdd, allocBuffer);	
+	forceTurnOnAOVs(denoiser_aovs, allocBuffer);
 }
+
+static const std::vector<int> contour_aovs = {
+	RPR_AOV_OBJECT_ID, 
+	RPR_AOV_SHADING_NORMAL,
+	RPR_AOV_MATERIAL_ID 
+};
 
 void FireRenderContext::turnOnAOVsForContour(bool allocBuffer /*= false*/)
 {
-	static const std::vector<int> aovsToAdd = {
-		RPR_AOV_OBJECT_ID, 
-		RPR_AOV_SHADING_NORMAL,
-		RPR_AOV_MATERIAL_ID 
-	};
-
 	// Turn on necessary AOVs
-	forceTurnOnAOVs(aovsToAdd, allocBuffer);
+	forceTurnOnAOVs(contour_aovs, allocBuffer);
 }
 
 void FireRenderContext::forceTurnOnAOVs(const std::vector<int>& aovsToAdd, bool allocBuffer /*= false*/)
@@ -1408,10 +1413,12 @@ void FireRenderContext::DebugDumpAOV(int aov) const
 	};
 
 	std::stringstream ssFileNameResolved;
+	ssFileNameResolved << "C:/temp/dbg/";
 	ssFileNameResolved << aovNames[aov] << "_resolved.png";
 	rprFrameBufferSaveToFile(m.framebufferAOV_resolved[aov].Handle(), ssFileNameResolved.str().c_str());
 
 	std::stringstream ssFileNameNOTResolved;
+	ssFileNameNOTResolved << "C:/temp/dbg/";
 	ssFileNameNOTResolved << aovNames[aov] << "_NOTresolved.png";
 	rprFrameBufferSaveToFile(m.framebufferAOV[aov].Handle(), ssFileNameNOTResolved.str().c_str());
 #endif
@@ -3125,3 +3132,103 @@ frw::Shader FireRenderContext::GetDefaultColorShader(frw::Value color)
 
 	return shader;
 }
+
+void FireRenderContext::ForEachFramebuffer(
+	std::function<void(int aovId)> actionFunc,
+	std::function<bool(int aovId)> filter
+)
+{
+	for (int id = RPR_AOV_COLOR; id < RPR_AOV_MAX; ++id)
+	{
+		if (!aovEnabled[id])
+			continue;
+
+		if (!filter(id))
+			continue;
+
+		actionFunc(id);
+	}
+}
+
+std::vector<float> FireRenderContext::DenoiseIntoRAM()
+{
+	bool shouldDenoise = IsDenoiserSupported() &&
+		(m_globals.denoiserSettings.enabled &&
+		((m_RenderType == RenderType::ProductionRender) || (m_RenderType == RenderType::IPR)));
+
+	if (!shouldDenoise)
+		return std::vector<float>();
+
+	bool useRAMBuffer = ShouldForceRAMDenoiser();
+	
+	// read frame buffers
+	if (useRAMBuffer)
+	{
+		RenderRegion tempRegion;
+		if (useRegion())
+		{
+			tempRegion = m_region;
+		}
+		else
+		{
+			tempRegion = RenderRegion(m_width, m_height);
+		}
+
+		m_pixelBuffers.clear();
+
+		ForEachFramebuffer([&](int aovId)
+		{
+			auto ret = m_pixelBuffers.insert(std::pair<unsigned int, PixelBuffer>(aovId, PixelBuffer()));
+			ret.first->second.resize(m_width, m_height);
+
+			// setup params
+			ReadFrameBufferRequestParams params(tempRegion);
+			params.pixels = m_pixelBuffers[aovId].get();
+			params.aov = aovId;
+			params.width = m_width;
+			params.height = m_height;
+			params.flip = false;
+			params.mergeOpacity = camera().GetAlphaMask() && isAOVEnabled(RPR_AOV_OPACITY);
+			params.mergeShadowCatcher = true;
+			params.shadowColor = m_shadowColor;
+			params.bgColor = m_bgColor;
+			params.bgWeight = m_bgWeight;
+			params.shadowTransp = m_shadowTransparency;
+			params.bgTransparency = m_backgroundTransparency;
+			params.shadowWeight = m_shadowWeight;
+
+			// process frame buffer
+			readFrameBuffer(params);
+
+			// debug
+			#ifdef DENOISE_RAM_DBG
+			m_pixelBuffers[aovId].debugDump(m_height, m_width, FireRenderAOV::GetAOVName(aovId));
+			#endif
+		},
+
+		[](int aovId)->bool
+		{
+			if (aovId == RPR_AOV_COLOR)
+				return true;
+
+			// is denoiser AOV
+			return (std::find(denoiser_aovs.begin(), denoiser_aovs.end(), aovId) != denoiser_aovs.end());
+		});
+	}
+
+	bool isDenoiserInitialized = ConsiderSetupDenoiser(useRAMBuffer); // will read data from outBuffers if useRAMBuffer == true
+	assert(isDenoiserInitialized);
+	if (!isDenoiserInitialized || !IsDenoiserEnabled())
+		return std::vector<float>();
+
+	// run denoiser on cached data
+	std::vector<float> vecData;
+	bool denoiseResult = false;
+	vecData = GetDenoisedData(denoiseResult);
+	assert(denoiseResult);
+
+	return vecData;
+}
+
+
+

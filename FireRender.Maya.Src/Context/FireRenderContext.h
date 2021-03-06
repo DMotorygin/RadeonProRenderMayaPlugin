@@ -329,6 +329,11 @@ public:
 	// Combine pixels (set alpha) with Opacity pixels
 	void combineWithOpacity(RV_PIXEL* pixels, unsigned int size, RV_PIXEL *opacityPixels = NULL) const;
 
+	// do action for each framebuffer matching filter
+	void ForEachFramebuffer(std::function<void(int aovId)> actionFunc, std::function<bool(int aovId)> filter);
+
+	// try running denoiser; result is svaed into RAM buffer in context
+	std::vector<float> DenoiseIntoRAM(void);
 
 	// Resolve the framebuffer using the current tone mapping
 
