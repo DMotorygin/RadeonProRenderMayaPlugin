@@ -203,8 +203,9 @@ public:
 
 	// Sets the resolution and perform an initial render and frame buffer resolve.
 	void resize(unsigned int w, unsigned int h, bool renderView, rpr_GLuint* glTexture = nullptr);
-	// - Setup denoiser if necessary (this function was used to be called from resize and setResolution)
-	bool ConsiderSetupDenoiser(bool useRAMBufer = false);
+
+	// Setup denoiser if necessary
+	bool TryCreateDenoiserImageFilters(bool useRAMBufer = false);
 
 	// Set the frame buffer resolution
 	void setResolution(unsigned int w, unsigned int h, bool renderView, rpr_GLuint* glTexture = nullptr);
@@ -525,7 +526,9 @@ public:
 	// Returns true if context was recently Freshen and needs redraw
 	bool needsRedraw(bool setNotUpdatedOnExit = true);
 
-	bool IsDenoiserEnabled(void) { return m_denoiserFilter != nullptr; }
+	bool IsDenoiserCreated(void) const { return m_denoiserFilter != nullptr; }
+
+	bool IsDenoiserEnabled(void) const { return (IsDenoiserSupported() && m_globals.denoiserSettings.enabled);	}
 
 	frw::PostEffect white_balance;
 	frw::PostEffect simple_tonemap;

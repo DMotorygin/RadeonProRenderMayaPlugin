@@ -423,7 +423,7 @@ void FireRenderProduction::OnBufferAvailableCallback(float progress)
 	AutoMutexLock pixelsLock(m_pixelsLock);
 
 	bool frameFinished = fabs(1.0f - progress) <= FLT_EPSILON;
-	bool shouldUpdateRenderView = !m_contextPtr->IsDenoiserEnabled() || (m_contextPtr->IsDenoiserEnabled() && frameFinished);
+	bool shouldUpdateRenderView = !m_contextPtr->IsDenoiserCreated() || (m_contextPtr->IsDenoiserCreated() && frameFinished);
 
 	m_renderViewAOV->readFrameBuffer(*m_contextPtr, true, !frameFinished);
 	
@@ -921,8 +921,7 @@ bool FireRenderProduction::RunOnViewportThread()
 
 void FireRenderProduction::DenoiseFromAOVs()
 {
-	bool shouldDenoise = m_contextPtr->IsDenoiserSupported() && m_globals.denoiserSettings.enabled;
-	if (!shouldDenoise)
+	if (!m_contextPtr->IsDenoiserEnabled())
 		return;
 
 	// run denoiser
@@ -1052,12 +1051,12 @@ void FireRenderProduction::RenderTiles()
 #endif
 
 	// setup denoiser if necessary
-	m_contextPtr->ConsiderSetupDenoiser(true);
+	m_contextPtr->TryCreateDenoiserImageFilters(true);
 
 	RV_PIXEL* data = nullptr;
 	std::vector<float> vecData;
 
-	if (m_contextPtr->IsDenoiserEnabled() && (m_renderViewAOV->id == RPR_AOV_COLOR))
+	if (m_contextPtr->IsDenoiserCreated() && (m_renderViewAOV->id == RPR_AOV_COLOR))
 	{
 		// run denoiser on cached data if necessary
 		bool denoiseResult = false;

@@ -393,7 +393,7 @@ MStatus FireRenderCmd::renderBatch(const MArgDatabase& args)
 		context.buildScene();
 		context.updateLimitsFromGlobalData(globals, false, true);
 		context.setResolution(settings.width, settings.height, true);
-		context.ConsiderSetupDenoiser();
+		context.TryCreateDenoiserImageFilters();
 
 		// Initialize the command port so the
 		// batch process can communicate with Maya.

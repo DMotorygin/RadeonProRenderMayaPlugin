@@ -178,7 +178,7 @@ void FireRenderContext::setResolution(unsigned int w, unsigned int h, bool rende
 	}
 }
 
-bool FireRenderContext::ConsiderSetupDenoiser(bool useRAMBufer /* = false*/)
+bool FireRenderContext::TryCreateDenoiserImageFilters(bool useRAMBufer /* = false*/)
 {
 	bool shouldDenoise = IsDenoiserSupported() &&
 						(m_globals.denoiserSettings.enabled && 
@@ -1571,7 +1571,7 @@ void FireRenderContext::readFrameBuffer(ReadFrameBufferRequestParams& params)
 
 	// Copy the region from the temporary
 	// buffer into supplied pixel memory.
-	if (params.UseTempData() || IsDenoiserEnabled())
+	if (params.UseTempData() || IsDenoiserCreated())
 	{
 		copyPixels(params.pixels, data, params.width, params.height, params.region, params.flip);
 	}
@@ -3149,9 +3149,8 @@ void FireRenderContext::ForEachFramebuffer(
 
 std::vector<float> FireRenderContext::DenoiseIntoRAM()
 {
-	bool shouldDenoise = IsDenoiserSupported() &&
-		(m_globals.denoiserSettings.enabled &&
-		((m_RenderType == RenderType::ProductionRender) || (m_RenderType == RenderType::IPR)));
+	bool shouldDenoise = IsDenoiserEnabled() &&
+		((m_RenderType == RenderType::ProductionRender) || (m_RenderType == RenderType::IPR));
 
 	if (!shouldDenoise)
 		return std::vector<float>();
@@ -3213,9 +3212,9 @@ std::vector<float> FireRenderContext::DenoiseIntoRAM()
 		});
 	}
 
-	bool isDenoiserInitialized = ConsiderSetupDenoiser(useRAMBuffer); // will read data from outBuffers if useRAMBuffer == true
+	bool isDenoiserInitialized = TryCreateDenoiserImageFilters(useRAMBuffer); // will read data from outBuffers if useRAMBuffer == true
 	assert(isDenoiserInitialized);
-	if (!isDenoiserInitialized || !IsDenoiserEnabled())
+	if (!isDenoiserInitialized || !IsDenoiserCreated())
 		return std::vector<float>();
 
 	// run denoiser on cached data

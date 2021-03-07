@@ -663,7 +663,7 @@ void FireRenderViewport::resizeFrameBufferStandard(unsigned int width, unsigned 
 {
 	// Update the RPR context dimensions.
 	m_contextPtr->resize(width, height, false);
-	m_contextPtr->ConsiderSetupDenoiser();
+	m_contextPtr->TryCreateDenoiserImageFilters();
 
 	// Resize the pixel buffer that
 	// will receive frame buffer data.
@@ -690,7 +690,7 @@ void FireRenderViewport::resizeFrameBufferGLInterop(unsigned int width, unsigned
 	{
 		// Update the RPR context.
 		m_contextPtr->resize(width, height, false, GetGlTexture());
-		m_contextPtr->ConsiderSetupDenoiser();
+		m_contextPtr->TryCreateDenoiserImageFilters();
 	}
 }
 

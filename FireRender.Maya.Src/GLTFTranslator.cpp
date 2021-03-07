@@ -75,7 +75,7 @@ MStatus	GLTFTranslator::writer(const MFileObject& file,
 	GetResolutionFromCommonTab(width, height);
 
 	fireRenderContext->setResolution(width, height, true, 0);
-	fireRenderContext->ConsiderSetupDenoiser();
+	fireRenderContext->TryCreateDenoiserImageFilters();
 
 	MStatus status;
 
