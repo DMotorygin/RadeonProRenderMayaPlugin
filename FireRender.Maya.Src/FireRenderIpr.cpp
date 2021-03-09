@@ -386,17 +386,23 @@ bool FireRenderIpr::RunOnViewportThread()
 				m_finishedFrame = true;
 
 				// run denoiser
-				std::vector<float> vecData = m_contextPtr->DenoiseIntoRAM();
-				assert(vecData.size() != 0);
-				RV_PIXEL* data = (RV_PIXEL*)vecData.data();
+				if (m_contextPtr->IsDenoiserEnabled())
+				{
+					std::vector<float> vecData = m_contextPtr->DenoiseIntoRAM();
+					assert(vecData.size() != 0);
+					if (vecData.size() == 0)
+						return true;
 
-				// Need to flip by Y because Maya render view is mirrored by Y compared to frame buffer in RPR 
-				ImageMirrorByY(data, m_width, m_height);
-				
-				// put denoised image to ipr buffer
-				memcpy(m_pixels.data(), data, sizeof(RV_PIXEL) * m_pixels.size());
+					RV_PIXEL* data = (RV_PIXEL*)vecData.data();
 
-				scheduleRenderViewUpdate();
+					// Need to flip by Y because Maya render view is mirrored by Y compared to frame buffer in RPR 
+					ImageMirrorByY(data, m_width, m_height);
+
+					// put denoised image to ipr buffer
+					memcpy(m_pixels.data(), data, sizeof(RV_PIXEL) * m_pixels.size());
+
+					scheduleRenderViewUpdate();
+				}
 			}
 		}
 
