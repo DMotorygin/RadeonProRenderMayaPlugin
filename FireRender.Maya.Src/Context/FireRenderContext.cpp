@@ -424,7 +424,7 @@ bool FireRenderContext::buildScene(bool isViewport, bool glViewport, bool freshe
 	return true;
 }
 
-static const std::vector<int> denoiser_aovs = { 
+static const std::vector<int> g_denoiserAovs = { 
 	RPR_AOV_SHADING_NORMAL, 
 	RPR_AOV_WORLD_COORDINATE,
 	RPR_AOV_OBJECT_ID, 
@@ -435,10 +435,10 @@ static const std::vector<int> denoiser_aovs = {
 void FireRenderContext::turnOnAOVsForDenoiser(bool allocBuffer)
 {
 	// Turn on necessary AOVs
-	forceTurnOnAOVs(denoiser_aovs, allocBuffer);
+	forceTurnOnAOVs(g_denoiserAovs, allocBuffer);
 }
 
-static const std::vector<int> contour_aovs = {
+static const std::vector<int> g_contourAovs = {
 	RPR_AOV_OBJECT_ID, 
 	RPR_AOV_SHADING_NORMAL,
 	RPR_AOV_MATERIAL_ID 
@@ -447,7 +447,7 @@ static const std::vector<int> contour_aovs = {
 void FireRenderContext::turnOnAOVsForContour(bool allocBuffer /*= false*/)
 {
 	// Turn on necessary AOVs
-	forceTurnOnAOVs(contour_aovs, allocBuffer);
+	forceTurnOnAOVs(g_contourAovs, allocBuffer);
 }
 
 void FireRenderContext::forceTurnOnAOVs(const std::vector<int>& aovsToAdd, bool allocBuffer /*= false*/)
@@ -1380,7 +1380,7 @@ bool FireRenderContext::ConsiderShadowReflectionCatcherOverride(const ReadFrameB
 	return false;
 }
 
-void FireRenderContext::DebugDumpAOV(int aov) const
+void FireRenderContext::DebugDumpAOV(int aov, char* pathToFile /*= nullptr*/) const
 {
 #ifdef _DEBUG
 	std::map<unsigned int, std::string> aovNames =
@@ -1426,12 +1426,22 @@ void FireRenderContext::DebugDumpAOV(int aov) const
 	};
 
 	std::stringstream ssFileNameResolved;
-	ssFileNameResolved << "C:/temp/dbg/";
+
+	if (pathToFile != nullptr)
+	{
+		ssFileNameResolved << pathToFile;
+	}
+
 	ssFileNameResolved << aovNames[aov] << "_resolved.png";
 	rprFrameBufferSaveToFile(m.framebufferAOV_resolved[aov].Handle(), ssFileNameResolved.str().c_str());
 
 	std::stringstream ssFileNameNOTResolved;
-	ssFileNameNOTResolved << "C:/temp/dbg/";
+
+	if (pathToFile != nullptr)
+	{
+		ssFileNameNOTResolved << pathToFile;
+	}
+
 	ssFileNameNOTResolved << aovNames[aov] << "_NOTresolved.png";
 	rprFrameBufferSaveToFile(m.framebufferAOV[aov].Handle(), ssFileNameNOTResolved.str().c_str());
 #endif
@@ -3235,7 +3245,7 @@ std::vector<float> FireRenderContext::DenoiseIntoRAM()
 				return true;
 
 			// is denoiser AOV
-			return (std::find(denoiser_aovs.begin(), denoiser_aovs.end(), aovId) != denoiser_aovs.end());
+			return (std::find(g_denoiserAovs.begin(), g_denoiserAovs.end(), aovId) != g_denoiserAovs.end());
 		});
 	}
 

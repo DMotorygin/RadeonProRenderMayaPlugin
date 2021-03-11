@@ -298,7 +298,6 @@ bool FireRenderProduction::Init(int contextWidth, int contextHeight, RenderRegio
 
 	m_needsContextRefresh = true;
 	m_contextPtr->setResolution(contextWidth, contextHeight, true);
-	//m_contextPtr->ConsiderSetupDenoiser();
 	m_contextPtr->setCamera(m_camera, true);
 
 	m_contextPtr->setUseRegion(m_isRegion);
