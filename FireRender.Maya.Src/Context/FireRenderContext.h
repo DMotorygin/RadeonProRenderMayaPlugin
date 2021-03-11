@@ -690,6 +690,7 @@ private:
 	void BuildLateinitObjects();
 
 private:
+	std::mutex m_rifLock;
 	std::shared_ptr<ImageFilter> m_denoiserFilter;
 
 	frw::DirectionalLight m_defaultLight;

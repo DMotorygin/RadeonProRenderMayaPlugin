@@ -89,7 +89,6 @@ void generateBitmapImage(unsigned char *image, int height, int width, int pitch,
 void PixelBuffer::debugDump(unsigned int totalHeight, unsigned int totalWidth, const std::string& fbName)
 {
 #ifdef _DEBUG
-#ifdef DUMP_PIXELS_PIXELBUFF
 	assert(sizeof(RV_PIXEL) * totalHeight * totalWidth == m_size);
 
 	std::vector<RV_PIXEL> sourcePixels;
@@ -127,7 +126,6 @@ void PixelBuffer::debugDump(unsigned int totalHeight, unsigned int totalWidth, c
 	std::string dumpAddr = "C:\\temp\\dbg\\" + fbName +std::to_string(debugDumpIdx++) + ".bmp";
 	unsigned char* dst2 = buffer2.data();
 	generateBitmapImage(dst2, totalHeight, totalWidth, totalWidth * 4, dumpAddr.c_str());
-#endif
 #endif
 }
 

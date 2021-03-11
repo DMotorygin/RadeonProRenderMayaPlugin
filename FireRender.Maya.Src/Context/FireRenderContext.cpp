@@ -1329,6 +1329,11 @@ bool FireRenderContext::ConsiderShadowReflectionCatcherOverride(const ReadFrameB
 		m.framebufferAOV[RPR_AOV_OPACITY] &&
 		scope.GetReflectionCatcherShader();
 
+	if ((!isReflectionCatcher) && (!isShadowCather))
+		return false; // SC or RC not used
+
+	std::lock_guard<std::mutex> lock(m_rifLock);
+
 	TahoePluginVersion version = GetTahoeVersionToUse();
 	bool isRPR20 = version == TahoePluginVersion::RPR2;
 
@@ -1568,7 +1573,7 @@ void FireRenderContext::readFrameBuffer(ReadFrameBufferRequestParams& params)
 	// process shadow and/or reflection catcher logic
 	bool isShadowReflectionCatcherUsed = ConsiderShadowReflectionCatcherOverride(params);
 	if (isShadowReflectionCatcherUsed)
-		return; // fo now; should run denoiser if enabled instead
+		return;
 
 	// load data from AOV
 	RV_PIXEL* data = nullptr;
@@ -3234,6 +3239,7 @@ std::vector<float> FireRenderContext::DenoiseIntoRAM()
 		});
 	}
 
+	std::lock_guard<std::mutex> lock(m_rifLock);
 	bool isDenoiserInitialized = TryCreateDenoiserImageFilters(useRAMBuffer); // will read data from outBuffers if useRAMBuffer == true
 	assert(isDenoiserInitialized);
 	if (!isDenoiserInitialized || !IsDenoiserCreated())
