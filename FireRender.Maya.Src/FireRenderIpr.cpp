@@ -317,9 +317,11 @@ bool FireRenderIpr::stop()
 
 void FireRenderIpr::OnBufferAvailableCallback(float progress)
 {
-	AutoMutexLock pixelsLock(m_pixelsLock);
+	{
+		AutoMutexLock pixelsLock(m_pixelsLock);
 
-	readFrameBuffer();
+		readFrameBuffer();
+	}
 
 	scheduleRenderViewUpdate();
 }
@@ -367,8 +369,10 @@ bool FireRenderIpr::RunOnViewportThread()
 				m_contextPtr->render(false);
 
 				// Read the frame buffer.
-				AutoMutexLock pixelsLock(m_pixelsLock);
-				readFrameBuffer();
+				{
+					AutoMutexLock pixelsLock(m_pixelsLock);
+					readFrameBuffer();
+				}
 
 				// Schedule a Maya render view on the main thread.
 				scheduleRenderViewUpdate();
@@ -503,6 +507,7 @@ void FireRenderIpr::updateMayaRenderInfo()
 // -----------------------------------------------------------------------------
 void FireRenderIpr::updateRenderView()
 {
+	AutoMutexLock refreshLock(m_refreshLock);
 	// Clear the scheduled flag.
 	m_renderViewUpdateScheduled = false;
 
@@ -541,6 +546,8 @@ void FireRenderIpr::updateRenderView()
 // -----------------------------------------------------------------------------
 void FireRenderIpr::scheduleRenderViewUpdate()
 {
+	AutoMutexLock refreshLock(m_refreshLock);
+
 	// Only schedule one update at a time.
 	if (m_renderViewUpdateScheduled)
 		return;
