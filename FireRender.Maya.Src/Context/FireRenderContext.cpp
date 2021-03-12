@@ -3240,13 +3240,17 @@ std::vector<float> FireRenderContext::DenoiseIntoRAM()
 
 	// save denoiser result in RAM buffer
 	RV_PIXEL* data = (RV_PIXEL*)vecData.data();
-	m_pixelBuffers[RPR_AOV_COLOR].overwrite(data, tempRegion, params.height, params.width, RPR_AOV_COLOR);
-
-	// run merge opacity
-	params.pixels = m_pixelBuffers[RPR_AOV_COLOR].get();
-	params.aov = RPR_AOV_COLOR;
-	params.mergeOpacity = camera().GetAlphaMask() && isAOVEnabled(RPR_AOV_OPACITY);
-	MergeOpacity(params);
+	if (useRAMBuffer)
+	{
+		m_pixelBuffers[RPR_AOV_COLOR].overwrite(data, tempRegion, params.height, params.width, RPR_AOV_COLOR);
+		params.pixels = m_pixelBuffers[RPR_AOV_COLOR].get();
+		// run merge opacity
+		params.aov = RPR_AOV_COLOR;
+		params.mergeOpacity = camera().GetAlphaMask() && isAOVEnabled(RPR_AOV_OPACITY);
+		MergeOpacity(params);
+		// combine (Opacity to Alpha)
+		CombineOpacity(params);
+	}
 
 	return vecData;
 }
