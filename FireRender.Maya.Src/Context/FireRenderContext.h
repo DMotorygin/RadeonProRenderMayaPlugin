@@ -305,7 +305,7 @@ public:
 	// reads aov directly into internal storage
 	RV_PIXEL* GetAOVData(const ReadFrameBufferRequestParams& params);
 
-	void MergeOpacity(const ReadFrameBufferRequestParams& params, size_t dataSize);
+	void MergeOpacity(const ReadFrameBufferRequestParams& params);
 
 	void CombineOpacity(ReadFrameBufferRequestParams& params);
 
@@ -660,6 +660,8 @@ protected:
 	virtual void OnPreRender() {}
 
 	virtual int GetAOVMaxValue();
+
+	void ReadDenoiserFrameBuffersIntoRAM(ReadFrameBufferRequestParams& params);
 
 private:
 	struct CallbacksAttachmentHelper

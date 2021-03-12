@@ -1530,7 +1530,7 @@ RV_PIXEL* FireRenderContext::GetAOVData(const ReadFrameBufferRequestParams& para
 	return data;
 }
 
-void FireRenderContext::MergeOpacity(const ReadFrameBufferRequestParams& params, size_t dataSize)
+void FireRenderContext::MergeOpacity(const ReadFrameBufferRequestParams& params)
 {
 	// No need to merge opacity for any FB other then color
 	if (!params.mergeOpacity || params.aov != RPR_AOV_COLOR)
@@ -1539,6 +1539,8 @@ void FireRenderContext::MergeOpacity(const ReadFrameBufferRequestParams& params,
 	rpr_framebuffer opacityFrameBuffer = frameBufferAOV_Resolved(RPR_AOV_OPACITY);
 	if (opacityFrameBuffer == nullptr)
 		return;
+
+	size_t dataSize = (sizeof(RV_PIXEL) * params.PixelCount());
 
 	m_opacityData.resize(params.PixelCount());
 
@@ -1590,7 +1592,7 @@ void FireRenderContext::readFrameBuffer(ReadFrameBufferRequestParams& params)
 	data = GetAOVData(params);
 
 	// No need to merge opacity for any FB other then color
-	MergeOpacity(params, (sizeof(RV_PIXEL) * params.PixelCount()));
+	MergeOpacity(params);
 
 	// Copy the region from the temporary
 	// buffer into supplied pixel memory.
@@ -3193,60 +3195,35 @@ std::vector<float> FireRenderContext::DenoiseIntoRAM()
 		return std::vector<float>();
 
 	bool useRAMBuffer = ShouldForceRAMDenoiser();
+
+	// setup params
+	RenderRegion tempRegion;
+	if (useRegion())
+	{
+		tempRegion = m_region;
+	}
+	else
+	{
+		tempRegion = RenderRegion(m_width, m_height);
+	}
+
+	ReadFrameBufferRequestParams params(tempRegion);
+	params.width = m_width;
+	params.height = m_height;
+	params.flip = false;
+	params.mergeOpacity = false;
+	params.mergeShadowCatcher = true;
+	params.shadowColor = m_shadowColor;
+	params.bgColor = m_bgColor;
+	params.bgWeight = m_bgWeight;
+	params.shadowTransp = m_shadowTransparency;
+	params.bgTransparency = m_backgroundTransparency;
+	params.shadowWeight = m_shadowWeight;
 	
 	// read frame buffers
 	if (useRAMBuffer)
 	{
-		RenderRegion tempRegion;
-		if (useRegion())
-		{
-			tempRegion = m_region;
-		}
-		else
-		{
-			tempRegion = RenderRegion(m_width, m_height);
-		}
-
-		m_pixelBuffers.clear();
-
-		ForEachFramebuffer([&](int aovId)
-		{
-			auto ret = m_pixelBuffers.insert(std::pair<unsigned int, PixelBuffer>(aovId, PixelBuffer()));
-			ret.first->second.resize(m_width, m_height);
-
-			// setup params
-			ReadFrameBufferRequestParams params(tempRegion);
-			params.pixels = m_pixelBuffers[aovId].get();
-			params.aov = aovId;
-			params.width = m_width;
-			params.height = m_height;
-			params.flip = false;
-			params.mergeOpacity = camera().GetAlphaMask() && isAOVEnabled(RPR_AOV_OPACITY);
-			params.mergeShadowCatcher = true;
-			params.shadowColor = m_shadowColor;
-			params.bgColor = m_bgColor;
-			params.bgWeight = m_bgWeight;
-			params.shadowTransp = m_shadowTransparency;
-			params.bgTransparency = m_backgroundTransparency;
-			params.shadowWeight = m_shadowWeight;
-
-			// process frame buffer
-			readFrameBuffer(params);
-
-			// debug
-			#ifdef DENOISE_RAM_DBG
-			m_pixelBuffers[aovId].debugDump(m_height, m_width, FireRenderAOV::GetAOVName(aovId));
-			#endif
-		},
-
-		[](int aovId)->bool
-		{
-			if (aovId == RPR_AOV_COLOR)
-				return true;
-
-			// is denoiser AOV
-			return (std::find(g_denoiserAovs.begin(), g_denoiserAovs.end(), aovId) != g_denoiserAovs.end());
-		});
+		ReadDenoiserFrameBuffersIntoRAM(params);
 	}
 
 	std::lock_guard<std::mutex> lock(m_rifLock);
@@ -3261,6 +3238,48 @@ std::vector<float> FireRenderContext::DenoiseIntoRAM()
 	vecData = GetDenoisedData(denoiseResult);
 	assert(denoiseResult);
 
+	// save denoiser result in RAM buffer
+	RV_PIXEL* data = (RV_PIXEL*)vecData.data();
+	m_pixelBuffers[RPR_AOV_COLOR].overwrite(data, tempRegion, params.height, params.width, RPR_AOV_COLOR);
+
+	// run merge opacity
+	params.pixels = m_pixelBuffers[RPR_AOV_COLOR].get();
+	params.aov = RPR_AOV_COLOR;
+	params.mergeOpacity = camera().GetAlphaMask() && isAOVEnabled(RPR_AOV_OPACITY);
+	MergeOpacity(params);
+
 	return vecData;
+}
+
+void FireRenderContext::ReadDenoiserFrameBuffersIntoRAM(ReadFrameBufferRequestParams& params)
+{
+	m_pixelBuffers.clear();
+
+	ForEachFramebuffer([&](int aovId)
+	{
+		auto ret = m_pixelBuffers.insert(std::pair<unsigned int, PixelBuffer>(aovId, PixelBuffer()));
+		ret.first->second.resize(m_width, m_height);
+
+		// setup params
+		params.pixels = m_pixelBuffers[aovId].get();
+		params.aov = aovId;
+
+		// process frame buffer
+		readFrameBuffer(params);
+
+		// debug
+#ifdef DENOISE_RAM_DBG
+		m_pixelBuffers[aovId].debugDump(m_height, m_width, FireRenderAOV::GetAOVName(aovId), "C:\\temp\\dbg\\");
+#endif
+	},
+
+	[](int aovId)->bool
+	{
+		if (aovId == RPR_AOV_COLOR)
+			return true;
+
+		// is denoiser AOV
+		return (std::find(g_denoiserAovs.begin(), g_denoiserAovs.end(), aovId) != g_denoiserAovs.end());
+	});
 }
 

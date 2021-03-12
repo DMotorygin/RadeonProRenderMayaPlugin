@@ -924,11 +924,13 @@ void FireRenderProduction::DenoiseFromAOVs()
 		return;
 
 	// run denoiser
-	std::vector<float> vecData = m_contextPtr->DenoiseIntoRAM();
-	assert(vecData.size() != 0);
+	m_contextPtr->DenoiseIntoRAM();
 
 	// output denoiser result
-	RV_PIXEL* data = (RV_PIXEL*)vecData.data();
+	auto it = m_contextPtr->PixelBuffers().find(RPR_AOV_COLOR);
+	bool hasAov = it != m_contextPtr->PixelBuffers().end();
+	assert(hasAov);
+	RV_PIXEL* data = (RV_PIXEL*)it->second.data();
 	m_renderViewAOV->pixels.overwrite(data, m_region, m_height, m_width, RPR_AOV_COLOR);
 
 	// apply render stamp
