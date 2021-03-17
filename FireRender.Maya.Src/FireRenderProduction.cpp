@@ -1078,6 +1078,9 @@ void FireRenderProduction::RenderTiles()
 		data = it->second.get();
 	}
 
+	// run merge opacity
+	m_contextPtr->ProcessMergeOpactityFromRAM(data, info.totalWidth, info.totalHeight);
+
 	FireRenderThread::RunProcOnMainThread([this, data]()
 	{
 		// Update the Maya render view.

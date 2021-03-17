@@ -3252,6 +3252,40 @@ std::vector<float> FireRenderContext::DenoiseIntoRAM()
 	return vecData;
 }
 
+void FireRenderContext::ProcessMergeOpactityFromRAM(RV_PIXEL* data, int bufferWidth, int bufferHeight)
+{
+	if (!camera().GetAlphaMask() || !isAOVEnabled(RPR_AOV_OPACITY))
+		return;
+
+	auto it = m_pixelBuffers.find(RPR_AOV_OPACITY);
+	if (it == m_pixelBuffers.end())
+		return;
+
+	RenderRegion tempRegion(bufferWidth, bufferHeight);
+	ReadFrameBufferRequestParams params(tempRegion);
+	params.width = bufferWidth;
+	params.height = bufferHeight;
+	params.mergeOpacity = true;
+	params.mergeShadowCatcher = true;
+	params.shadowColor = m_shadowColor;
+	params.bgColor = m_bgColor;
+	params.bgWeight = m_bgWeight;
+	params.shadowTransp = m_shadowTransparency;
+	params.bgTransparency = m_backgroundTransparency;
+	params.shadowWeight = m_shadowWeight;
+	params.pixels = data;
+	params.aov = RPR_AOV_COLOR;
+
+	size_t dataSize = (sizeof(RV_PIXEL) * params.PixelCount());
+
+	m_opacityData.resize(params.PixelCount());
+
+	copyPixels(m_opacityData.get(), it->second.get(), params.width, params.height, params.region);
+
+	// combine (Opacity to Alpha)
+	CombineOpacity(params);
+}
+
 void FireRenderContext::ReadDenoiserFrameBuffersIntoRAM(ReadFrameBufferRequestParams& params)
 {
 	m_pixelBuffers.clear();
