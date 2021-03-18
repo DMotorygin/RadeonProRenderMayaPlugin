@@ -1069,6 +1069,18 @@ void FireRenderProduction::RenderTiles()
 	// run merge opacity
 	m_contextPtr->ProcessMergeOpactityFromRAM(data, info.totalWidth, info.totalHeight);
 
+	// apply render stamp
+	FireMaya::RenderStamp renderStamp;
+	MString stampStr;
+	m_aovs->ForEachActiveAOV([&](FireRenderAOV& aov)
+	{
+		if (aov.id != RPR_AOV_COLOR)
+			return;
+
+		stampStr = aov.renderStamp;
+	});
+	renderStamp.AddRenderStamp(*m_contextPtr, data, m_width, m_height, stampStr.asChar());
+
 	FireRenderThread::RunProcOnMainThread([this, data]()
 	{
 		// Update the Maya render view.

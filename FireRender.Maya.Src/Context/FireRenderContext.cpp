@@ -1559,14 +1559,16 @@ void FireRenderContext::MergeOpacity(const ReadFrameBufferRequestParams& params)
 	}
 }
 
-void FireRenderContext::CombineOpacity(ReadFrameBufferRequestParams& params)
+void FireRenderContext::CombineOpacity(int aov, RV_PIXEL* pixels, unsigned int area)
 {
+	assert(pixels);
+
 	//combine (Opacity to Alpha)
 	// No need to merge opacity for any FB other then color
-	if (!params.mergeOpacity || params.aov != RPR_AOV_COLOR)
+	if (aov != RPR_AOV_COLOR)
 		return;
 
-	combineWithOpacity(params.pixels, params.region.getArea(), m_opacityData.get());
+	combineWithOpacity(pixels, area, m_opacityData.get());
 }
 
 void FireRenderContext::readFrameBuffer(ReadFrameBufferRequestParams& params)
@@ -1602,7 +1604,10 @@ void FireRenderContext::readFrameBuffer(ReadFrameBufferRequestParams& params)
 
 	//combine (Opacity to Alpha)
 	// No need to merge opacity for any FB other then color
-	CombineOpacity(params);
+	if (params.mergeOpacity)
+	{
+		CombineOpacity(params.aov, params.pixels, params.region.getArea());
+	}
 }
 
 #ifdef _DEBUG
@@ -3245,8 +3250,12 @@ std::vector<float> FireRenderContext::DenoiseIntoRAM()
 		params.aov = RPR_AOV_COLOR;
 		params.mergeOpacity = camera().GetAlphaMask() && isAOVEnabled(RPR_AOV_OPACITY);
 		MergeOpacity(params);
+
 		// combine (Opacity to Alpha)
-		CombineOpacity(params);
+		if (params.mergeOpacity)
+		{
+			CombineOpacity(RPR_AOV_COLOR, data, tempRegion.getArea());
+		}
 	}
 
 	return vecData;
@@ -3261,29 +3270,15 @@ void FireRenderContext::ProcessMergeOpactityFromRAM(RV_PIXEL* data, int bufferWi
 	if (it == m_pixelBuffers.end())
 		return;
 
+	size_t dataSize = (sizeof(RV_PIXEL) * bufferWidth * bufferHeight);
+
+	m_opacityData.resize(bufferWidth * bufferHeight);
+
 	RenderRegion tempRegion(bufferWidth, bufferHeight);
-	ReadFrameBufferRequestParams params(tempRegion);
-	params.width = bufferWidth;
-	params.height = bufferHeight;
-	params.mergeOpacity = true;
-	params.mergeShadowCatcher = true;
-	params.shadowColor = m_shadowColor;
-	params.bgColor = m_bgColor;
-	params.bgWeight = m_bgWeight;
-	params.shadowTransp = m_shadowTransparency;
-	params.bgTransparency = m_backgroundTransparency;
-	params.shadowWeight = m_shadowWeight;
-	params.pixels = data;
-	params.aov = RPR_AOV_COLOR;
-
-	size_t dataSize = (sizeof(RV_PIXEL) * params.PixelCount());
-
-	m_opacityData.resize(params.PixelCount());
-
-	copyPixels(m_opacityData.get(), it->second.get(), params.width, params.height, params.region);
+	copyPixels(m_opacityData.get(), it->second.get(), bufferWidth, bufferHeight, tempRegion);
 
 	// combine (Opacity to Alpha)
-	CombineOpacity(params);
+	CombineOpacity(RPR_AOV_COLOR, data, tempRegion.getArea());
 }
 
 void FireRenderContext::ReadDenoiserFrameBuffersIntoRAM(ReadFrameBufferRequestParams& params)

@@ -260,7 +260,7 @@ void FireRenderAOV::readFrameBuffer(FireRenderContext& context)
 	PostProcess();
 
 	// Render stamp, but only when region matches the whole frame buffer
-	if (m_region.getHeight() == m_frameHeight && m_region.getWidth() == m_frameWidth && renderStamp.numChars() > 0)
+	if (m_region.getHeight() == m_frameHeight && m_region.getWidth() == m_frameWidth && renderStamp.numChars() > 0 && !context.IsTileRender())
 	{
 		m_renderStamp->AddRenderStamp(context, pixels.get(), m_frameWidth, m_frameHeight, renderStamp.asChar());
 	}

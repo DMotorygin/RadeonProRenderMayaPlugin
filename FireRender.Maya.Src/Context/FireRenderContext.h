@@ -302,7 +302,7 @@ public:
 
 	void MergeOpacity(const ReadFrameBufferRequestParams& params);
 
-	void CombineOpacity(ReadFrameBufferRequestParams& params);
+	void CombineOpacity(int aov, RV_PIXEL* pixels, unsigned int area);
 
 	// Composite image for Shadow Catcher, Reflection Catcher and Shadow+Reflection Catcher
 	virtual void compositeShadowCatcherOutput(const ReadFrameBufferRequestParams& params);
