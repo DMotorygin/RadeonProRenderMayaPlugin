@@ -3951,7 +3951,7 @@ namespace frw
 			rpr_int res = rprShapeSetSubdivisionAutoRatioCap(Handle(), autoRatioCap);
 			checkStatusThrow(res, "Unable to set Adaptive Subdivision!");
 
-			res = rprShapeSetSubdivisionFactor(Handle(), calculatedFactor);
+			res = rprShapeSetSubdivisionFactor(Handle(), adaptiveFactor);
 			checkStatusThrow(res, "Unable to set Adaptive Subdivision!");
 		}
 	}
