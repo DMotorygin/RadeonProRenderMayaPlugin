@@ -2314,7 +2314,8 @@ bool FireRenderContext::AddSceneObject(const MDagPath& dagPath)
 		}
 		else if (dagNode.typeName() == "transform")
 		{
-			ob = CreateSceneObject<FireRenderNode, NodeCachingOptions::AddPath>(dagPath);
+			MString objname = dagNode.name();
+			//ob = CreateSceneObject<FireRenderNode, NodeCachingOptions::AddPath>(dagPath);
 		}
 #ifdef WIN32
 		else if (dagNode.typeName() == "gpuCache")

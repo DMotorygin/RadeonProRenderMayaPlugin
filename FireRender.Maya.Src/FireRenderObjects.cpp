@@ -152,10 +152,13 @@ HashValue FireRenderNode::CalculateHash()
 {
 	HashValue hash = FireRenderObject::CalculateHash();
 	auto dagPath = DagPath();
+
+	MString name = dagPath.fullPathName();
+
 	if (dagPath.isValid())
 	{
 		hash << dagPath.isVisible();
-		hash << dagPath.inclusiveMatrix();
+		hash << 0; // dagPath.inclusiveMatrix();
 	}
 	return hash;
 }
