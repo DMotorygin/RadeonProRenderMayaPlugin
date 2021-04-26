@@ -1503,6 +1503,17 @@ namespace frw
 			{
 				checkStatus(res);
 			}
+
+			res = rprCurveSetVisibilityFlag(Handle(), RPR_CURVE_VISIBILITY_DIFFUSE, visible);
+
+			if (res == RPR_ERROR_UNSUPPORTED)
+			{
+				return;
+			}
+			else
+			{
+				checkStatus(res);
+			}
 		}
 
 		void SetReflectionVisibility(bool visible)
@@ -4193,6 +4204,12 @@ namespace frw
 		const rpr_int* tidx_stride, const rpr_int * num_face_vertices, size_t num_faces, std::string optionalMeshName) const
 	{
 		FRW_PRINT_DEBUG("CreateMesh() - %d faces\n", num_faces);
+		assert(num_vertices != 0);
+		assert(num_faces != 0);
+
+		if (num_vertices == 0 || num_faces == 0)
+			return Shape();
+
 		rpr_shape shape = nullptr;
 
 		auto status = rprContextCreateMeshEx(Handle(),
