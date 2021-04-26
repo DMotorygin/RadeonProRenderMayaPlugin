@@ -24,7 +24,9 @@ namespace FireMaya
 			const frw::Context& context,
 			const MFnMesh& fnMesh,
 			std::vector<frw::Shape>& elements,
-			MeshTranslator::MeshPolygonData& meshPolygonData
+			MeshTranslator::MeshPolygonData& meshPolygonData,
+			const MIntArray& faceMaterialIndices,
+			std::vector<int>& outFaceMaterialIndices
 		);
 
 	private:
@@ -35,7 +37,9 @@ namespace FireMaya
 			std::vector<int>& normalIndices,
 			std::vector<std::vector<int>>& uvIndices,
 			std::vector<MColor>& vertexColors,
-			std::vector<int>& vertexIndices
+			std::vector<int>& vertexIndices,
+			const MIntArray& faceMaterialIndices,
+			std::vector<int>& outFaceMaterialIndices
 		);
 
 		static void FillIndicesUV(

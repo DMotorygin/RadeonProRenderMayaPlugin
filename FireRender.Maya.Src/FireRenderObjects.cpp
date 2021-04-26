@@ -721,7 +721,7 @@ void FireRenderMesh::RegisterCallbacks()
 
 	for (auto& it : m.elements)
 	{
-		if (!it.shadingEngine.isNull())
+		/*if (!it.shadingEngine.isNull())
 		{
 			MObject shaderOb = getSurfaceShader(it.shadingEngine);
 			if (!shaderOb.isNull())
@@ -740,7 +740,7 @@ void FireRenderMesh::RegisterCallbacks()
 			{
 				AddCallback(MNodeMessage::addNodeDirtyCallback(shaderVolume, ShaderDirtyCallback, this));
 			}
-		}
+		}*/
 	}
 }
 
@@ -855,15 +855,15 @@ void FireRenderMeshCommon::setReflectionVisibility(bool reflectionVisibility)
 {
 	for (auto element : m.elements)
 	{
-		if (element.shader.IsShadowCatcher() || element.shader.IsReflectionCatcher())
-		{
-			if (auto shape = element.shape)
-				shape.SetReflectionVisibility(false);
-			continue;
-		}
-
-		if (auto shape = element.shape)
-			shape.SetReflectionVisibility(reflectionVisibility);
+		//if (element.shader.IsShadowCatcher() || element.shader.IsReflectionCatcher())
+		//{
+		//	if (auto shape = element.shape)
+		//		shape.SetReflectionVisibility(false);
+		//	continue;
+		//}
+		//
+		//if (auto shape = element.shape)
+		//	shape.SetReflectionVisibility(reflectionVisibility);
 	}
 }
 
@@ -871,15 +871,15 @@ void FireRenderMeshCommon::setRefractionVisibility(bool refractionVisibility)
 {
 	for (auto element : m.elements)
 	{
-		if (element.shader.IsShadowCatcher() || element.shader.IsReflectionCatcher())
-		{
-			if (auto shape = element.shape)
-				shape.setRefractionVisibility(false);
-			continue;
-		}
-
-		if (auto shape = element.shape)
-			shape.setRefractionVisibility(refractionVisibility);
+		//if (element.shader.IsShadowCatcher() || element.shader.IsReflectionCatcher())
+		//{
+		//	if (auto shape = element.shape)
+		//		shape.setRefractionVisibility(false);
+		//	continue;
+		//}
+		//
+		//if (auto shape = element.shape)
+		//	shape.setRefractionVisibility(refractionVisibility);
 	}
 }
 
@@ -1100,13 +1100,13 @@ void FireRenderMesh::ReloadMesh(const MDagPath& meshPath)
 
 	m.elements.clear();
 
-	MObjectArray shaderObjs;
 	std::vector<frw::Shape> shapes;
 
 	// node is not visible => skip
 	if (IsMeshVisible(meshPath, this->context()))
 	{
 		GetShapes(shapes);
+		assert(shapes.size() <= 1);
 	}
 
 	m.elements.resize(shapes.size());
@@ -1262,43 +1262,65 @@ void FireRenderMesh::ProcessMesh(const MDagPath& meshPath)
 
 	MFnDependencyNode nodeFn(Object());
 
-	for (int i = 0; i < m.elements.size(); i++)
+	for (int i = 0; i < m.elements.size(); i++) // should be always only 1, but keeping array for now for backward compatibility
 	{
 		auto& element = m.elements[i];
-		element.shader = context->GetShader(getSurfaceShader(element.shadingEngine), element.shadingEngine, this);
-		element.volumeShader = context->GetVolumeShader(getVolumeShader(element.shadingEngine));
 
-		if (context->IsDisplacementSupported())
+		if (!element.shape)
+			continue;
+
+		for (unsigned int shaderIdx = 0; shaderIdx < element.shadingEngine.size(); ++shaderIdx)
 		{
-			setupDisplacement(element.shadingEngine, element.shape);
+			MObject& shadingEngine = element.shadingEngine[shaderIdx];
+			element.shaders.push_back(context->GetShader(getSurfaceShader(shadingEngine), shadingEngine, this));
+
+			std::vector<int>& faceMaterialIndices = m.faceMaterialIndices;
+			std::vector<int> face_ids;
+			face_ids.reserve(faceMaterialIndices.size());
+			for (int faceIdx = 0; faceIdx < faceMaterialIndices.size(); ++faceIdx)
+			{
+				if (faceMaterialIndices[faceIdx] == shaderIdx)
+					face_ids.push_back(faceIdx);
+			}
+
+			element.shape.SetPerFaceShader(element.shaders.back(), face_ids);
 		}
 
-		if (!element.volumeShader)
-			element.volumeShader = context->GetVolumeShader(getSurfaceShader(element.shadingEngine));
+		//element.shader = context->GetShader(getSurfaceShader(element.shadingEngine), element.shadingEngine, this);
+
+		//element.volumeShader = context->GetVolumeShader(getVolumeShader(element.shadingEngine));
+		//
+		//if (context->IsDisplacementSupported())
+		//{
+		//	setupDisplacement(element.shadingEngine, element.shape);
+		//}
+
+		//if (!element.volumeShader)
+		//	element.volumeShader = context->GetVolumeShader(getSurfaceShader(element.shadingEngine));
 
 		// if no valid surface shader, we should set to transparent in case of volumes present
-		if (element.volumeShader)
-		{
-			if (!element.shader || element.shader == element.volumeShader)	// also catch case where volume assigned to surface
-				element.shader = frw::TransparentShader(context->GetMaterialSystem());
-		}
+		//if (element.volumeShader)
+		//{
+		//	if (!element.shader || element.shader == element.volumeShader)	// also catch case where volume assigned to surface
+		//		element.shader = frw::TransparentShader(context->GetMaterialSystem());
+		//}
 
-		if (element.shape)
-		{
-			element.shape.SetShader(element.shader);
-			element.shape.SetVolumeShader(element.volumeShader);
-			frw::ShaderType shType = element.shader.GetShaderType();
-			if (shType == frw::ShaderTypeEmissive)
-				m.isEmissive = true;
-
-			if (element.shader.IsShadowCatcher() || element.shader.IsReflectionCatcher())
-				continue;
-
-			if ((shType == frw::ShaderTypeRprx) && (IsUberEmissive(element.shader)) )
-			{
-				m.isEmissive = true;
-			}
-		}
+		//if (element.shape)
+		//{
+		//	element.shape.SetShader(element.shader);
+		//	//element.shape.SetVolumeShader(element.volumeShader);
+		//	frw::ShaderType shType = element.shader.GetShaderType();
+		//	if (shType == frw::ShaderTypeEmissive)
+		//		m.isEmissive = true;
+		//
+		//	if (element.shader.IsShadowCatcher() || element.shader.IsReflectionCatcher())
+		//		continue;
+		//
+		//	if ((shType == frw::ShaderTypeRprx) && (IsUberEmissive(element.shader)) )
+		//	{
+		//		m.isEmissive = true;
+		//	}
+		//}
 	}
 
 	RebuildTransforms();
@@ -1452,11 +1474,11 @@ void FireRenderMeshCommon::ForceShaderDirtyCallback(MObject& node, void* clientD
 
 	for (auto& it : self->m.elements)
 	{
-		if (!it.shadingEngine.isNull())
-		{
-			MObject shaderOb = getSurfaceShader(it.shadingEngine);
-			MGlobal::executeCommand("dgdirty " + MFnDependencyNode(shaderOb).name());
-		}
+		//if (!it.shadingEngine.isNull())
+		//{
+		//	MObject shaderOb = getSurfaceShader(it.shadingEngine);
+		//	MGlobal::executeCommand("dgdirty " + MFnDependencyNode(shaderOb).name());
+		//}
 	}
 }
 
@@ -1505,7 +1527,7 @@ void FireRenderMesh::GetShapes(std::vector<frw::Shape>& outShapes)
 
 	if (mainMesh == nullptr)
 	{
-		outShapes = FireMaya::MeshTranslator::TranslateMesh(context->GetContext(), Object());
+		outShapes = FireMaya::MeshTranslator::TranslateMesh(context->GetContext(), Object(), m.faceMaterialIndices);
 		m.isMainInstance = true;
 		context->AddMainMesh(this);
 	}
@@ -1595,7 +1617,8 @@ void FireRenderMeshCommon::AssignShadingEngines(const MObjectArray& shadingEngin
 {
 	for (unsigned int i = 0; i < m.elements.size(); i++)
 	{
-		m.elements[i].shadingEngine = shadingEngines[i < shadingEngines.length() ? i : 0];
+		DumpMayaArray(m.elements[i].shadingEngine, shadingEngines);
+		//m.elements[i].shadingEngine = shadingEngines[i < shadingEngines.length() ? i : 0];
 	}
 }
 

@@ -16,7 +16,9 @@ void FireMaya::SingleShaderMeshTranslator::TranslateMesh(
 	const frw::Context& context,
 	const MFnMesh& fnMesh,
 	std::vector<frw::Shape>& elements,
-	MeshTranslator::MeshPolygonData& meshData)
+	MeshTranslator::MeshPolygonData& meshData,
+	const MIntArray& faceMaterialIndices,
+	std::vector<int>& outFaceMaterialIndices)
 {
 	// output indices of vertexes (3 indices for each triangle)
 	std::vector<int> triangleVertexIndices;
@@ -53,7 +55,16 @@ void FireMaya::SingleShaderMeshTranslator::TranslateMesh(
 		std::chrono::steady_clock::time_point start_inner_AddPolygon = std::chrono::steady_clock::now();
 #endif
 
-		AddPolygonSingleShader(it, meshData.uvSetNames, triangleVertexIndices, triangleNormalIndices, uvIndices, vertexColors, vertexIndices);
+		AddPolygonSingleShader(
+			it, 
+			meshData.uvSetNames, 
+			triangleVertexIndices, 
+			triangleNormalIndices, 
+			uvIndices, 
+			vertexColors, 
+			vertexIndices,
+			faceMaterialIndices,
+			outFaceMaterialIndices);
 
 #ifdef OPTIMIZATION_CLOCK
 		std::chrono::steady_clock::time_point fin_inner_AddPolygon = std::chrono::steady_clock::now();
@@ -120,7 +131,9 @@ void FireMaya::SingleShaderMeshTranslator::AddPolygonSingleShader(
 	std::vector<int>& outNormalIndices,
 	std::vector<std::vector<int> >& outIndicesUV,
 	std::vector<MColor>& outVertexColors,
-	std::vector<int>& outColorVertexIndices)
+	std::vector<int>& outColorVertexIndices,
+	const MIntArray& faceMaterialIndices,
+	std::vector<int>& outFaceMaterialIndices)
 {
 	MStatus mayaStatus;
 
@@ -152,6 +165,13 @@ void FireMaya::SingleShaderMeshTranslator::AddPolygonSingleShader(
 	for (unsigned int globalVertexIndex = 0; globalVertexIndex < trianglesVertexList.length(); ++globalVertexIndex)
 	{
 		outTriangleVertexIndices.push_back(trianglesVertexList[globalVertexIndex]);
+	}
+
+	// save material data
+	int shaderId = faceMaterialIndices[meshPolygonIterator.index()];
+	for (unsigned int idx = 0; idx < (trianglesVertexList.length()/3); ++idx)
+	{
+		outFaceMaterialIndices.push_back(shaderId);
 	}
 
 	// create table to convert global index in vertex indices array to local one [0...number of vertex in polygon]

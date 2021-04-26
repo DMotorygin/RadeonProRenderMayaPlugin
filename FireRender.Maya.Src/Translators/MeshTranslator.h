@@ -83,7 +83,7 @@ namespace FireMaya
 			std::vector<MColor> vertexColors;
 		};
 
-		static std::vector<frw::Shape> TranslateMesh(const frw::Context& context, const MObject& originalObject);
+		static std::vector<frw::Shape> TranslateMesh(const frw::Context& context, const MObject& originalObject, std::vector<int>& outFaceMaterialIndices);
 
 	private:
 

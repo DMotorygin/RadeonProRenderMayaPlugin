@@ -306,7 +306,8 @@ protected:
 
 	struct
 	{
-		std::vector<FrElement> elements;
+		std::vector<FrElement> elements; // should be always only 1, but keeping array for now for backward compatibility
+		std::vector<int> faceMaterialIndices;
 		bool isEmissive = false;
 		bool isMainInstance = false;
 		struct
@@ -321,7 +322,6 @@ protected:
 	// this is the limitation of Maya's relationship editor
 	// thus, it is correct to match filename with UV map index
 	std::unordered_map<std::string /*texture file name*/, unsigned int /*UV map index*/ > m_uvSetCachedMappingData;
-
 };
 
 // Fire render mesh

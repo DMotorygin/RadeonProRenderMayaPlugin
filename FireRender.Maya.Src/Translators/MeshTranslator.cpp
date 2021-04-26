@@ -80,7 +80,10 @@ bool FireMaya::MeshTranslator::MeshPolygonData::Initialize(const MFnMesh& fnMesh
 	return true;
 }
 
-std::vector<frw::Shape> FireMaya::MeshTranslator::TranslateMesh(const frw::Context& context, const MObject& originalObject)
+std::vector<frw::Shape> FireMaya::MeshTranslator::TranslateMesh(
+	const frw::Context& context, 
+	const MObject& originalObject, 
+	std::vector<int>& outFaceMaterialIndices)
 {
 	MAIN_THREAD_ONLY;
 
@@ -136,11 +139,10 @@ std::vector<frw::Shape> FireMaya::MeshTranslator::TranslateMesh(const frw::Conte
 		return resultShapes;
 	}
 
-	// get number of submeshes in mesh (number of materials used in this mesh)
+	// get number of materials used in this mesh
 	MIntArray faceMaterialIndices;
 	int elementCount = GetFaceMaterials(fnMesh, faceMaterialIndices);
-	resultShapes.resize(elementCount);
-	assert(faceMaterialIndices.length() == fnMesh.numPolygons());
+	resultShapes.resize(1 /*elementCount*/);
 
 	// get common data from mesh
 	MeshPolygonData meshPolygonData;
@@ -154,18 +156,20 @@ std::vector<frw::Shape> FireMaya::MeshTranslator::TranslateMesh(const frw::Conte
 	}
 
 	// use special case TranslateMesh that is optimized for 1 shader
-	if (elementCount == 1)
+	//if (elementCount == 1)
 	{
-		SingleShaderMeshTranslator::TranslateMesh(context, fnMesh, resultShapes, meshPolygonData);
+		SingleShaderMeshTranslator::TranslateMesh(
+			context, fnMesh, resultShapes, meshPolygonData, faceMaterialIndices, outFaceMaterialIndices
+		);
 #ifdef OPTIMIZATION_CLOCK
 		std::chrono::steady_clock::time_point fin = std::chrono::steady_clock::now();
 		std::chrono::milliseconds elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(fin - start);
 #endif
 	}
-	else
-	{
-		MultipleShaderMeshTranslator::TranslateMesh(context, fnMesh, resultShapes, meshPolygonData, faceMaterialIndices);
-	}
+	//else
+	//{
+	//	MultipleShaderMeshTranslator::TranslateMesh(context, fnMesh, resultShapes, meshPolygonData, faceMaterialIndices);
+	//}
 
 	// Now remove any temporary mesh we created.
 	if (!tessellated.isNull())

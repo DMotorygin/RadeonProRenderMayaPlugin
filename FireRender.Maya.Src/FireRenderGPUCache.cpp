@@ -208,18 +208,18 @@ void FireRenderGPUCache::ProcessShaders()
 	for (int i = 0; i < m.elements.size(); i++)
 	{
 		auto& element = m.elements[i];
-		element.shader = context->GetShader(getSurfaceShader(element.shadingEngine), element.shadingEngine, this);
+		//element.shader = context->GetShader(getSurfaceShader(element.shadingEngine), element.shadingEngine, this);
 
 		if (element.shape)
 		{
-			element.shape.SetShader(element.shader);
-
-			frw::ShaderType shType = element.shader.GetShaderType();
-			if (shType == frw::ShaderTypeEmissive)
-				m.isEmissive = true;
-
-			if ((shType == frw::ShaderTypeRprx) && (IsUberEmissive(element.shader)))
-				m.isEmissive = true;
+//			element.shape.SetShader(element.shader);
+//
+//			frw::ShaderType shType = element.shader.GetShaderType();
+//			if (shType == frw::ShaderTypeEmissive)
+//				m.isEmissive = true;
+//
+//			if ((shType == frw::ShaderTypeRprx) && (IsUberEmissive(element.shader)))
+//				m.isEmissive = true;
 		}
 	}
 }
@@ -538,14 +538,14 @@ void FireRenderGPUCache::RegisterCallbacks()
 
 	for (auto& it : m.elements)
 	{
-		if (!it.shadingEngine.isNull())
-		{
-			MObject shaderOb = getSurfaceShader(it.shadingEngine);
-			if (!shaderOb.isNull())
-			{
-				AddCallback(MNodeMessage::addNodeDirtyCallback(shaderOb, ShaderDirtyCallback, this));
-			}
-		}
+		//if (!it.shadingEngine.isNull())
+		//{
+		//	MObject shaderOb = getSurfaceShader(it.shadingEngine);
+		//	if (!shaderOb.isNull())
+		//	{
+		//		AddCallback(MNodeMessage::addNodeDirtyCallback(shaderOb, ShaderDirtyCallback, this));
+		//	}
+		//}
 	}
 }
 
