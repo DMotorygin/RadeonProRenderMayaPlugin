@@ -136,33 +136,6 @@ void FireRenderObject::Dump(const MObject& ob, int depth, int maxDepth)
 	}
 }
 
-HashValue FireRenderObject::GetHash(const MObject& ob)
-{
-	HashValue hash;
-	hash << ob;
-	return hash;
-}
-
-HashValue FireRenderObject::CalculateHash()
-{
-	return GetHash(Object());
-}
-
-HashValue FireRenderNode::CalculateHash()
-{
-	HashValue hash = FireRenderObject::CalculateHash();
-	auto dagPath = DagPath();
-
-	MString name = dagPath.fullPathName();
-
-	if (dagPath.isValid())
-	{
-		hash << dagPath.isVisible();
-		hash << 0; // dagPath.inclusiveMatrix();
-	}
-	return hash;
-}
-
 void FireRenderNode::MarkDirtyTransformRecursive(const MFnTransform& transform)
 {
 	unsigned int childCount = transform.childCount();
@@ -253,111 +226,10 @@ MMatrix FireRenderNode::GetSelfTransform()
 	return DagPath().inclusiveMatrix();
 }
 
-HashValue GetHashValue(const MPlug& plug)
-{
-	HashValue hash;
-	MFnAttribute attr(plug.attribute());
-
-	if (!attr.isWritable() || attr.isDynamic())
-		return hash;
-
-	if (plug.isArray())
-		return hash;
-
-	if (plug.isIgnoredWhenRendering())
-		return hash;
-
-	if (!plug.isKeyable())
-		return hash;
-
-	auto data = plug.asMDataHandle();
-
-	auto type = data.type();
-	hash << type;
-
-	switch (type)
-	{
-	case MFnData::kNumeric:
-	{
-		switch (data.numericType())
-		{
-		case MFnNumericData::kBoolean:
-			hash << data.asBool();
-			break;
-		case MFnNumericData::kInt:
-			hash << data.asInt();
-			break;
-		case MFnNumericData::kChar:
-			hash << data.asChar();
-			break;
-		case MFnNumericData::kShort:
-			hash << data.asShort();
-			break;
-		case MFnNumericData::kByte:
-			hash << data.asInt();
-			break;
-		case MFnNumericData::k2Short:
-			hash << data.asShort2();
-			break;
-		case MFnNumericData::k3Short:
-			hash << data.asShort3();
-			break;
-		case MFnNumericData::k2Int:
-			hash << data.asInt2();
-			break;
-		case MFnNumericData::k3Int:
-			hash << data.asInt3();
-			break;
-		case MFnNumericData::kFloat:
-			hash << data.asFloat();
-			break;
-		case MFnNumericData::k2Float:
-			hash << data.asFloat2();
-			break;
-		case MFnNumericData::k3Float:
-			hash << data.asFloat3();
-			break;
-		case MFnNumericData::kDouble:
-			hash << data.asDouble();
-			break;
-		case MFnNumericData::k2Double:
-			hash << data.asDouble2();
-			break;
-		case MFnNumericData::k3Double:
-			hash << data.asDouble3();
-			break;
-#ifndef MAYA2015
-		case MFnNumericData::kInt64:
-			hash << data.asInt64();
-			break;
-#endif
-		default: break;
-		}
-	} break;
-
-	case MFnData::kMatrix:
-	{
-		hash << data.asMatrix();
-	}	break;
-	case MFnData::kDoubleArray:
-	case MFnData::kFloatArray:
-	case MFnData::kIntArray:
-	case MFnData::kPointArray:
-	case MFnData::kVectorArray:
-
-	default:
-		break;
-	}
-
-
-	return hash;
-}
-
 void FireRenderObject::Freshen()
 {
 	if (m.callbackId.empty())
 		RegisterCallbacks();
-	m.hash = CalculateHash();
 }
 
 void FireRenderObject::clear()
@@ -1685,16 +1557,6 @@ void FireRenderMesh::Freshen()
 {
 	Rebuild();
 	FireRenderNode::Freshen();
-}
-
-HashValue FireRenderMesh::CalculateHash()
-{
-	auto hash = FireRenderNode::CalculateHash();
-	for (auto& e : m.elements)
-	{
-		hash << e.shadingEngine;
-	}
-	return hash;
 }
 
 //===================

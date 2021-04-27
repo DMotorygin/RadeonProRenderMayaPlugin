@@ -721,9 +721,8 @@ MStatus FireRenderViewport::renderCached(unsigned int width, unsigned int height
 	try
 	{
 		// Get the frame hash.
-		auto hash = m_contextPtr->GetStateHash();
 		stringstream ss;
-		ss << m_panelName.asChar() << ";" << size_t(hash);
+		ss << m_panelName.asChar() << ";" ;
 
 		// Get the frame for the hash.
 		auto& frame = m_textureCache[ss.str().c_str()];

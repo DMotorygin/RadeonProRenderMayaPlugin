@@ -28,52 +28,6 @@ limitations under the License.
 class FireRenderContext;
 class SkyBuilder;
 
-class HashValue
-{
-	const static size_t BigDumbPrime = 0x1fffffffffffffff;
-	size_t value = 0;
-
-	template<class T>
-	size_t HashItems(const T* v, int count, size_t ret)
-	{
-		auto n = sizeof(T) * count;
-		auto p = reinterpret_cast<const unsigned char*>(v);
-
-		if (!p)
-			return (ret >> 17 | ret << 47) ^ ((n + ret) * BigDumbPrime);
-
-		for (int i = 0; i < n; i++)
-			ret = (ret >> 17 | ret << 47) ^ ((p[i] + i + 1 + ret) * BigDumbPrime);
-
-		return ret;
-	}
-
-public:
-	HashValue(size_t v = 0) : value(v) {}
-
-	bool operator==(const HashValue& h) const { return value == h.value; }
-	bool operator!=(const HashValue& h) const { return value != h.value; }
-
-	template <class T>
-	HashValue& operator<<(const T& v)
-	{
-		value = HashItems(&v, 1, value);
-		return *this;
-	}
-
-	template <class T>
-	void Append(const T* v, int count)
-	{
-		value = HashItems(v, count, value);
-	}
-
-	operator size_t() const { return value; }
-	operator int() const
-	{
-		return  int((value >> 32) ^ value);
-	}
-};
-
 // FireRenderObject
 // Base class for each translated object
 class FireRenderObject
@@ -90,7 +44,6 @@ protected:
 		FireRenderContext* context = nullptr;
 		std::string uuid;
 		MObject		object;
-		HashValue	hash;
 		unsigned int instance = 0;
 	} m;
 public:
@@ -115,15 +68,11 @@ public:
 	void setDirty();
 
 	static void Dump(const MObject& ob, int depth = 0, int maxDepth = 4);
-	static HashValue GetHash(const MObject& ob);
 
 	static std::string uuidWithoutInstanceNumberForString(const std::string& uuid);
 
 	// update fire render objects using Maya objects, then marks as clean
 	virtual void Freshen();
-
-	// hash is generated during Freshen call
-	HashValue GetStateHash() { return m.hash; }
 
 	// Return the render context
 	FireRenderContext* context() { return m.context; }
@@ -174,8 +123,6 @@ protected:
 	static void plugDirty_callback(MObject& node, MPlug& plug, void* clientData);
 	void SetAllChildrenDirty();
 
-	virtual HashValue CalculateHash();
-
 public:
 	bool m_isPortal_IBL;
 	bool m_isPortal_SKY;
@@ -204,7 +151,6 @@ public:
 	// transform change callback
 	// Plug dirty
 	virtual void OnPlugDirty(MObject& node, MPlug &plug) override;
-	virtual HashValue CalculateHash() override;
 
 	virtual void OnWorldMatrixChanged();
 	static void WorldMatrixChangedCallback(MObject& transformNode, MDagMessage::MatrixModifiedFlags& modified, void* clientData);
@@ -382,12 +328,6 @@ private:
 	void GetShapes(std::vector<frw::Shape>& outShapes);
 	
 	bool IsSelected(const MDagPath& dagPath) const;
-
-	// A mesh in Maya can have multiple shaders
-	// in fr it must be split in multiple shapes
-	// so this return the list of all the fr_shapes created for this Maya mesh
-
-	virtual HashValue CalculateHash() override;
 };
 
 // Fire render light

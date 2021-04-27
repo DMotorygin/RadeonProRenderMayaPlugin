@@ -2315,7 +2315,7 @@ bool FireRenderContext::AddSceneObject(const MDagPath& dagPath)
 		else if (dagNode.typeName() == "transform")
 		{
 			MString objname = dagNode.name();
-			//ob = CreateSceneObject<FireRenderNode, NodeCachingOptions::AddPath>(dagPath);
+			ob = CreateSceneObject<FireRenderNode, NodeCachingOptions::AddPath>(dagPath);
 		}
 #ifdef WIN32
 		else if (dagNode.typeName() == "gpuCache")
@@ -2402,21 +2402,6 @@ void FireRenderContext::setDirtyObject(FireRenderObject* obj)
 			m_dirtyObjects[obj] = ptr;
 		}
 	}
-}
-
-HashValue FireRenderContext::GetStateHash()
-{
-	HashValue hash(size_t(this));
-
-	for (auto& it : m_sceneObjects)
-	{
-		if (it.second)
-			hash << it.second->GetStateHash();
-	}
-
-	hash << m_camera.GetStateHash();
-
-	return hash;
 }
 
 void FireRenderContext::UpdateTimeAndTriggerProgressCallback(ContextWorkProgressData& syncProgressData, ProgressType progressType)
@@ -2557,9 +2542,6 @@ bool FireRenderContext::Freshen(bool lock, std::function<bool()> cancelled)
 	updateRenderLayers();
 
 	m_dirty = false;
-
-	auto hash = GetStateHash();
-	DebugPrint("Hash Value: %08X", int(hash));
 
 	m_inRefresh = false;
 

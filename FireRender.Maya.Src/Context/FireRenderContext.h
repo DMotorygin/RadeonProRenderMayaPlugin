@@ -459,8 +459,6 @@ public:
 	bool Freshen(bool lock = true,
 		std::function<bool()> cancelled = [] { return false; });
 
-	HashValue GetStateHash();
-
 	// Add a node to the scene.
 	void addNode(const MObject& node);
 
