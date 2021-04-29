@@ -2404,6 +2404,21 @@ void FireRenderContext::setDirtyObject(FireRenderObject* obj)
 	}
 }
 
+HashValue FireRenderContext::GetStateHash()
+{
+	HashValue hash(size_t(this));
+
+	for (auto& it : m_sceneObjects)
+	{
+		if (it.second)
+			hash << it.second->GetStateHash();
+	}
+
+	hash << m_camera.GetStateHash();
+
+	return hash;
+}
+
 void FireRenderContext::UpdateTimeAndTriggerProgressCallback(ContextWorkProgressData& syncProgressData, ProgressType progressType)
 {
 	if (progressType != ContextWorkProgressData::ProgressType::Unknown)
@@ -2542,6 +2557,9 @@ bool FireRenderContext::Freshen(bool lock, std::function<bool()> cancelled)
 	updateRenderLayers();
 
 	m_dirty = false;
+
+	auto hash = GetStateHash();
+	DebugPrint("Hash Value: %08X", int(hash));
 
 	m_inRefresh = false;
 
