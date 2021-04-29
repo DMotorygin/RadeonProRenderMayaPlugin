@@ -3854,23 +3854,9 @@ namespace frw
 		return data().shader.As<Shader>();
 	}
 
+	// note that old shaders must be removed before this function is called!
 	inline void Shape::SetPerFaceShader(Shader shader, std::vector<int>& face_ids)
 	{
-		// remove old
-		if (Shader old = GetShader())
-		{
-			RemoveReference(old);
-			old.DetachFromShape(data());
-		}
-
-		for (auto& it = data().shaders.begin(); it != data().shaders.end(); ++it)
-		{
-			Shader oldShader = it->As<Shader>();
-			RemoveReference(oldShader);
-			oldShader.DetachFromShape(data());
-		}
-		data().shaders.clear();
-
 		AddReference(shader);
 		data().shaders.push_back(shader);
 		shader.AttachToShape(data(), face_ids);

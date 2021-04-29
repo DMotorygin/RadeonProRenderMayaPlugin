@@ -1269,6 +1269,8 @@ void FireRenderMesh::ProcessMesh(const MDagPath& meshPath)
 		if (!element.shape)
 			continue;
 
+		element.shape.SetShader(nullptr);
+
 		for (unsigned int shaderIdx = 0; shaderIdx < element.shadingEngine.size(); ++shaderIdx)
 		{
 			MObject& shadingEngine = element.shadingEngine[shaderIdx];
@@ -1286,9 +1288,19 @@ void FireRenderMesh::ProcessMesh(const MDagPath& meshPath)
 			element.shape.SetPerFaceShader(element.shaders.back(), face_ids);
 		}
 
-		//element.shader = context->GetShader(getSurfaceShader(element.shadingEngine), element.shadingEngine, this);
+		MObject volumeShader = MObject::kNullObj;
+		for (auto& it : element.shadingEngine)
+		{
+			volumeShader = getVolumeShader(it);
 
-		//element.volumeShader = context->GetVolumeShader(getVolumeShader(element.shadingEngine));
+			if (volumeShader != MObject::kNullObj)
+				break;
+		}
+
+		if (volumeShader != MObject::kNullObj)
+		{
+			element.volumeShader = context->GetVolumeShader(getVolumeShader(volumeShader));
+		}
 		//
 		//if (context->IsDisplacementSupported())
 		//{
@@ -1299,11 +1311,11 @@ void FireRenderMesh::ProcessMesh(const MDagPath& meshPath)
 		//	element.volumeShader = context->GetVolumeShader(getSurfaceShader(element.shadingEngine));
 
 		// if no valid surface shader, we should set to transparent in case of volumes present
-		//if (element.volumeShader)
-		//{
-		//	if (!element.shader || element.shader == element.volumeShader)	// also catch case where volume assigned to surface
-		//		element.shader = frw::TransparentShader(context->GetMaterialSystem());
-		//}
+		if (element.volumeShader)
+		{
+			if (!element.shader || element.shader == element.volumeShader)	// also catch case where volume assigned to surface
+				element.shader = frw::TransparentShader(context->GetMaterialSystem());
+		}
 
 		//if (element.shape)
 		//{
