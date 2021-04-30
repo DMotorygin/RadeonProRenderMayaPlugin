@@ -158,7 +158,7 @@ HashValue FireRenderNode::CalculateHash()
 	if (dagPath.isValid())
 	{
 		hash << dagPath.isVisible();
-		hash << 0; // dagPath.inclusiveMatrix();
+		hash << dagPath.inclusiveMatrix();
 	}
 	return hash;
 }
@@ -357,7 +357,11 @@ void FireRenderObject::Freshen()
 {
 	if (m.callbackId.empty())
 		RegisterCallbacks();
-	m.hash = CalculateHash();
+
+	if (m.context->GetRenderType() == RenderType::ViewportRender)
+	{
+		m.hash = CalculateHash();
+	}
 }
 
 void FireRenderObject::clear()
