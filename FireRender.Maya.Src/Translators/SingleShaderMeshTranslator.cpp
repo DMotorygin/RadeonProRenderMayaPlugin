@@ -135,46 +135,96 @@ void FireMaya::SingleShaderMeshTranslator::AddPolygonSingleShader(
 	mayaStatus = meshPolygonIterator.getVertices(vertices);
 	assert(MStatus::kSuccess == mayaStatus);
 
-	// get indices of vertices of triangles of current polygon
-	// - these are indices of verts in triangles!
-	MIntArray trianglesVertexList;
-	MPointArray points;
-	mayaStatus = meshPolygonIterator.getTriangles(points, trianglesVertexList);
-	assert(MStatus::kSuccess == mayaStatus);
-
-#ifdef OPTIMIZATION_CLOCK
-	std::chrono::steady_clock::time_point fin_1GetData = std::chrono::steady_clock::now();
-	std::chrono::nanoseconds elapsed_1GetData = std::chrono::duration_cast<std::chrono::nanoseconds>(fin_1GetData - start_Vtx);
-	FireRenderContext::timeGetDataFromMaya += elapsed_1GetData.count();
-#endif
-
-	// write indices of triangles in mesh into output triangle indices array
-	for (unsigned int globalVertexIndex = 0; globalVertexIndex < trianglesVertexList.length(); ++globalVertexIndex)
-	{
-		outTriangleVertexIndices.push_back(trianglesVertexList[globalVertexIndex]);
-	}
-
-	// create table to convert global index in vertex indices array to local one [0...number of vertex in polygon]
-	std::map<int, int> vertexIndexGlobalToLocal;
-
+	// vertex colors
 	MColorArray polygonColors;
 	meshPolygonIterator.getColors(polygonColors);
 
-	for (unsigned localVertexIndex = 0; localVertexIndex < vertices.length(); ++localVertexIndex)
+	// polygon isConvex => don't need to get local indices from Maya
+	if (!meshPolygonIterator.isConvex())
 	{
-		unsigned globalVertexIndex = vertices[localVertexIndex];
-		vertexIndexGlobalToLocal[globalVertexIndex] = localVertexIndex;
-		
-		if (polygonColors.length() > localVertexIndex)
+		// get indices of vertices of triangles of current polygon
+		// - these are indices of verts in triangles!
+		MIntArray trianglesVertexList;
+		MPointArray points;
+		mayaStatus = meshPolygonIterator.getTriangles(points, trianglesVertexList);
+		assert(MStatus::kSuccess == mayaStatus);
+
+#ifdef OPTIMIZATION_CLOCK
+		std::chrono::steady_clock::time_point fin_1GetData = std::chrono::steady_clock::now();
+		std::chrono::nanoseconds elapsed_1GetData = std::chrono::duration_cast<std::chrono::nanoseconds>(fin_1GetData - start_Vtx);
+		FireRenderContext::timeGetDataFromMaya += elapsed_1GetData.count();
+#endif
+
+		// write indices of triangles in mesh into output triangle indices array
+		for (unsigned int globalVertexIndex = 0; globalVertexIndex < trianglesVertexList.length(); ++globalVertexIndex)
 		{
-			outVertexColors[globalVertexIndex] = polygonColors[localVertexIndex];
-			outColorVertexIndices[globalVertexIndex] = globalVertexIndex;
-		} 
+			outTriangleVertexIndices.push_back(trianglesVertexList[globalVertexIndex]);
+		}
+	
+		// create table to convert global index in vertex indices array to local one [0...number of vertex in polygon]
+		std::map<int, int> vertexIndexGlobalToLocal;
+
+		for (unsigned localVertexIndex = 0; localVertexIndex < vertices.length(); ++localVertexIndex)
+		{
+			unsigned globalVertexIndex = vertices[localVertexIndex];
+			vertexIndexGlobalToLocal[globalVertexIndex] = localVertexIndex;
+
+			if (polygonColors.length() > localVertexIndex)
+			{
+				outVertexColors[globalVertexIndex] = polygonColors[localVertexIndex];
+				outColorVertexIndices[globalVertexIndex] = globalVertexIndex;
+			}
+		}
+
+		FillNormalsIndices(trianglesVertexList, vertexIndexGlobalToLocal, meshPolygonIterator, outNormalIndices);
+
+		FillIndicesUV(uvSetCount, trianglesVertexList, vertexIndexGlobalToLocal, uvSetNames, meshPolygonIterator, outIndicesUV);
 	}
+	else
+	{
+		// don't need table for convex polygons
+		unsigned int countTriangles = vertices.length() - 2;
+		for (unsigned triangleIdx = 0; triangleIdx < countTriangles; ++triangleIdx)
+		{
+			unsigned int localIndices[3] = {0, 1 + triangleIdx, 2 + triangleIdx};
 
-	FillNormalsIndices(trianglesVertexList, vertexIndexGlobalToLocal, meshPolygonIterator, outNormalIndices);
+			for (unsigned localIdx : localIndices)
+			{
+				// triangle indices
+				outTriangleVertexIndices.push_back(vertices[localIdx]);
 
-	FillIndicesUV(uvSetCount, trianglesVertexList, vertexIndexGlobalToLocal, uvSetNames, meshPolygonIterator, outIndicesUV);
+				// normal indices
+				outNormalIndices.push_back(meshPolygonIterator.normalIndex(localIdx));
+
+				// vertex colors
+				if (polygonColors.length() > 0)
+				{
+					//outVertexColors[globalVertexIndex] = polygonColors[localVertexIndex];
+					outVertexColors[vertices[localIdx]] = polygonColors[localIdx];
+					//outColorVertexIndices[globalVertexIndex] = globalVertexIndex;
+					outColorVertexIndices[vertices[localIdx]] = vertices[localIdx];
+				}
+
+				// uv coordinates
+				for (unsigned int currentChannelUV = 0; currentChannelUV < uvSetCount; ++currentChannelUV)
+				{
+					const MString& name = uvSetNames[currentChannelUV];
+					int uvIndex = 0;
+					MStatus status = meshPolygonIterator.getUVIndex(localIdx, uvIndex, &name);
+
+					if (status == MStatus::kSuccess)
+					{
+						outIndicesUV[currentChannelUV].push_back(uvIndex);
+					}
+					else
+					{
+						// in case if uv coordinate not assigned to polygon set it index to 0
+						outIndicesUV[currentChannelUV].push_back(0);
+					}
+				}
+			}
+		}
+	}
 
 #ifdef OPTIMIZATION_CLOCK
 	std::chrono::steady_clock::time_point fin_Vtx = std::chrono::steady_clock::now();
