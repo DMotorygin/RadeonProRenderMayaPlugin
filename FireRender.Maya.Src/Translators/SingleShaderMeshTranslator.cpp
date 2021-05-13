@@ -18,15 +18,15 @@ void FireMaya::SingleShaderMeshTranslator::TranslateMesh(
 	std::vector<frw::Shape>& elements,
 	MeshTranslator::MeshPolygonData& meshData)
 {
-	// output indices of vertexes (3 indices for each triangle)
-	std::vector<int> triangleVertexIndices;
-	triangleVertexIndices.reserve(meshData.triangleVertexIndicesCount);
+	// output indices of vertexes (3 indices for each triangle, 4 for quads)
+	std::vector<int> faceVertexIndices;
+	faceVertexIndices.reserve(meshData.triangleVertexIndicesCount);
 
-	// output indices of normals (3 indices for each triangle)
-	std::vector<int> triangleNormalIndices;
-	triangleNormalIndices.reserve(meshData.triangleVertexIndicesCount);
+	// output indices of normals (3 indices for each triangle, 4 for quads)
+	std::vector<int> faceNormalIndices;
+	faceNormalIndices.reserve(meshData.triangleVertexIndicesCount);
 
-	// output indices of UV coordinates (3 indices for each triangle)
+	// output indices of UV coordinates (3 indices for each triangle, 4 for quads)
 	// up to 2 UV channels is supported, thus vector of vectors
 	std::vector<std::vector<int>> uvIndices;
 	unsigned int uvSetCount = meshData.uvSetNames.length();
@@ -42,6 +42,8 @@ void FireMaya::SingleShaderMeshTranslator::TranslateMesh(
 	std::vector<int> vertexIndices;
 	vertexIndices.resize(meshData.countVertices);
 
+	std::vector<int> numFaceVertices; // std::vector<int>(triangleVertexIndices.size() / 3, 3)
+
 	// iterate through mesh
 
 #ifdef OPTIMIZATION_CLOCK
@@ -53,7 +55,7 @@ void FireMaya::SingleShaderMeshTranslator::TranslateMesh(
 		std::chrono::steady_clock::time_point start_inner_AddPolygon = std::chrono::steady_clock::now();
 #endif
 
-		AddPolygonSingleShader(it, meshData.uvSetNames, triangleVertexIndices, triangleNormalIndices, uvIndices, vertexColors, vertexIndices);
+		AddPolygonSingleShader(it, meshData.uvSetNames, faceVertexIndices, faceNormalIndices, uvIndices, vertexColors, vertexIndices, numFaceVertices);
 
 #ifdef OPTIMIZATION_CLOCK
 		std::chrono::steady_clock::time_point fin_inner_AddPolygon = std::chrono::steady_clock::now();
@@ -96,10 +98,10 @@ void FireMaya::SingleShaderMeshTranslator::TranslateMesh(
 		meshData.pNormals, meshData.countNormals, sizeof(Float3),
 		nullptr, 0, 0,
 		uvSetCount, meshData.puvCoords.data(), meshData.sizeCoords.data(), multiUV_texcoord_strides.data(),
-		triangleVertexIndices.data(), sizeof(rpr_int),
-		triangleNormalIndices.data(), sizeof(rpr_int),
+		faceVertexIndices.data(), sizeof(rpr_int),
+		faceNormalIndices.data(), sizeof(rpr_int),
 		puvIndices.data(), texIndexStride.data(),
-		std::vector<int>(triangleVertexIndices.size() / 3, 3).data(), triangleVertexIndices.size() / 3, fnMesh.name().asChar());
+		numFaceVertices.data(), numFaceVertices.size(), fnMesh.name().asChar());
 
 	if (!vertexColors.empty())
 	{
@@ -120,7 +122,8 @@ void FireMaya::SingleShaderMeshTranslator::AddPolygonSingleShader(
 	std::vector<int>& outNormalIndices,
 	std::vector<std::vector<int> >& outIndicesUV,
 	std::vector<MColor>& outVertexColors,
-	std::vector<int>& outColorVertexIndices)
+	std::vector<int>& outColorVertexIndices,
+	std::vector<int>& numFaceVertices)
 {
 	MStatus mayaStatus;
 
@@ -139,6 +142,47 @@ void FireMaya::SingleShaderMeshTranslator::AddPolygonSingleShader(
 	MColorArray polygonColors;
 	meshPolygonIterator.getColors(polygonColors);
 
+	if (vertices.length() == 4) // this is quad
+	{
+		numFaceVertices.push_back(4);
+
+		for (unsigned int vtxIdx = 0; vtxIdx < 4; ++vtxIdx)
+		{
+			// triangle indices
+			outTriangleVertexIndices.push_back(vertices[vtxIdx]);
+
+			// normal indices
+			outNormalIndices.push_back(meshPolygonIterator.normalIndex(vtxIdx));
+
+			// vertex colors
+			if (polygonColors.length() > 0)
+			{
+				outVertexColors[vertices[vtxIdx]] = polygonColors[vtxIdx];
+				outColorVertexIndices[vertices[vtxIdx]] = vertices[vtxIdx];
+			}
+
+			// uv coordinates
+			for (unsigned int currentChannelUV = 0; currentChannelUV < uvSetCount; ++currentChannelUV)
+			{
+				const MString& name = uvSetNames[currentChannelUV];
+				int uvIndex = 0;
+				MStatus status = meshPolygonIterator.getUVIndex(vtxIdx, uvIndex, &name);
+
+				if (status == MStatus::kSuccess)
+				{
+					outIndicesUV[currentChannelUV].push_back(uvIndex);
+				}
+				else
+				{
+					// in case if uv coordinate not assigned to polygon set it index to 0
+					outIndicesUV[currentChannelUV].push_back(0);
+				}
+			}
+		}
+
+		return;
+	}
+
 	// polygon isConvex => don't need to get local indices from Maya
 	if (!meshPolygonIterator.isConvex())
 	{
@@ -148,6 +192,9 @@ void FireMaya::SingleShaderMeshTranslator::AddPolygonSingleShader(
 		MPointArray points;
 		mayaStatus = meshPolygonIterator.getTriangles(points, trianglesVertexList);
 		assert(MStatus::kSuccess == mayaStatus);
+
+		for (int idx = 0; idx < trianglesVertexList.length() / 3; ++idx)
+			numFaceVertices.push_back(3);
 
 #ifdef OPTIMIZATION_CLOCK
 		std::chrono::steady_clock::time_point fin_1GetData = std::chrono::steady_clock::now();
@@ -186,6 +233,8 @@ void FireMaya::SingleShaderMeshTranslator::AddPolygonSingleShader(
 		unsigned int countTriangles = vertices.length() - 2;
 		for (unsigned triangleIdx = 0; triangleIdx < countTriangles; ++triangleIdx)
 		{
+			numFaceVertices.push_back(3);
+
 			unsigned int localIndices[3] = {0, 1 + triangleIdx, 2 + triangleIdx};
 
 			for (unsigned localIdx : localIndices)

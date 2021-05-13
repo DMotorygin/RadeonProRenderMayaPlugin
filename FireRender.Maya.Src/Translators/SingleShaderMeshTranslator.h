@@ -35,7 +35,8 @@ namespace FireMaya
 			std::vector<int>& normalIndices,
 			std::vector<std::vector<int>>& uvIndices,
 			std::vector<MColor>& vertexColors,
-			std::vector<int>& vertexIndices
+			std::vector<int>& vertexIndices,
+			std::vector<int>& numFaceVertices
 		);
 
 		static void FillIndicesUV(
