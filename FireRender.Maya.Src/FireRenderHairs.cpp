@@ -1153,8 +1153,6 @@ void FireRenderHairNHair::setRenderStats(MDagPath dagPath)
 	MPlug visibleInReflectionsPlug = depNode.findPlug("nhairVisibleInReflections");
 	if (!visibleInReflectionsPlug.isNull())
 	{
-		MString dbgName = visibleInReflectionsPlug.name();
-
 		bool visibleInReflections = false;
 		visibleInReflectionsPlug.getValue(visibleInReflections);
 		setReflectionVisibility(visibleInReflections);
