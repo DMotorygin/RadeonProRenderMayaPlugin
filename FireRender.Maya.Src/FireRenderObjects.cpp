@@ -726,26 +726,29 @@ void FireRenderMesh::RegisterCallbacks()
 
 	for (auto& it : m.elements)
 	{
-		/*if (!it.shadingEngine.isNull())
+		for (auto& shadingEngine : it.shadingEngine)
 		{
-			MObject shaderOb = getSurfaceShader(it.shadingEngine);
+			if (shadingEngine.isNull())
+				continue;
+
+			MObject shaderOb = getSurfaceShader(shadingEngine);
 			if (!shaderOb.isNull())
 			{
 				AddCallback(MNodeMessage::addNodeDirtyCallback(shaderOb, ShaderDirtyCallback, this));
 			}
 
-			MObject shaderDi = getDisplacementShader(it.shadingEngine);
+			MObject shaderDi = getDisplacementShader(shadingEngine);
 			if (!shaderDi.isNull())
 			{
 				AddCallback(MNodeMessage::addNodeDirtyCallback(shaderDi, ShaderDirtyCallback, this));
 			}
 
-			MObject shaderVolume = getVolumeShader(it.shadingEngine);
+			MObject shaderVolume = getVolumeShader(shadingEngine);
 			if (!shaderVolume.isNull())
 			{
 				AddCallback(MNodeMessage::addNodeDirtyCallback(shaderVolume, ShaderDirtyCallback, this));
 			}
-		}*/
+		}
 	}
 }
 
@@ -860,15 +863,19 @@ void FireRenderMeshCommon::setReflectionVisibility(bool reflectionVisibility)
 {
 	for (auto element : m.elements)
 	{
-		//if (element.shader.IsShadowCatcher() || element.shader.IsReflectionCatcher())
-		//{
-		//	if (auto shape = element.shape)
-		//		shape.SetReflectionVisibility(false);
-		//	continue;
-		//}
-		//
-		//if (auto shape = element.shape)
-		//	shape.SetReflectionVisibility(reflectionVisibility);
+		for (auto& shader : element.shaders) 
+		{
+			if (shader.IsShadowCatcher() || shader.IsReflectionCatcher())
+			{
+				if (auto shape = element.shape)
+					shape.SetReflectionVisibility(false);
+
+				break;
+			}
+
+			if (auto shape = element.shape)
+				shape.SetReflectionVisibility(reflectionVisibility);
+		}
 	}
 }
 
@@ -876,15 +883,19 @@ void FireRenderMeshCommon::setRefractionVisibility(bool refractionVisibility)
 {
 	for (auto element : m.elements)
 	{
-		//if (element.shader.IsShadowCatcher() || element.shader.IsReflectionCatcher())
-		//{
-		//	if (auto shape = element.shape)
-		//		shape.setRefractionVisibility(false);
-		//	continue;
-		//}
-		//
-		//if (auto shape = element.shape)
-		//	shape.setRefractionVisibility(refractionVisibility);
+		for (auto& shader : element.shaders)
+		{
+			if (shader.IsShadowCatcher() || shader.IsReflectionCatcher())
+			{
+				if (auto shape = element.shape)
+					shape.setRefractionVisibility(false);
+
+				break;
+			}
+			
+			if (auto shape = element.shape)
+				shape.setRefractionVisibility(refractionVisibility);
+		}
 	}
 }
 
