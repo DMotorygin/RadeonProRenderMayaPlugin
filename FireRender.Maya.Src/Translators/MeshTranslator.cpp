@@ -253,8 +253,10 @@ std::vector<frw::Shape> FireMaya::MeshTranslator::TranslateMesh(
 		return resultShapes;
 	}
 
-	// use special case TranslateMesh that is optimized for 1 shader
-	//if (elementCount == 1)
+	TahoePluginVersion version = GetTahoeVersionToUse();
+	bool isRPR20 = version == TahoePluginVersion::RPR2;
+
+	if (isRPR20)
 	{
 		SingleShaderMeshTranslator::TranslateMesh(
 			context, fnMesh, resultShapes, meshPolygonData, faceMaterialIndices, outFaceMaterialIndices
@@ -264,10 +266,10 @@ std::vector<frw::Shape> FireMaya::MeshTranslator::TranslateMesh(
 		std::chrono::milliseconds elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(fin - start);
 #endif
 	}
-	//else
-	//{
-	//	MultipleShaderMeshTranslator::TranslateMesh(context, fnMesh, resultShapes, meshPolygonData, faceMaterialIndices);
-	//}
+	else
+	{
+		MultipleShaderMeshTranslator::TranslateMesh(context, fnMesh, resultShapes, meshPolygonData, faceMaterialIndices);
+	}
 
 	// Now remove any temporary mesh we created.
 	if (!tessellated.isNull())

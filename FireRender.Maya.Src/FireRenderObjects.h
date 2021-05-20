@@ -366,7 +366,7 @@ public:
 
 	virtual bool IsEmissive() override { return m.isEmissive; }
 
-	void setupDisplacement(MObject shadingEngine, frw::Shape shape);
+	void setupDisplacement(std::vector<MObject>& shadingEngines, frw::Shape shape);
 	void Rebuild(void);
 	void ReloadMesh(const MDagPath& meshPath);
 	void ProcessMesh(const MDagPath& meshPath);
