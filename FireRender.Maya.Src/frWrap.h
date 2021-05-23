@@ -3844,7 +3844,7 @@ namespace frw
 			old.DetachFromShape(data());
 		}
 
-		for (auto& it = data().shaders.begin(); it != data().shaders.end(); ++it)
+		for (auto it = data().shaders.begin(); it != data().shaders.end(); ++it)
 		{
 			Shader oldShader = it->As<Shader>();
 			RemoveReference(oldShader);

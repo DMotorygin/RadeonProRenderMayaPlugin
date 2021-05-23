@@ -944,10 +944,10 @@ void FireRenderNode::RegisterCallbacks()
 	AddCallback(MDagMessage::addWorldMatrixModifiedCallback(dagPath, WorldMatrixChangedCallback, this));
 }
 
-void FireRenderMesh::setupDisplacement(std::vector<MObject>& shadingEngines, frw::Shape shape)
+bool FireRenderMesh::setupDisplacement(std::vector<MObject>& shadingEngines, frw::Shape shape)
 {
 	if (!shape)
-		return;
+		return false;
 
 	bool haveDisplacement = false;
 	
@@ -1098,7 +1098,7 @@ void FireRenderMesh::setupDisplacement(std::vector<MObject>& shadingEngines, frw
 					shape.SetSubdivisionCreaseWeight(params.creaseWeight);
 					shape.SetSubdivisionBoundaryInterop(params.boundary);
 
-					return;
+					return haveDisplacement;
 				}
 			}
 		}
@@ -1109,6 +1109,8 @@ void FireRenderMesh::setupDisplacement(std::vector<MObject>& shadingEngines, frw
 	{
 		shape.RemoveDisplacement();
 	}
+
+	return haveDisplacement;
 }
 
 void FireRenderMesh::ReloadMesh(const MDagPath& meshPath)
@@ -1294,7 +1296,12 @@ void FireRenderMesh::ProcessMesh(const MDagPath& meshPath)
 
 		element.shape.SetShader(nullptr);
 
-		for (unsigned int shaderIdx = 0; shaderIdx < element.shadingEngine.size(); ++shaderIdx)
+		if (context->IsDisplacementSupported())
+		{
+			setupDisplacement(element.shadingEngine, element.shape);
+		}
+
+		for (unsigned int shaderIdx = 0; shaderIdx < element.shadingEngine.size(); ++shaderIdx) // element.shadingEngine.size() is always 1 for RPR1
 		{
 			MObject& shadingEngine = element.shadingEngine[shaderIdx];
 			element.shaders.push_back(context->GetShader(getSurfaceShader(shadingEngine), shadingEngine, this));
@@ -1308,7 +1315,14 @@ void FireRenderMesh::ProcessMesh(const MDagPath& meshPath)
 					face_ids.push_back(faceIdx);
 			}
 
-			element.shape.SetPerFaceShader(element.shaders.back(), face_ids);
+			if (!face_ids.empty())
+			{
+				element.shape.SetPerFaceShader(element.shaders.back(), face_ids);
+			}
+			else
+			{
+				element.shape.SetShader(element.shaders.back());
+			}
 
 			frw::ShaderType shType = element.shaders.back().GetShaderType();
 			if (shType == frw::ShaderTypeEmissive)
@@ -1362,11 +1376,6 @@ void FireRenderMesh::ProcessMesh(const MDagPath& meshPath)
 				// also catch case where volume assigned to surface
 				element.shaders.push_back(frw::TransparentShader(context->GetMaterialSystem()));
 			}
-		}
-		
-		if (context->IsDisplacementSupported())
-		{
-			setupDisplacement(element.shadingEngine, element.shape);
 		}
 	}
 
@@ -1528,11 +1537,11 @@ void FireRenderMeshCommon::ForceShaderDirtyCallback(MObject& node, void* clientD
 
 	for (auto& it : self->m.elements)
 	{
-		//if (!it.shadingEngine.isNull())
-		//{
-		//	MObject shaderOb = getSurfaceShader(it.shadingEngine);
-		//	MGlobal::executeCommand("dgdirty " + MFnDependencyNode(shaderOb).name());
-		//}
+		for (auto& shadingEngine : it.shadingEngine)
+		{
+			MObject shaderOb = getSurfaceShader(shadingEngine);
+			MGlobal::executeCommand("dgdirty " + MFnDependencyNode(shaderOb).name());
+		}
 	}
 }
 
@@ -1671,7 +1680,6 @@ void FireRenderMeshCommon::AssignShadingEngines(const MObjectArray& shadingEngin
 	for (unsigned int i = 0; i < m.elements.size(); i++)
 	{
 		DumpMayaArray(m.elements[i].shadingEngine, shadingEngines);
-		//m.elements[i].shadingEngine = shadingEngines[i < shadingEngines.length() ? i : 0];
 	}
 }
 
