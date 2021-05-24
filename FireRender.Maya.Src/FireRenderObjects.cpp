@@ -1298,7 +1298,7 @@ void FireRenderMesh::ProcessMesh(const MDagPath& meshPath)
 
 		if (context->IsDisplacementSupported())
 		{
-			setupDisplacement(element.shadingEngine, element.shape);
+			bool haveDispl = setupDisplacement(element.shadingEngine, element.shape);
 		}
 
 		for (unsigned int shaderIdx = 0; shaderIdx < element.shadingEngine.size(); ++shaderIdx) // element.shadingEngine.size() is always 1 for RPR1

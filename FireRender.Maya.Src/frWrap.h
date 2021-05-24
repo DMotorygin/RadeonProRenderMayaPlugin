@@ -3470,6 +3470,21 @@ namespace frw
 			FRW_PRINT_DEBUG("\tShape.AttachMaterial: d: 0x%016llX - numAttachedShapes: %d shape=0x%016llX x_material=0x%016llX", &d, d.numAttachedShapes, shape.Handle(), Handle());
 			res = rprShapeSetMaterialFaces(shape.Handle(), Handle(), face_ids.data(), face_ids.size());
 			checkStatus(res);
+
+			if (d.isShadowCatcher)
+			{
+				res = rprShapeSetShadowCatcher(shape.Handle(), true);
+				if (res != RPR_ERROR_UNSUPPORTED)
+				{
+					checkStatus(res);
+				}
+			}
+
+			if (d.isReflectionCatcher)
+			{
+				res = rprShapeSetReflectionCatcher(shape.Handle(), true);
+				checkStatus(res);
+			}
 		}
 
 		void AttachToCurve(frw::Curve::Data& crv)
