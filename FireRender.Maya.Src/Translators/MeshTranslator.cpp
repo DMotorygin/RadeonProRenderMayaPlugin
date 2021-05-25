@@ -236,8 +236,7 @@ std::vector<frw::Shape> FireMaya::MeshTranslator::TranslateMesh(
 
 	// get number of materials used in this mesh
 	MIntArray faceMaterialIndices;
-	int elementCount = GetFaceMaterials(fnMesh, faceMaterialIndices);
-	resultShapes.resize(1 /*elementCount*/);
+	int materialCount = GetFaceMaterials(fnMesh, faceMaterialIndices);
 
 	// get common data from mesh
 	MeshPolygonData meshPolygonData;
@@ -259,6 +258,7 @@ std::vector<frw::Shape> FireMaya::MeshTranslator::TranslateMesh(
 
 	if (isRPR20)
 	{
+		resultShapes.resize(1);
 		SingleShaderMeshTranslator::TranslateMesh(
 			context, fnMesh, resultShapes, meshPolygonData, faceMaterialIndices, outFaceMaterialIndices
 		);
@@ -269,6 +269,7 @@ std::vector<frw::Shape> FireMaya::MeshTranslator::TranslateMesh(
 	}
 	else
 	{
+		resultShapes.resize(materialCount);
 		MultipleShaderMeshTranslator::TranslateMesh(context, fnMesh, resultShapes, meshPolygonData, faceMaterialIndices);
 	}
 

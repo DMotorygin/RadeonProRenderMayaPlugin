@@ -236,6 +236,8 @@ void FireMaya::MultipleShaderMeshTranslator::ReserveShaderData(
 	{
 		int shaderId = faceMaterialIndices[it.index()];
 
+		assert(shaderId < idxSizes.size());
+
 		idxSizes[shaderId].coords_size += coordsPerPolygon;
 		idxSizes[shaderId].indices_size += indicesPerPolygon;
 

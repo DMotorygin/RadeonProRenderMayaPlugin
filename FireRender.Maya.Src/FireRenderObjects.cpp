@@ -1131,7 +1131,6 @@ void FireRenderMesh::ReloadMesh(const MDagPath& meshPath)
 	if (IsMeshVisible(meshPath, this->context()))
 	{
 		GetShapes(shapes);
-		assert(shapes.size() <= 1);
 	}
 
 	m.elements.resize(shapes.size());
@@ -1287,7 +1286,8 @@ void FireRenderMesh::ProcessMesh(const MDagPath& meshPath)
 
 	MFnDependencyNode nodeFn(Object());
 
-	for (int i = 0; i < m.elements.size(); i++) // should be always only 1, but keeping array for now for backward compatibility
+	bool isRPR1 = m.elements.size() > 1;
+	for (int i = 0; i < m.elements.size(); i++) // should be always only 1 for RPR2, but keeping array for now for backward compatibility with RPR1
 	{
 		auto& element = m.elements[i];
 
@@ -1301,7 +1301,8 @@ void FireRenderMesh::ProcessMesh(const MDagPath& meshPath)
 			bool haveDispl = setupDisplacement(element.shadingEngine, element.shape);
 		}
 
-		for (unsigned int shaderIdx = 0; shaderIdx < element.shadingEngine.size(); ++shaderIdx) // element.shadingEngine.size() is always 1 for RPR1
+		unsigned int shaderIdx = isRPR1 ? i : 0;
+		for (; shaderIdx < element.shadingEngine.size(); ++shaderIdx)
 		{
 			MObject& shadingEngine = element.shadingEngine[shaderIdx];
 			element.shaders.push_back(context->GetShader(getSurfaceShader(shadingEngine), shadingEngine, this));
@@ -1329,11 +1330,16 @@ void FireRenderMesh::ProcessMesh(const MDagPath& meshPath)
 				m.isEmissive = true;
 
 			if (element.shaders.back().IsShadowCatcher() || element.shaders.back().IsReflectionCatcher())
-				continue;
+				break;
 
 			if ((shType == frw::ShaderTypeRprx) && (IsUberEmissive(element.shaders.back())))
 			{
 				m.isEmissive = true;
+			}
+
+			if (isRPR1)
+			{
+				break;
 			}
 		}
 
