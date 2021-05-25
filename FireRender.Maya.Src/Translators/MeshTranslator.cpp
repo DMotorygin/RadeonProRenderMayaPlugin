@@ -252,6 +252,8 @@ std::vector<frw::Shape> FireMaya::MeshTranslator::TranslateMesh(
 		return resultShapes;
 	}
 
+	outFaceMaterialIndices.clear();
+
 	TahoePluginVersion version = GetTahoeVersionToUse();
 	bool isRPR20 = version == TahoePluginVersion::RPR2;
 
