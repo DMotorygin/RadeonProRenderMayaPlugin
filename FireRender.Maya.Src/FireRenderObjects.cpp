@@ -1383,6 +1383,8 @@ void FireRenderMesh::ProcessMesh(const MDagPath& meshPath)
 				element.shaders.push_back(frw::TransparentShader(context->GetMaterialSystem()));
 			}
 		}
+
+		element.shape.SetVolumeShader(element.volumeShader);
 	}
 
 	RebuildTransforms();
