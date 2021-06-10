@@ -1307,11 +1307,11 @@ void FireRenderMesh::ProcessMesh(const MDagPath& meshPath)
 					face_ids.push_back(faceIdx);
 			}
 
-			if (!face_ids.empty())
-			{
-				element.shape.SetPerFaceShader(element.shaders.back(), face_ids);
-			}
-			else
+			//if (!face_ids.empty())
+			//{
+			//	element.shape.SetPerFaceShader(element.shaders.back(), face_ids);
+			//}
+			//else
 			{
 				element.shape.SetShader(element.shaders.back());
 			}
