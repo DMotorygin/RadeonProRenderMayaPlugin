@@ -1350,7 +1350,7 @@ void FireRenderMesh::ProcessMesh(const MDagPath& meshPath)
 
 		if (volumeShader != MObject::kNullObj)
 		{
-			element.volumeShader = context->GetVolumeShader(getVolumeShader(volumeShader));
+			element.volumeShader = context->GetVolumeShader(volumeShader);
 		}
 
 		if (!element.volumeShader)
