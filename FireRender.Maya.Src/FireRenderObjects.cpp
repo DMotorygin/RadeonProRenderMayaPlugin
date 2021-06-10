@@ -1296,7 +1296,12 @@ void FireRenderMesh::ProcessMesh(const MDagPath& meshPath)
 		for (; shaderIdx < element.shadingEngine.size(); ++shaderIdx)
 		{
 			MObject& shadingEngine = element.shadingEngine[shaderIdx];
-			element.shaders.push_back(context->GetShader(getSurfaceShader(shadingEngine), shadingEngine, this));
+
+			MObject surfaceShader = getSurfaceShader(shadingEngine);
+			if (surfaceShader.isNull())
+				continue;
+
+			element.shaders.push_back(context->GetShader(surfaceShader, shadingEngine, this));
 
 			std::vector<int>& faceMaterialIndices = m.faceMaterialIndices;
 			std::vector<int> face_ids;
@@ -1307,11 +1312,11 @@ void FireRenderMesh::ProcessMesh(const MDagPath& meshPath)
 					face_ids.push_back(faceIdx);
 			}
 
-			//if (!face_ids.empty())
-			//{
-			//	element.shape.SetPerFaceShader(element.shaders.back(), face_ids);
-			//}
-			//else
+			if (!face_ids.empty())
+			{
+				element.shape.SetPerFaceShader(element.shaders.back(), face_ids);
+			}
+			else
 			{
 				element.shape.SetShader(element.shaders.back());
 			}
