@@ -127,6 +127,7 @@ public:
 
 	// Return the render context
 	FireRenderContext* context() { return m.context; }
+	const FireRenderContext* context() const { return m.context; }
 
 	frw::Scene		Scene();
 	frw::Context	Context();
@@ -296,6 +297,9 @@ protected:
 
 	// Attach to the scene
 	virtual void attachToScene() override;
+
+	// materials
+	const std::vector<int>& GetFaceMaterialIndices(void) const;
 
 	// utility functions
 	void AssignShadingEngines(const MObjectArray& shadingEngines);

@@ -1114,7 +1114,7 @@ void FireRenderMesh::ReloadMesh(const MDagPath& meshPath)
 	MMatrix mMtx = meshPath.inclusiveMatrix();
 	setVisibility(false);
 
-	if (m.isMainInstance && m.elements.size() > 0)
+	if (IsMainInstance() && m.elements.size() > 0)
 	{
 		this->context()->RemoveMainMesh(this);
 	}
@@ -1303,7 +1303,7 @@ void FireRenderMesh::ProcessMesh(const MDagPath& meshPath)
 
 			element.shaders.push_back(context->GetShader(surfaceShader, shadingEngine, this));
 
-			std::vector<int>& faceMaterialIndices = m.faceMaterialIndices;
+			const std::vector<int>& faceMaterialIndices = GetFaceMaterialIndices();
 			std::vector<int> face_ids;
 			face_ids.reserve(faceMaterialIndices.size());
 			for (int faceIdx = 0; faceIdx < faceMaterialIndices.size(); ++faceIdx)
@@ -1753,6 +1753,19 @@ void FireRenderMeshCommon::ProcessMotionBlur(const MFnDagNode& meshFn)
 			}
 		}
 	}
+}
+
+const std::vector<int>& FireRenderMeshCommon::GetFaceMaterialIndices(void) const
+{
+	const FireRenderContext* context = this->context();
+	const FireRenderMeshCommon* mainMesh = context->GetMainMesh(uuid());
+
+	if (mainMesh != nullptr)
+	{
+		return mainMesh->m.faceMaterialIndices;
+	}
+
+	return m.faceMaterialIndices;
 }
 
 void FireRenderMesh::OnNodeDirty()
