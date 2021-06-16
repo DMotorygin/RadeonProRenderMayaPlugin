@@ -23,6 +23,8 @@ void FireMaya::MultipleShaderMeshTranslator::TranslateMesh(
 	std::vector<MeshTranslator::MeshIdxDictionary> shaderData;
 	shaderData.resize(outElements.size());
 
+	int size = fnMesh.numPolygons();
+
 	// reserve space for indices and coordinates
 	ReserveShaderData(fnMesh, shaderData.data(), faceMaterialIndices, outElements.size());
 
@@ -82,17 +84,22 @@ void FireMaya::MultipleShaderMeshTranslator::FillDictionaryWithColorData(
 	const MIntArray& indicesInPolygon,
 	MeshTranslator::MeshIdxDictionary& outMeshDictionary)
 {
+	// vertex colors
+	MColorArray polygonColors;
+	MStatus result = meshPolygonIterator.getColors(polygonColors);
+
 	// Save polygon color data into dictionary with corresponging indices
 	for (unsigned int localVertexIndex = 0; localVertexIndex < indicesInPolygon.length(); localVertexIndex++)
 	{
 		int globalVertexIndex = indicesInPolygon[localVertexIndex];
 		int coreVertexIndex = outMeshDictionary.vertexCoordsIndicesGlobalToDictionary[globalVertexIndex];
 
-		MColor result;
-		meshPolygonIterator.getColor(result, localVertexIndex);
-
-		outMeshDictionary.vertexColors.push_back(result);
-		outMeshDictionary.colorVertexIndices.push_back(coreVertexIndex);
+		if (polygonColors.length() > localVertexIndex)
+		{
+			outMeshDictionary.vertexColors.push_back(polygonColors[localVertexIndex]);
+			//outMeshDictionary.colorVertexIndices.push_back(coreVertexIndex);
+			outMeshDictionary.colorVertexIndices.push_back(globalVertexIndex);
+		}
 	}
 }
 
