@@ -39,10 +39,14 @@ void FireMaya::SingleShaderMeshTranslator::TranslateMesh(
 		uvIndices[currentChannelUV].reserve(meshData.triangleVertexIndicesCount);
 	}
 
+	MColorArray vtxColors;
+	const_cast<MFnMesh&>(fnMesh).getVertexColors(vtxColors);
+	unsigned int countVtxColors = vtxColors.length();
+
 	std::vector<MColor> vertexColors;
-	vertexColors.resize(meshData.countVertices);
+	vertexColors.resize(countVtxColors);
 	std::vector<int> colorVertexIndices;
-	colorVertexIndices.resize(meshData.countVertices);
+	colorVertexIndices.resize(countVtxColors);
 
 	std::vector<int> numFaceVertices;
 	numFaceVertices.reserve(faceVertexIndices.size() / 3); // in case all faces are triangles
