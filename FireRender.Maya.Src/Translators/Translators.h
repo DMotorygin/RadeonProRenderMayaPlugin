@@ -38,7 +38,7 @@ struct FrElement
 	frw::Shape	shape;
 	std::vector<frw::Shader> shaders;
 	frw::Shader volumeShader;
-	std::vector<MObject> shadingEngine;
+	std::vector<MObject> shadingEngines;
 
 	std::array<float, 16> TM; // extra transformation matrix
 };

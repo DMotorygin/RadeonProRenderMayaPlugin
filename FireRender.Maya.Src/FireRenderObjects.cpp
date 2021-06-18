@@ -722,7 +722,7 @@ void FireRenderMesh::RegisterCallbacks()
 
 	for (auto& it : m.elements)
 	{
-		for (auto& shadingEngine : it.shadingEngine)
+		for (auto& shadingEngine : it.shadingEngines)
 		{
 			if (shadingEngine.isNull())
 				continue;
@@ -1293,9 +1293,9 @@ void FireRenderMesh::ProcessMesh(const MDagPath& meshPath)
 		element.shape.SetShader(nullptr);
 
 		unsigned int shaderIdx = isRPR1 ? i : 0;
-		for (; shaderIdx < element.shadingEngine.size(); ++shaderIdx)
+		for (; shaderIdx < element.shadingEngines.size(); ++shaderIdx)
 		{
-			MObject& shadingEngine = element.shadingEngine[shaderIdx];
+			MObject& shadingEngine = element.shadingEngines[shaderIdx];
 
 			MObject surfaceShader = getSurfaceShader(shadingEngine);
 			if (surfaceShader.isNull())
@@ -1312,7 +1312,7 @@ void FireRenderMesh::ProcessMesh(const MDagPath& meshPath)
 					face_ids.push_back(faceIdx);
 			}
 
-			if (!face_ids.empty())
+			if (!face_ids.empty() && (element.shadingEngines.size() != 1))
 			{
 				element.shape.SetPerFaceShader(element.shaders.back(), face_ids);
 			}
@@ -1341,11 +1341,11 @@ void FireRenderMesh::ProcessMesh(const MDagPath& meshPath)
 
 		if (context->IsDisplacementSupported())
 		{
-			bool haveDispl = setupDisplacement(element.shadingEngine, element.shape);
+			bool haveDispl = setupDisplacement(element.shadingEngines, element.shape);
 		}
 
 		MObject volumeShader = MObject::kNullObj;
-		for (auto& it : element.shadingEngine)
+		for (auto& it : element.shadingEngines)
 		{
 			volumeShader = getVolumeShader(it);
 
@@ -1360,7 +1360,7 @@ void FireRenderMesh::ProcessMesh(const MDagPath& meshPath)
 
 		if (!element.volumeShader)
 		{
-			for (auto& it : element.shadingEngine)
+			for (auto& it : element.shadingEngines)
 			{
 				MObject surfaceShader = getSurfaceShader(it);
 				if (surfaceShader == MObject::kNullObj)
@@ -1550,7 +1550,7 @@ void FireRenderMeshCommon::ForceShaderDirtyCallback(MObject& node, void* clientD
 
 	for (auto& it : self->m.elements)
 	{
-		for (auto& shadingEngine : it.shadingEngine)
+		for (auto& shadingEngine : it.shadingEngines)
 		{
 			MObject shaderOb = getSurfaceShader(shadingEngine);
 			MGlobal::executeCommand("dgdirty " + MFnDependencyNode(shaderOb).name());
@@ -1697,7 +1697,7 @@ void FireRenderMeshCommon::AssignShadingEngines(const MObjectArray& shadingEngin
 {
 	for (unsigned int i = 0; i < m.elements.size(); i++)
 	{
-		DumpMayaArray(m.elements[i].shadingEngine, shadingEngines);
+		DumpMayaArray(m.elements[i].shadingEngines, shadingEngines);
 	}
 }
 
@@ -1811,7 +1811,7 @@ HashValue FireRenderMesh::CalculateHash()
 	auto hash = FireRenderNode::CalculateHash();
 	for (auto& e : m.elements)
 	{
-		hash << e.shadingEngine;
+		hash << e.shadingEngines;
 	}
 	return hash;
 }

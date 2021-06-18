@@ -214,9 +214,9 @@ void FireRenderGPUCache::ProcessShaders()
 
 		element.shape.SetShader(nullptr);
 
-		for (unsigned int shaderIdx = 0; shaderIdx < element.shadingEngine.size(); ++shaderIdx)
+		for (unsigned int shaderIdx = 0; shaderIdx < element.shadingEngines.size(); ++shaderIdx)
 		{
-			MObject& shadingEngine = element.shadingEngine[shaderIdx];
+			MObject& shadingEngine = element.shadingEngines[shaderIdx];
 			element.shaders.push_back(context->GetShader(getSurfaceShader(shadingEngine), shadingEngine, this));
 
 			std::vector<int>& faceMaterialIndices = m.faceMaterialIndices;
@@ -559,7 +559,7 @@ void FireRenderGPUCache::RegisterCallbacks()
 
 	for (auto& it : m.elements)
 	{
-		for (auto& shadingEngine : it.shadingEngine)
+		for (auto& shadingEngine : it.shadingEngines)
 		{
 			if (shadingEngine.isNull())
 				continue;
